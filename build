@@ -1,0 +1,6 @@
+#!/bin/sh
+
+CSS=`sed 's/^\s*//;s/\s*$//' settings.css | tr '\n' ' ' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
+HTML=`sed 's/^\s*//;s/\s*$//' settings.html | tr -d '\n' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
+VER=`sed -n '\|^// @version\s\+\([^\s]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
+sed 's/#settings.css#/'"${CSS}"'/;s/#settings.html#/'"${HTML}"'/' weiboFilter.user.js > weiboFilter-v${VER}.user.js

@@ -1,0 +1,78 @@
+#wbpSettings .wbpInput 
+{
+	border: 1px solid #D2D5D8; 
+	padding: 0 2px;
+}
+#wbpSettings .wbpInput input
+{
+	width: 100%;
+	height: 22px;
+	border: 0;
+	padding: 0;
+	margin: 0;
+	display: block;
+}
+#wbpSettings .detail > div
+{
+	margin-top: 15px;
+}
+#wbpTab3 input
+{
+	vertical-align: middle; 
+	margin-right: 5px;
+}
+#wbpSettings .wbpKeywordBlock
+{
+	margin-top: 10px;
+	border: 1px solid #D2D5D8;
+	padding: 8px 8px 0;
+}
+#wbpSettings .wbpKeywordBlock em
+{
+	font-weight: bold;
+	margin-right: 15px;
+}
+#wbpSettings .wbpKeywordList
+{
+	margin-top: 8px;
+}
+#wbpSettings .wbpKeywordList a
+{
+	margin: 0 5px 8px 0;
+	padding: 0 4px;
+	border: 1px solid;
+	float: left;
+	height: 18px;
+	line-height: 18px;
+	white-space: nowrap;
+}
+#wbpSettings .wbpKeywordList a:hover {
+	text-decoration: none;
+}
+#wbpWhiteKeywordList a
+{
+	border-color: #008000;
+	color: #008000;
+}
+#wbpWhiteKeywordList a:hover {
+	border-color: #008000;
+	background-color: #D0FFD0;
+}
+#wbpHideKeywordList a
+{
+	border-color: #FF0000;
+	color: #FF0000;
+}
+#wbpHideKeywordList a:hover {
+	border-color: #FF0000;
+	background-color: #FFD0D0;
+}
+#wbpCensoredKeywordList a
+{
+	border-color: #808000;
+	color: #808000;
+}
+#wbpCensoredKeywordList a:hover {
+	border-color: #808000;
+	background-color: #FFFF80;
+}
