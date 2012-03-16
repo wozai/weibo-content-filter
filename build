@@ -1,6 +1,16 @@
 #!/bin/sh
 
+head -n 14 weiboFilter.user.js > weiboFilter.user.head.js
 CSS=`sed 's/^\s*//;s/\s*$//' settings.css | tr '\n' ' ' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
 HTML=`sed 's/^\s*//;s/\s*$//' settings.html | tr -d '\n' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
 VER=`sed -n '\|^// @version\s\+\([^\s]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
-sed 's/#settings.css#/'"${CSS}"'/;s/#settings.html#/'"${HTML}"'/' weiboFilter.user.js > weiboFilter-v${VER}.user.js
+sed 's/#settings.css#/'"${CSS}"'/;s/#settings.html#/'"${HTML}"'/' weiboFilter.user.js > weiboFilter.user.body.js
+if [ ! -f compiler.jar ]
+then
+	wget -q http://closure-compiler.googlecode.com/files/compiler-latest.tar.gz
+	tar -xzf compiler-latest.tar.gz compiler.jar
+	rm compiler-latest.tar.gz
+fi
+java -jar compiler.jar --charset=UTF-8 --compilation_level SIMPLE_OPTIMIZATIONS --js=weiboFilter.user.body.js --js_output_file=weiboFilter.user.body.compiled.js
+cat weiboFilter.user.head.js weiboFilter.user.body.compiled.js > weiboFilter-v${VER}.user.js
+rm weiboFilter.user.head.js weiboFilter.user.body.js weiboFilter.user.body.compiled.js
