@@ -4,9 +4,9 @@
 // @license			MIT license
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
 // @features		代码效率优化（感谢@牛肉火箭）；使用CSS压缩脚本长度；重新设计了关键词设置界面；脚本可以作用于他人主页
-// @version			0.7b2
+// @version			0.7b3
 // @created			2011.08.15
-// @modified		2012.03.16
+// @modified		2012.03.17
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -171,7 +171,7 @@ function hideFeed(node) {
 	showFeed.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px';
 	var keywordLink = document.createElement('a');
 	keywordLink.href = 'javascript:void(0)';
-	keywordLink.innerText = keyword;
+	keywordLink.innerHTML = keyword;
 	click(keywordLink, function (event) {
 		showSettingsWindow(event);
 		event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
@@ -327,7 +327,7 @@ function getKeywords(id) {
 	if (!_(id).hasChildNodes()) {return ''; }
 	var keywords = _(id).childNodes, list = [];
 	for (var i = 0, len = keywords.length; i < len; ++i) {
-		if (keywords[i].tagName === 'A') {list.push(keywords[i].innerText); }
+		if (keywords[i].tagName === 'A') {list.push(keywords[i].innerHTML); }
 	}
 	return list.join(';');
 }
@@ -340,7 +340,7 @@ function addKeywords(id, str) {
 			var keywordLink = document.createElement('a');
 			keywordLink.title = '删除关键词';
 			keywordLink.href = 'javascript:void(0)';
-			keywordLink.innerText = keywords[i];
+			keywordLink.innerHTML = keywords[i];
 			_(id).appendChild(keywordLink);
 		}
 	}
@@ -394,7 +394,7 @@ function loadSettingsWindow() {
 	keywordBlock.innerHTML = '#settings.html#';
 	document.body.appendChild(keywordBack);
 	document.body.appendChild(keywordBlock);
-	_('wbpSettingsTitle').innerText = '“眼不见心不烦”(v' + $version + ')设置';
+	_('wbpSettingsTitle').innerHTML = '“眼不见心不烦”(v' + $version + ')设置';
 	// 修改屏蔽提示颜色事件
 	bind(_('wbpTipBackColor'), 'blur', function () {
 		_('wbpTipSample').style.backgroundColor = this.value;
