@@ -4,7 +4,7 @@
 // @license			MIT license
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
 // @features		代码效率优化（感谢@牛肉火箭）；使用CSS压缩脚本长度；重新设计了关键词设置界面；脚本可以作用于他人主页
-// @version			0.7b3
+// @version			0.7
 // @created			2011.08.15
 // @modified		2012.03.17
 // @author			@富平侯(/salviati)
@@ -204,7 +204,7 @@ function hideFeed(node) {
 		this.parentNode.style.cssText = '';
 		this.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px';
 	});
-	node.insertBefore(showFeed, node.childNodes[0]);
+	node.insertBefore(showFeed, node.firstChild);
 	return true;
 }
 
@@ -270,7 +270,7 @@ function showSettingsBtn() {
 	if (!groups) {return; }
 	var showSettingsTab = document.createElement('li');
 	showSettingsTab.innerHTML = '<span><em><a id="wbpShowSettings" href="javascript:void(0)">眼不见心不烦</a></em></span>';
-	groups.children[0].appendChild(showSettingsTab);
+	groups.childNodes[1].appendChild(showSettingsTab);
 	click(_('wbpShowSettings'), showSettingsWindow);
 }
 
@@ -298,8 +298,8 @@ function applySettings() {
 		// 单独处理广告
 		if ($blocks[i][0] === 'Ads') {
 			var sideBar = __('.W_main_r');
-			for (j = 0, l = sideBar.children.length; j < l; ++j) {
-				var elem = sideBar.children[j];
+			for (j = 0, l = sideBar.childNodes.length; j < l; ++j) {
+				var elem = sideBar.childNodes[j];
 				if (elem.tagName === 'DIV' && (elem.id.indexOf('ads_') === 0 || elem.hasAttribute('ad-data'))) {
 					elem.style.display = isBlocked ? 'none' : '';
 				}
@@ -308,7 +308,7 @@ function applySettings() {
 			// 单独处理推荐话题
 			var recommendedTopic = __('.key');
 			if (recommendedTopic && recommendedTopic.parentNode.classList.contains('send_weibo')) {
-				recommendedTopic.style.display = isBlocked ? 'none' : '';
+				recommendedTopic.firstChild.style.display = isBlocked ? 'none' : '';
 			}
 		} else if ($blocks[i][0] === 'Medal') { // 单独处理勋章
 			// 传统版
