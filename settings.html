@@ -25,9 +25,11 @@
 <span class="tab_title">您要屏蔽：</span>
 <a id="wbpTabHeader1" order="1" href="javascript:void(0);" class="current W_texta">关键词</a>
 <em class="W_vline">|</em>
-<a id="wbpTabHeader2" order="2" href="javascript:void(0);">用户/来源</a>
+<a id="wbpTabHeader2" order="2" href="javascript:void(0);">链接地址</a>
 <em class="W_vline">|</em>
-<a id="wbpTabHeader3" order="3" href="javascript:void(0);">版面内容</a>
+<a id="wbpTabHeader3" order="3" href="javascript:void(0);">用户/来源</a>
+<em class="W_vline">|</em>
+<a id="wbpTabHeader4" order="4" href="javascript:void(0);">版面内容</a>
 </div>
 <div id="wbpTab1">
 <div class="wbpKeywordBlock">
@@ -124,10 +126,30 @@
 </div>
 </div>
 <div id="wbpTab2" style="display: none;">
+<p>如果一条微博中包含链接且目标地址中包含下列关键词，微博将被屏蔽（无提示）。如将taobao.com设为关键词可屏蔽所有包含淘宝链接的微博。</p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px; margin-top: 8px;">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" id="wbpURLKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+</div>
+</td>
+<td style="width: 60px; text-align: right;">
+<a href="javascript:void(0);" class="W_btn_a" id="wbpAddURLKeyword"><span>添加</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div id="wbpURLKeywordList" class="wbpKeywordList">
+</div>
+<div class="clear"></div>
+</div>
+<div id="wbpTab3" style="display: none;">
 <p>新浪微博官方已提供针对指定用户或来源（如“皮皮时光机”）的屏蔽功能，而且在移动客户端上有效。</p>
 <p style="margin-top: 20px;" target="_blank">请点击<a href="http://account.weibo.com/set/feed">此处</a>设置屏蔽用户；点击<a href="http://account.weibo.com/set/feedsource">此处</a>设置屏蔽来源。</p>
 </div>
-<div id="wbpTab3" style="display: none;">
+<div id="wbpTab4" style="display: none;">
 <p>请选择要屏蔽的内容。</p>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 24px; margin-top: 15px;">
 <tbody>

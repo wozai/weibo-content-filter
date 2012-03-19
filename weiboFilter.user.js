@@ -1,19 +1,19 @@
 // ==UserScript==
 // @name			眼不见心不烦（新浪微博）
 // @namespace		http://weibo.com/salviati
-// @license			MIT license
+// @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		代码效率优化（感谢@牛肉火箭）；使用CSS压缩脚本长度；重新设计了关键词设置界面；脚本可以作用于他人主页
-// @version			0.7
+// @features		增加链接地址的屏蔽功能
+// @version			0.71b1
 // @created			2011.08.15
-// @modified		2012.03.17
+// @modified		2012.03.19
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // ==/UserScript==
 
-var $version = 0.7;
+var $version = 0.71;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Fun', 'pl_common_fun'],
@@ -138,8 +138,15 @@ function hideFeed(node) {
 		return false;
 	}
 	if (searchKeyword(content.textContent, 'hideKeywords')) {
-		node.style.display = 'none'; // 直接隐藏，不显示屏蔽信息
+		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 		return true;
+	}
+	var links = content.getElementsByTagName('A');
+	for (var i = 0, len = links.length; i < len; ++i) {
+		if (links[i].href.substring(0,12) === 'http://t.cn/' && searchKeyword(links[i].title, 'URLKeywords')) {
+			node.style.display = 'none';
+			return true;	
+		}
 	}
 	node.style.display = '';
 	var keyword = searchKeyword(content.textContent, 'censoredKeywords');
@@ -300,7 +307,7 @@ function applySettings() {
 			var sideBar = __('.W_main_r');
 			for (j = 0, l = sideBar.childNodes.length; j < l; ++j) {
 				var elem = sideBar.childNodes[j];
-				if (elem.tagName === 'DIV' && (elem.id.indexOf('ads_') === 0 || elem.hasAttribute('ad-data'))) {
+				if (elem.tagName === 'DIV' && (elem.id.substring(0,3) === 'ads_' || elem.hasAttribute('ad-data'))) {
 					elem.style.display = isBlocked ? 'none' : '';
 				}
 			}
@@ -358,12 +365,15 @@ function reloadSettings() {
 	_('wbpWhiteKeywordList').innerHTML = '';
 	_('wbpHideKeywordList').innerHTML = '';
 	_('wbpCensoredKeywordList').innerHTML = '';
+	_('wbpURLKeywordList').innerHTML = '';
 	addKeywords('wbpWhiteKeywordList', GM_getValue($uid + '.whiteKeywords', ''));
 	addKeywords('wbpHideKeywordList', GM_getValue($uid + '.hideKeywords', ''));
 	addKeywords('wbpCensoredKeywordList', GM_getValue($uid + '.censoredKeywords', ''));
+	addKeywords('wbpURLKeywordList', GM_getValue($uid + '.URLKeywords', ''));
 	_('wbpWhiteKeywords').value = '';
 	_('wbpHideKeywords').value = '';
 	_('wbpCensoredKeywords').value = '';
+	_('wbpURLKeywords').value = '';
 	var tipBackColor = GM_getValue($uid + '.tipBackColor', '#FFD0D0');
 	var tipTextColor = GM_getValue($uid + '.tipTextColor', '#FF8080');
 	_('wbpTipBackColor').value = tipBackColor;
@@ -418,16 +428,21 @@ function loadSettingsWindow() {
 		addKeywords('wbpCensoredKeywordList', _('wbpCensoredKeywords').value);
 		_('wbpCensoredKeywords').value = '';
 	});
+	click(_('wbpAddURLKeyword'), function () {
+		addKeywords('wbpURLKeywordList', _('wbpURLKeywords').value);
+		_('wbpURLKeywords').value = '';
+	});
 	// 删除关键词事件
 	click(_('wbpWhiteKeywordList'), deleteKeyword);
 	click(_('wbpHideKeywordList'), deleteKeyword);
 	click(_('wbpCensoredKeywordList'), deleteKeyword);
+	click(_('wbpURLKeywordList'), deleteKeyword);
 	// 标签点击事件
 	click(_('wbpTabHeaders'), function (event) {
 		var node = event.target;
 		if (node && node.tagName === 'A') {
 			var i = node.getAttribute('order');
-			for (var j = 1; j <= 3; ++j) {
+			for (var j = 1; j <= 4; ++j) {
 				if (i == j) {
 					_('wbpTabHeader' + j).className = 'current W_texta';
 					_('wbpTab' + j).style.display = '';
@@ -455,6 +470,7 @@ function loadSettingsWindow() {
 		GM_setValue($uid + '.whiteKeywords', getKeywords('wbpWhiteKeywordList'));
 		GM_setValue($uid + '.censoredKeywords', getKeywords('wbpCensoredKeywordList'));
 		GM_setValue($uid + '.hideKeywords', getKeywords('wbpHideKeywordList'));
+		GM_setValue($uid + '.URLKeywords', getKeywords('wbpURLKeywordList'));
 		GM_setValue($uid + '.tipBackColor', _('wbpTipBackColor').value);
 		GM_setValue($uid + '.tipTextColor', _('wbpTipTextColor').value);
 		for (var i = 0, len = $blocks.length; i < len; ++i) {
