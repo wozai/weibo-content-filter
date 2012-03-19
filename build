@@ -1,9 +1,24 @@
 #!/bin/sh
 
-head -n 14 weiboFilter.user.js > weiboFilter.user.head.js
 CSS=`sed 's/^\s*//;s/\s*$//' settings.css | tr '\n' ' ' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
 HTML=`sed 's/^\s*//;s/\s*$//' settings.html | tr -d '\n' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
 VER=`sed -n '\|^// @version\s\+\([^\s]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
+OUTFILE="weiboFilter-v${VER}.user.js"
+while getopts ":no:" optname
+do
+	case "$optname" in
+		"n") NO_COMPRESS=1;;
+		"o") OUTFILE=$OPTARG;;
+		"?") echo "Unknown option $OPTARG"; exit 1;;
+		":") echo "Missing argument value for option $OPTARG"; exit 1;;
+	esac
+done
+if [ $NO_COMPRESS ]
+then
+	sed 's/#settings.css#/'"${CSS}"'/;s/#settings.html#/'"${HTML}"'/' weiboFilter.user.js > $OUTFILE
+	exit 1
+fi
+head -n 14 weiboFilter.user.js > weiboFilter.user.head.js
 sed 's/#settings.css#/'"${CSS}"'/;s/#settings.html#/'"${HTML}"'/' weiboFilter.user.js > weiboFilter.user.body.js
 if [ ! -f compiler.jar ]
 then
@@ -12,5 +27,5 @@ then
 	rm compiler-latest.tar.gz
 fi
 java -jar compiler.jar --charset=UTF-8 --compilation_level SIMPLE_OPTIMIZATIONS --js=weiboFilter.user.body.js --js_output_file=weiboFilter.user.body.compiled.js
-cat weiboFilter.user.head.js weiboFilter.user.body.compiled.js > weiboFilter-v${VER}.user.js
+cat weiboFilter.user.head.js weiboFilter.user.body.compiled.js > $OUTFILE
 rm weiboFilter.user.head.js weiboFilter.user.body.js weiboFilter.user.body.compiled.js
