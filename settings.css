@@ -16,7 +16,7 @@
 {
 	margin-top: 15px;
 }
-#wbpTab3 input
+#wbpTab4 input
 {
 	vertical-align: middle; 
 	margin-right: 5px;
@@ -75,4 +75,13 @@
 #wbpCensoredKeywordList a:hover {
 	border-color: #808000;
 	background-color: #FFFF80;
+}
+#wbpURLKeywordList a
+{
+	border-color: #FF0000;
+	color: #FF0000;
+}
+#wbpURLKeywordList a:hover {
+	border-color: #FF0000;
+	background-color: #FFD0D0;
 }
