@@ -4,9 +4,9 @@
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
 // @features		增加链接地址的屏蔽功能
-// @version			0.71b1
+// @version			0.71b2
 // @created			2011.08.15
-// @modified		2012.03.19
+// @modified		2012.03.21
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -307,7 +307,7 @@ function applySettings() {
 			var sideBar = __('.W_main_r');
 			for (j = 0, l = sideBar.childNodes.length; j < l; ++j) {
 				var elem = sideBar.childNodes[j];
-				if (elem.tagName === 'DIV' && (elem.id.substring(0,3) === 'ads_' || elem.hasAttribute('ad-data'))) {
+				if (elem.tagName === 'DIV' && (elem.id.substring(0,4) === 'ads_' || elem.hasAttribute('ad-data'))) {
 					elem.style.display = isBlocked ? 'none' : '';
 				}
 			}

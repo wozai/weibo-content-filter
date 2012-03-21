@@ -58,12 +58,12 @@
 	border-color: #008000;
 	background-color: #D0FFD0;
 }
-#wbpHideKeywordList a
+#wbpHideKeywordList a, #wbpURLKeywordList a
 {
 	border-color: #FF0000;
 	color: #FF0000;
 }
-#wbpHideKeywordList a:hover {
+#wbpHideKeywordList a:hover, #wbpURLKeywordList a:hover {
 	border-color: #FF0000;
 	background-color: #FFD0D0;
 }
@@ -75,13 +75,4 @@
 #wbpCensoredKeywordList a:hover {
 	border-color: #808000;
 	background-color: #FFFF80;
-}
-#wbpURLKeywordList a
-{
-	border-color: #FF0000;
-	color: #FF0000;
-}
-#wbpURLKeywordList a:hover {
-	border-color: #FF0000;
-	background-color: #FFD0D0;
 }
