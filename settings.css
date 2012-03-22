@@ -1,3 +1,7 @@
+#wbpSettings p
+{
+	line-height: 150%;
+}
 #wbpSettings .wbpInput 
 {
 	border: 1px solid #D2D5D8; 

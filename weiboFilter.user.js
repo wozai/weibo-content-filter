@@ -4,7 +4,7 @@
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
 // @features		增加链接地址的屏蔽功能
-// @version			0.71b2
+// @version			0.71
 // @created			2011.08.15
 // @modified		2012.03.21
 // @author			@富平侯(/salviati)
