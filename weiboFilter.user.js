@@ -3,10 +3,10 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		增加链接地址的屏蔽功能
+// @features		增加链接地址的屏蔽功能；设置页面增加FAQ链接
 // @version			0.71
 // @created			2011.08.15
-// @modified		2012.03.21
+// @modified		2012.03.25
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
