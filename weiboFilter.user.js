@@ -3,17 +3,17 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		修正了3月27日新浪微博改版导致“推荐微话题”等模块无法被屏蔽的问题
-// @version			0.72
+// @features		修正了从部分页面返回首页时脚本失效的问题
+// @version			0.73
 // @created			2011.08.15
-// @modified		2012.03.27
+// @modified		2012.04.03
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // ==/UserScript==
 
-var $version = 0.72;
+var $version = 0.73;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Fun', 'pl_common_fun'],
@@ -101,9 +101,9 @@ if (!window.chrome) {
 	};
 }
 
-var $scope = (function () {
+function getScope() {
 	return "B_index" === document.body.className ? 1 : "B_my_profile_other" === document.body.className ? 2 : 0;
-}());
+}
 
 // 搜索指定文本中是否包含列表中的关键词
 function searchKeyword(str, key) {
@@ -116,8 +116,8 @@ function searchKeyword(str, key) {
 
 function hideFeed(node) {
 	if (node.firstChild.tagName === 'A') {node.removeChild(node.firstChild); } // 已被屏蔽过
-	var content;
-	switch ($scope) {
+	var content, scope = getScope();
+	switch (scope) {
 	case 1:
 		content = node.childNodes[3];
 		break;
@@ -158,7 +158,7 @@ function hideFeed(node) {
 		return false;
 	}
 	var authorClone;
-	if ($scope === 1) {
+	if (scope === 1) {
 		// 2011年11月15日起，新浪微博提供了屏蔽功能，由于屏蔽按钮的存在，微博发布者链接的位置发生了变化
 		var author = content.childNodes[3].childNodes[1];
 		if (author.tagName !== 'A') {return false; } // 不要屏蔽自己的微博
@@ -183,11 +183,11 @@ function hideFeed(node) {
 		showSettingsWindow(event);
 		event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
 	});
-	if ($scope === 1) {
+	if (scope === 1) {
 		showFeed.appendChild(document.createTextNode('本条来自'));
 		showFeed.appendChild(authorClone);
 		showFeed.appendChild(document.createTextNode('的微博因包含关键词“'));
-	} else if ($scope === 2) {
+	} else if (scope === 2) {
 		showFeed.appendChild(document.createTextNode('本条微博因包含关键词“'));
 	}
 	showFeed.appendChild(keywordLink);
@@ -215,9 +215,11 @@ function hideFeed(node) {
 	return true;
 }
 
+var $reloadTimerID = null;
+
 // 处理动态载入内容
 function onDOMNodeInsertion(event) {
-	if ($scope === 0) {return false; }
+	if (getScope() === 0) {return false; }
 	var node = event.target;
 	if (node.tagName === 'DL' && node.classList.contains('feed_list')) {
 		// 处理动态载入的微博
@@ -226,13 +228,28 @@ function onDOMNodeInsertion(event) {
 	if (node.tagName === 'DIV' && node.getAttribute('node-type') === 'feed_nav') {
 		// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
 		// 需要重新载入设置页面、按钮及刷新微博列表
-		if (!_('wbpSettings')) {loadSettingsWindow(); }
+		if ($reloadTimerID != null) {
+			clearTimeout($reloadTimerID);
+			$reloadTimerID = null;
+		}
+		loadSettingsWindow();
 		showSettingsBtn();
 	} else if (node.tagName === 'DIV' && node.classList.contains('feed_lists')) {
 		// 微博列表作为pagelet被一次性载入
 		applySettings();
+	} else if ($reloadTimerID == null && !_('wbpShowSettings')) {
+		// 由于各版块载入顺序不定，有时设置窗口及按钮未载入，使用定时器保险
+		$reloadTimerID = setTimeout(reloadTimer, 1000);
 	}
 	return false;
+}
+
+function reloadTimer() {
+	if (getScope() === 0 || (loadSettingsWindow() && showSettingsBtn())) {
+		$reloadTimerID = null;
+	} else {
+		$reloadTimerID = setTimeout(reloadTimer, 1000);
+	}
 }
 
 function checkUpdate() {
@@ -271,14 +288,15 @@ function showSettingsWindow(event) {
 
 function showSettingsBtn() {
 	// 设置标签已经置入页面
-	if (_('wbpShowSettings')) {return; }
-	var groups = __('.nfTagB');
+	if (_('wbpShowSettings')) {return true; }
+	var groups = __('#pl_content_homeFeed .nfTagB, #pl_content_hisFeed .nfTagB');
 	// Firefox的div#pl_content_homeFeed载入时是空的，此时无法置入页面，稍后由onDOMNodeInsertion()处理
-	if (!groups) {return; }
+	if (!groups) {return false; }
 	var showSettingsTab = document.createElement('li');
 	showSettingsTab.innerHTML = '<span><em><a id="wbpShowSettings" href="javascript:void(0)">眼不见心不烦</a></em></span>';
 	groups.childNodes[1].appendChild(showSettingsTab);
 	click(_('wbpShowSettings'), showSettingsWindow);
+	return true;
 }
 
 // 根据当前设置屏蔽/显示所有内容
@@ -304,16 +322,18 @@ function applySettings() {
 		}
 		// 单独处理广告
 		if ($blocks[i][0] === 'Ads') {
-			var sideBar = __('.W_main_r');
-			for (j = 0, l = sideBar.childNodes.length; j < l; ++j) {
-				var elem = sideBar.childNodes[j];
-				if (elem.tagName === 'DIV' && (elem.id.substring(0,4) === 'ads_' || elem.hasAttribute('ad-data'))) {
-					elem.style.display = isBlocked ? 'none' : '';
+			var sideBar = __('#plc_main .W_main_r');
+			if (sideBar) {
+				for (j = 0, l = sideBar.childNodes.length; j < l; ++j) {
+					var elem = sideBar.childNodes[j];
+					if (elem.tagName === 'DIV' && (elem.id.substring(0,4) === 'ads_' || elem.hasAttribute('ad-data'))) {
+						elem.style.display = isBlocked ? 'none' : '';
+					}
 				}
 			}
 		} else if ($blocks[i][0] === 'RecommendedTopic') {
 			// 单独处理推荐话题
-			var recommendedTopic = __('.key');
+			var recommendedTopic = __('#pl_content_publisherTop .key');
 			if (recommendedTopic && recommendedTopic.getAttribute('node-type') === 'recommendTopic') {
 				recommendedTopic.style.visibility = isBlocked ? 'hidden' : '';
 			}
@@ -390,7 +410,9 @@ function reloadSettings() {
 }
 
 function loadSettingsWindow() {
+	if (_('wbpSettings')) {return true; }
 	$uid = getGlobalVar('$CONFIG.uid');
+	if (!$uid) {return false; }
 
 	// 加入选项设置
 	GM_addStyle('#settings.css#');
@@ -493,10 +515,11 @@ function loadSettingsWindow() {
 
 	reloadSettings();
 	click(_('wbpCheckUpdate'), checkUpdate);
+	return true;
 }
 
 // 仅在个人首页与他人页面生效
-if ($scope > 0) {
+if (getScope() !== 0) {
 	loadSettingsWindow();
 	showSettingsBtn();
 	applySettings();
