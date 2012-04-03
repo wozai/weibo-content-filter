@@ -255,7 +255,7 @@ function reloadTimer() {
 function checkUpdate() {
 	GM_xmlhttpRequest({
 		method: 'GET',
-		url: 'http://userscripts.org/scripts/source/114087.user.js?source',
+		url: 'http://userscripts.org/scripts/source/114087.meta.js',
 		onload: function (result) {
 			if (!result.responseText.match(/@version\s+(\d+\.\d+)/)) {return; }
 			var ver = RegExp.$1;
