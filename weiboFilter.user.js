@@ -3,17 +3,17 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		增加链接地址的屏蔽功能；设置页面增加FAQ链接
-// @version			0.71
+// @features		修正了3月27日新浪微博改版导致“推荐微话题”等模块无法被屏蔽的问题
+// @version			0.72
 // @created			2011.08.15
-// @modified		2012.03.25
+// @modified		2012.03.27
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // ==/UserScript==
 
-var $version = 0.71;
+var $version = 0.72;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Fun', 'pl_common_fun'],
@@ -314,8 +314,8 @@ function applySettings() {
 		} else if ($blocks[i][0] === 'RecommendedTopic') {
 			// 单独处理推荐话题
 			var recommendedTopic = __('.key');
-			if (recommendedTopic && recommendedTopic.parentNode.classList.contains('send_weibo')) {
-				recommendedTopic.firstChild.style.display = isBlocked ? 'none' : '';
+			if (recommendedTopic && recommendedTopic.getAttribute('node-type') === 'recommendTopic') {
+				recommendedTopic.style.visibility = isBlocked ? 'hidden' : '';
 			}
 		} else if ($blocks[i][0] === 'Medal') { // 单独处理勋章
 			// 传统版
