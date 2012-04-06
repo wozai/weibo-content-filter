@@ -1,0 +1,210 @@
+<div class="bg">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+<div class="content">
+<div class="title" node-type="title">
+<span id="wbpSettingsTitle" node-type="title_content"></span>
+</div>
+<a href="javascript:void(0);" class="W_close" title="关闭" id="wbpCloseBtn"></a>
+<div node-type="inner" class="detail layer_forward" style="width: auto; padding-bottom: 20px;">
+<div class="clearfix">
+<div style="float: left;">
+新浪微博<span style="color: red;">非官方</span>功能增强脚本。
+</div>
+<div style="float: right; display: inline; position: relative;">
+<a id="wbpCheckUpdate" href="javascript:void(0);" title="检查脚本是否有新版本">检查更新</a>
+<em class="W_vline" style="margin: 0 8px">|</em>
+<a href="http://userscripts.org/scripts/show/114087" title="脚本新版本在此页面发布" target="_blank">脚本页面</a>
+<em class="W_vline" style="margin: 0 8px">|</em>
+<a href="http://code.google.com/p/weibo-content-filter/wiki/FAQ" title="遇到问题请先阅读FAQ" target="_blank">常见问题</a>
+<em class="W_vline" style="margin: 0 8px">|</em>
+<a href="/salviati" title="欢迎私信、评论或@作者提出脚本建议">联系作者</a>
+</div>
+</div>
+<div id="wbpTabHeaders" node-type="forward_tab" class="tab tab_bottom tab_forward W_texta">
+<span class="tab_title">您要屏蔽：</span>
+<a id="wbpTabHeader1" order="1" href="javascript:void(0);" class="current W_texta">关键词</a>
+<em class="W_vline">|</em>
+<a id="wbpTabHeader2" order="2" href="javascript:void(0);">链接地址</a>
+<em class="W_vline">|</em>
+<a id="wbpTabHeader3" order="3" href="javascript:void(0);">用户/来源</a>
+<em class="W_vline">|</em>
+<a id="wbpTabHeader4" order="4" href="javascript:void(0);">版面内容</a>
+</div>
+<div id="wbpTab1">
+<div class="wbpKeywordBlock">
+<em>白名单</em>包含下列关键词的微博不会被屏蔽
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px; margin-top: 8px;">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" id="wbpWhiteKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+</div>
+</td>
+<td style="width: 60px; text-align: right;">
+<a href="javascript:void(0);" class="W_btn_a" id="wbpAddWhiteKeyword"><span>添加</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div id="wbpWhiteKeywordList" class="wbpKeywordList">
+</div>
+<div class="clear"></div>
+</div>
+<div class="wbpKeywordBlock">
+<em>黑名单</em>包含下列关键词的微博将被屏蔽
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px; margin-top: 8px;">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" id="wbpHideKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+</div>
+</td>
+<td style="width: 60px; text-align: right;">
+<a href="javascript:void(0);" class="W_btn_a" id="wbpAddHideKeyword"><span>添加</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div id="wbpHideKeywordList" class="wbpKeywordList">
+</div>
+<div class="clear"></div>
+</div>
+<div class="wbpKeywordBlock">
+<em>灰名单</em>包含下列关键词的微博将被屏蔽<span style="color: red;">并提示</span>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px; margin-top: 8px;">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" id="wbpCensoredKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+</div>
+</td>
+<td style="width: 60px; text-align: right;">
+<a href="javascript:void(0);" class="W_btn_a" id="wbpAddCensoredKeyword"><span>添加</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div id="wbpCensoredKeywordList" class="wbpKeywordList">
+</div>
+<div class="clear"></div>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px;">
+<tbody>
+<tr>
+<td style="width: 110px;">屏蔽提示背景颜色：</td>
+<td>
+<div class="wbpInput">
+<input type="text" id="wbpTipBackColor" class="input">
+</div>
+</td>
+<td style="width: 15px;">
+</td>
+<td style="width: 110px;">屏蔽提示文字颜色：</td>
+<td>
+<div class="wbpInput">
+<input type="text" id="wbpTipTextColor" class="input">
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px; margin-bottom: 8px;">
+<tbody>
+<tr>
+<td style="width: 40px;">示例：</td>
+<td>
+<div id="wbpTipSample" style="border-style: solid; border-width: 1px; height: 23px; line-height: 23px; text-align: center;">
+本条来自<a href="javascript:void(0);">@某人</a>的微博因包含关键词“<a href="javascript:void(0);">XXXX</a>”而被隐藏，点击显示
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="wbpTab2" style="display: none;">
+<p>如果一条微博中包含链接且目标地址中包含下列关键词，微博将被屏蔽（无提示）。如将taobao.com设为关键词可屏蔽所有包含淘宝链接的微博。</p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px; margin-top: 8px;">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" id="wbpURLKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+</div>
+</td>
+<td style="width: 60px; text-align: right;">
+<a href="javascript:void(0);" class="W_btn_a" id="wbpAddURLKeyword"><span>添加</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div id="wbpURLKeywordList" class="wbpKeywordList">
+</div>
+<div class="clear"></div>
+</div>
+<div id="wbpTab3" style="display: none;">
+<p>新浪微博官方已提供针对指定用户或来源（如“皮皮时光机”）的屏蔽功能，而且在移动客户端上有效。</p>
+<p style="margin-top: 20px;" target="_blank">请点击<a href="http://account.weibo.com/set/feed">此处</a>设置屏蔽用户；点击<a href="http://account.weibo.com/set/feedsource">此处</a>设置屏蔽来源。</p>
+</div>
+<div id="wbpTab4" style="display: none;">
+<p>请选择要屏蔽的内容。</p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 24px; margin-top: 15px;">
+<tbody>
+<tr>
+<td><input type="checkbox" id="wbpBlockAds"><label for="wbpBlockAds">右边栏广告</label></td>
+<td><input type="checkbox" id="wbpBlockBottomAds"><label for="wbpBlockBottomAds">底栏广告</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" id="wbpBlockPullyList"><label for="wbpBlockPullyList">微博看点（顶栏广告）</label></td>
+<td><input type="checkbox" id="wbpBlockRecommendedTopic"><label for="wbpBlockRecommendedTopic">推荐微话题</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" id="wbpBlockTasks"><label for="wbpBlockTasks">微博任务（微博宝典）</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" id="wbpBlockMood"><label for="wbpBlockMood">心情</label></td>
+<td><input type="checkbox" id="wbpBlockMedal"><label for="wbpBlockMedal">勋章</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" id="wbpBlockFun"><label for="wbpBlockFun">玩转微博</label></td>
+<td><input type="checkbox" id="wbpBlockTopic"><label for="wbpBlockTopic">热门话题</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" id="wbpBlockInterestUser"><label for="wbpBlockInterestUser">可能感兴趣的人</label></td>
+<td><input type="checkbox" id="wbpBlockPopularUser"><label for="wbpBlockPopularUser">人气用户推荐</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" id="wbpBlockInterestGroup"><label for="wbpBlockInterestGroup">可能感兴趣的微群</label></td>
+<td><input type="checkbox" id="wbpBlockInterestApp"><label for="wbpBlockInterestApp">可能感兴趣的应用/活动</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" id="wbpBlockNotice"><label for="wbpBlockNotice">公告栏</label></td>
+<td><input type="checkbox" id="wbpBlockHelpFeedback"><label for="wbpBlockHelpFeedback">帮助/意见反馈</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" id="wbpBlockGame"><label for="wbpBlockGame">游戏（体验版左边栏）</label></td>
+<td><input type="checkbox" id="wbpBlockApp"><label for="wbpBlockApp">应用（体验版左边栏）</label></td>
+</tr>
+</tbody>
+</table>
+<p style="margin-top: 20px;">
+<a href="javascript:void(0);" class="W_btn_a" id="wbpBlockAll"><span>全选</span></a>
+<a href="javascript:void(0);" class="W_btn_a" style="margin-left: 10px;" id="wbpBlockInvert"><span>反选</span></a>
+</p>
+</div>
+<p class="btn">
+<a href="javascript:void(0);" class="W_btn_b" id="wbpOKBtn"><span>确定</span></a>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpCancelBtn"><span>取消</span></a>
+</p>
+</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
