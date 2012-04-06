@@ -6,7 +6,7 @@
 // @features		修正了从部分页面返回首页时脚本失效的问题
 // @version			0.73
 // @created			2011.08.15
-// @modified		2012.04.03
+// @modified		2012.04.06
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
