@@ -2,6 +2,20 @@
 {
 	line-height: 150%;
 }
+#wbpTabHeaders a {
+	display: block;
+	padding: 5px 0;
+	text-align: center;
+	text-decoration: none;
+}
+#wbpTabHeaders a:hover {
+	background-color: #C6E8F4;
+}
+#wbpTabHeaders a.current {
+	background-color: #79C5E9;
+	color: white;
+	cursor: default;
+}
 #wbpSettings .wbpInput 
 {
 	border: 1px solid #D2D5D8; 

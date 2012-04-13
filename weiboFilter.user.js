@@ -3,17 +3,17 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		修正了从部分页面返回首页时脚本失效的问题
-// @version			0.73
+// @features		
+// @version			0.8
 // @created			2011.08.15
-// @modified		2012.04.06
+// @modified		2012.04.12
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // ==/UserScript==
 
-var $version = 0.73;
+var $version = 0.8;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Fun', 'pl_common_fun'],
@@ -422,7 +422,7 @@ function loadSettingsWindow() {
 	var keywordBlock = document.createElement('div');
 	keywordBlock.className = 'W_layer';
 	keywordBlock.id = 'wbpSettings';
-	keywordBlock.style.cssText = 'width: 500px; margin-left: -250px; z-index: 10001; position: absolute; display: none;';
+	keywordBlock.style.cssText = 'width: 600px; margin-left: -300px; z-index: 10001; position: absolute; display: none;';
 	keywordBlock.innerHTML = '#settings.html#';
 	document.body.appendChild(keywordBack);
 	document.body.appendChild(keywordBlock);
@@ -463,14 +463,12 @@ function loadSettingsWindow() {
 	click(_('wbpTabHeaders'), function (event) {
 		var node = event.target;
 		if (node && node.tagName === 'A') {
-			var i = node.getAttribute('order');
-			for (var j = 1; j <= 4; ++j) {
-				if (i == j) {
-					_('wbpTabHeader' + j).className = 'current W_texta';
-					_('wbpTab' + j).style.display = '';
-				} else {
-					_('wbpTabHeader' + j).className = '';
-					_('wbpTab' + j).style.display = 'none';
+			node.className = 'current';
+			_(node.getAttribute('tab')).style.display = '';
+			for (var i = 0, l = this.childNodes.length; i < l; ++i) {
+				if (node !== this.childNodes[i]) {
+					this.childNodes[i].className = '';
+					_(this.childNodes[i].getAttribute('tab')).style.display = 'none';
 				}
 			}
 			event.stopPropagation();
