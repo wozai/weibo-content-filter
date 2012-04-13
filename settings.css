@@ -4,7 +4,7 @@
 }
 #wbpTabHeaders a {
 	display: block;
-	padding: 5px 0;
+	padding: 6px 0;
 	text-align: center;
 	text-decoration: none;
 }
@@ -34,7 +34,7 @@
 {
 	margin-top: 15px;
 }
-#wbpTab4 input
+#wbpTabModules input
 {
 	vertical-align: middle; 
 	margin-right: 5px;
@@ -76,21 +76,21 @@
 	border-color: #008000;
 	background-color: #D0FFD0;
 }
-#wbpHideKeywordList a, #wbpURLKeywordList a
+#wbpBlackKeywordList a, #wbpURLKeywordList a
 {
 	border-color: #FF0000;
 	color: #FF0000;
 }
-#wbpHideKeywordList a:hover, #wbpURLKeywordList a:hover {
+#wbpBlackKeywordList a:hover, #wbpURLKeywordList a:hover {
 	border-color: #FF0000;
 	background-color: #FFD0D0;
 }
-#wbpCensoredKeywordList a
+#wbpGrayKeywordList a
 {
 	border-color: #808000;
 	color: #808000;
 }
-#wbpCensoredKeywordList a:hover {
+#wbpGrayKeywordList a:hover {
 	border-color: #808000;
 	background-color: #FFFF80;
 }

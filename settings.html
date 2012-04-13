@@ -29,6 +29,7 @@
 <a tab="wbpTabLinks" href="javascript:void(0);">链接地址</a>
 <a tab="wbpTabUserSource" href="javascript:void(0);">用户/来源</a>
 <a tab="wbpTabModules" href="javascript:void(0);">版面模块</a>
+<a id="wbpTabHeaderSettings" tab="wbpTabSettings" href="javascript:void(0);">设置导入/导出</a>
 </div>
 <div style="float: right; width: 440px;">
 <div id="wbpTabKeywords">
@@ -39,7 +40,7 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" id="wbpWhiteKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+<input type="text" id="wbpWhiteKeywords" class="input" placeholder="多个关键词用空格隔开">
 </div>
 </td>
 <td style="width: 60px; text-align: right;">
@@ -58,16 +59,16 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" id="wbpHideKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+<input type="text" id="wbpBlackKeywords" class="input" placeholder="多个关键词用空格隔开">
 </div>
 </td>
 <td style="width: 60px; text-align: right;">
-<a href="javascript:void(0);" class="W_btn_a" id="wbpAddHideKeyword"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpAddBlackKeyword"><span>添加</span></a>
 </td>
 </tr>
 </tbody>
 </table>
-<div id="wbpHideKeywordList" class="wbpKeywordList clearfix">
+<div id="wbpBlackKeywordList" class="wbpKeywordList clearfix">
 </div>
 </div>
 <div class="wbpKeywordBlock">
@@ -77,16 +78,16 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" id="wbpCensoredKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+<input type="text" id="wbpGrayKeywords" class="input" placeholder="多个关键词用空格隔开">
 </div>
 </td>
 <td style="width: 60px; text-align: right;">
-<a href="javascript:void(0);" class="W_btn_a" id="wbpAddCensoredKeyword"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpAddGrayKeyword"><span>添加</span></a>
 </td>
 </tr>
 </tbody>
 </table>
-<div id="wbpCensoredKeywordList" class="wbpKeywordList clearfix">
+<div id="wbpGrayKeywordList" class="wbpKeywordList clearfix">
 </div>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px;">
 <tbody>
@@ -129,7 +130,7 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" id="wbpURLKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+<input type="text" id="wbpURLKeywords" class="input" placeholder="多个关键词用空格隔开">
 </div>
 </td>
 <td style="width: 60px; text-align: right;">
@@ -191,6 +192,15 @@
 <a href="javascript:void(0);" class="W_btn_a" id="wbpBlockAll"><span>全选</span></a>
 <a href="javascript:void(0);" class="W_btn_a" style="margin-left: 10px;" id="wbpBlockInvert"><span>反选</span></a>
 </p>
+</div>
+<div id="wbpTabSettings" style="display: none;">
+<div class="clearfix">
+<div style="float: left; width: 385px;">
+<p>当前账号的设置信息在下列文本框中，您可以将其复制到其它位置保存。需要导入设置时，请将设置信息粘贴到文本框中，然后点击“导入”。</p>
+</div>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpImportBtn" style="float: right; margin-top: 6px;"><span>导入</span></a>
+</div>
+<textarea id="wbpSettingsString" rows="10" style="width: 440px; margin-top: 10px; border: 1px solid #D2D5D8;"></textarea>
 </div>
 </div>
 </div>

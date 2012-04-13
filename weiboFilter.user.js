@@ -3,10 +3,10 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		
+// @features		增加设置导入导出功能（注意：新版不兼容旧版设置！）；标签页改为竖版；关键词分隔符改为空格；关键词不再区分大小写
 // @version			0.8
 // @created			2011.08.15
-// @modified		2012.04.12
+// @modified		2012.04.14
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -35,7 +35,8 @@ var $blocks = [ // 模块屏蔽设置
 		['App', 'pl_leftNav_app'],
 		['Tasks', 'pl_content_tasks']
 	];
-
+var $options = {};
+	
 var _ = function (s) {
 	return document.getElementById(s);
 };
@@ -107,14 +108,17 @@ function getScope() {
 
 // 搜索指定文本中是否包含列表中的关键词
 function searchKeyword(str, key) {
-	var keywords = GM_getValue($uid + '.' + key, '').split(';');
+	var text = str.toLowerCase(), keywords = $options[key];
+	if (keywords === undefined) {return ''; }
 	for (var i = 0, len = keywords.length; i < len; ++i) {
-		if (keywords[i] && str.indexOf(keywords[i]) > -1) {return keywords[i]; }
+		if (keywords[i] && text.indexOf(keywords[i].toLowerCase()) > -1) {
+			return keywords[i];
+		}
 	}
 	return '';
 }
 
-function hideFeed(node) {
+function filterFeed(node) {
 	if (node.firstChild.tagName === 'A') {node.removeChild(node.firstChild); } // 已被屏蔽过
 	var content, scope = getScope();
 	switch (scope) {
@@ -137,7 +141,7 @@ function hideFeed(node) {
 		node.childNodes[3].style.opacity = 1;
 		return false;
 	}
-	if (searchKeyword(content.textContent, 'hideKeywords')) {
+	if (searchKeyword(content.textContent, 'blackKeywords')) {
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 		return true;
 	}
@@ -149,7 +153,7 @@ function hideFeed(node) {
 		}
 	}
 	node.style.display = '';
-	var keyword = searchKeyword(content.textContent, 'censoredKeywords');
+	var keyword = searchKeyword(content.textContent, 'grayKeywords');
 	if (!keyword) {
 		node.childNodes[1].style.display = '';
 		node.childNodes[3].style.display = '';
@@ -170,8 +174,8 @@ function hideFeed(node) {
 	}
 	// 找到了待隐藏的微博
 	node.childNodes[1].style.display = 'none';
-	var tipBackColor = GM_getValue($uid + '.tipBackColor', '#FFD0D0');
-	var tipTextColor = GM_getValue($uid + '.tipTextColor', '#FF8080');
+	var tipBackColor = $options.tipBackColor || '#FFD0D0';
+	var tipTextColor = $options.tipTextColor || '#FF8080';
 	var showFeed = document.createElement('a');
 	showFeed.href = 'javascript:void(0)';
 	showFeed.className = 'notes';
@@ -223,12 +227,12 @@ function onDOMNodeInsertion(event) {
 	var node = event.target;
 	if (node.tagName === 'DL' && node.classList.contains('feed_list')) {
 		// 处理动态载入的微博
-		return hideFeed(node);
+		return filterFeed(node);
 	}
 	if (node.tagName === 'DIV' && node.getAttribute('node-type') === 'feed_nav') {
 		// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
 		// 需要重新载入设置页面、按钮及刷新微博列表
-		if ($reloadTimerID != null) {
+		if ($reloadTimerID !== null) {
 			clearTimeout($reloadTimerID);
 			$reloadTimerID = null;
 		}
@@ -237,7 +241,7 @@ function onDOMNodeInsertion(event) {
 	} else if (node.tagName === 'DIV' && node.classList.contains('feed_lists')) {
 		// 微博列表作为pagelet被一次性载入
 		applySettings();
-	} else if ($reloadTimerID == null && !_('wbpShowSettings')) {
+	} else if ($reloadTimerID === null && !_('wbpShowSettings')) {
 		// 由于各版块载入顺序不定，有时设置窗口及按钮未载入，使用定时器保险
 		$reloadTimerID = setTimeout(reloadTimer, 1000);
 	}
@@ -303,10 +307,10 @@ function showSettingsBtn() {
 function applySettings() {
 	// 处理非动态载入内容
 	var feeds = document.querySelectorAll('.feed_list'), i, len, j, l;
-	for (i = 0, len = feeds.length; i < len; ++i) {hideFeed(feeds[i]); }
+	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
 	// 屏蔽版面内容
 	for (i = 0, len = $blocks.length; i < len; ++i) {
-		var isBlocked = (GM_getValue($uid + '.block' + $blocks[i][0], 'false') === 'true');
+		var isBlocked = ($options.hideBlock && $options.hideBlock[$blocks[i][0]] === true);
 		if ($blocks[i].length === 2) {
 			var block;
 			if (typeof $blocks[i][1] === 'string') {
@@ -350,20 +354,22 @@ function applySettings() {
 	}
 }
 
+// 从显示列表建立关键词数组
 function getKeywords(id) {
-	if (!_(id).hasChildNodes()) {return ''; }
+	if (!_(id).hasChildNodes()) {return []; }
 	var keywords = _(id).childNodes, list = [];
 	for (var i = 0, len = keywords.length; i < len; ++i) {
 		if (keywords[i].tagName === 'A') {list.push(keywords[i].innerHTML); }
 	}
-	return list.join(';');
+	return list;
 }
 
-function addKeywords(id, str) {
-	var keywords = str.split(';'),
-		currentKeywords = ';' + getKeywords(id) + ';';
+// 将关键词添加到显示列表
+function addKeywords(id, list) {
+	var keywords = list instanceof Array ? list : list.split(' ');
 	for (var i = 0, len = keywords.length; i < len; ++i) {
-		if (keywords[i] && currentKeywords.indexOf(';' + keywords[i] + ';') === -1) {
+		var currentKeywords = ' ' + getKeywords(id).join(' ') + ' ';
+		if (keywords[i] && currentKeywords.indexOf(' ' + keywords[i] + ' ') === -1) {
 			var keywordLink = document.createElement('a');
 			keywordLink.title = '删除关键词';
 			keywordLink.href = 'javascript:void(0)';
@@ -381,32 +387,65 @@ function deleteKeyword(event) {
 	}
 }
 
+// 根据当前设置（可能未保存）更新$options
+function updateSettings() {
+	$options = {};
+	$options.whiteKeywords = getKeywords('wbpWhiteKeywordList');
+	$options.blackKeywords = getKeywords('wbpBlackKeywordList');
+	$options.grayKeywords = getKeywords('wbpGrayKeywordList');
+	$options.URLKeywords = getKeywords('wbpURLKeywordList');
+	$options.tipBackColor = _('wbpTipBackColor').value;
+	$options.tipTextColor = _('wbpTipTextColor').value;
+	$options.hideBlock = {};
+	for (var i = 0, len = $blocks.length; i < len; ++i) {
+		$options.hideBlock[$blocks[i][0]] = _('wbpBlock' + $blocks[i][0]).checked;
+	}
+	_('wbpSettingsString').value = JSON.stringify($options);
+}
+
+// 重新载入设置（丢弃未保存设置）
 function reloadSettings() {
+	$options = {};
+	var options = arguments[0] || GM_getValue($uid.toString(), '');
+	if (!options) {return false; }
+	try {
+		$options = JSON.parse(options.replace(/\n/g, ''));
+		if (typeof $options !== 'object') {throw 0; }
+	} catch (e) {
+		if (arguments[0]) {
+			alert('设置导入失败！\n设置信息格式有问题。');
+			return false;
+		} else {
+			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
+		}
+	}
 	_('wbpWhiteKeywordList').innerHTML = '';
-	_('wbpHideKeywordList').innerHTML = '';
-	_('wbpCensoredKeywordList').innerHTML = '';
+	_('wbpBlackKeywordList').innerHTML = '';
+	_('wbpGrayKeywordList').innerHTML = '';
 	_('wbpURLKeywordList').innerHTML = '';
-	addKeywords('wbpWhiteKeywordList', GM_getValue($uid + '.whiteKeywords', ''));
-	addKeywords('wbpHideKeywordList', GM_getValue($uid + '.hideKeywords', ''));
-	addKeywords('wbpCensoredKeywordList', GM_getValue($uid + '.censoredKeywords', ''));
-	addKeywords('wbpURLKeywordList', GM_getValue($uid + '.URLKeywords', ''));
+	addKeywords('wbpWhiteKeywordList', $options.whiteKeywords || '');
+	addKeywords('wbpBlackKeywordList', $options.blackKeywords || '');
+	addKeywords('wbpGrayKeywordList', $options.grayKeywords || '');
+	addKeywords('wbpURLKeywordList', $options.URLKeywords || '');
 	_('wbpWhiteKeywords').value = '';
-	_('wbpHideKeywords').value = '';
-	_('wbpCensoredKeywords').value = '';
+	_('wbpBlackKeywords').value = '';
+	_('wbpGrayKeywords').value = '';
 	_('wbpURLKeywords').value = '';
-	var tipBackColor = GM_getValue($uid + '.tipBackColor', '#FFD0D0');
-	var tipTextColor = GM_getValue($uid + '.tipTextColor', '#FF8080');
+	var tipBackColor = $options.tipBackColor || '#FFD0D0';
+	var tipTextColor = $options.tipTextColor || '#FF8080';
 	_('wbpTipBackColor').value = tipBackColor;
 	_('wbpTipTextColor').value = tipTextColor;
 	var tipSample = _('wbpTipSample');
 	tipSample.style.backgroundColor = tipBackColor;
 	tipSample.style.borderColor = tipTextColor;
 	tipSample.style.color = tipTextColor;
-	for (var i = 0, len = $blocks.length; i < len; ++i) {
-		if (GM_getValue($uid + '.block' + $blocks[i][0], 'false') === 'true') {
-			_('wbpBlock' + $blocks[i][0]).checked = true;
+	if ($options.hideBlock) {
+		for (var i = 0, len = $blocks.length; i < len; ++i) {
+			_('wbpBlock' + $blocks[i][0]).checked = ($options.hideBlock[$blocks[i][0]] === true);
 		}
 	}
+	_('wbpSettingsString').value = JSON.stringify($options);
+	return true;
 }
 
 function loadSettingsWindow() {
@@ -438,17 +477,16 @@ function loadSettingsWindow() {
 	});
 	// 添加关键词按钮点击事件
 	click(_('wbpAddWhiteKeyword'), function () {
-		var wbpWhiteKeywords = _('wbpWhiteKeywords');
-		addKeywords('wbpWhiteKeywordList', wbpWhiteKeywords.value);
+		addKeywords('wbpWhiteKeywordList', _('wbpWhiteKeywords').value);
 		wbpWhiteKeywords.value = '';
 	});
-	click(_('wbpAddHideKeyword'), function () {
-		addKeywords('wbpHideKeywordList', _('wbpHideKeywords').value);
-		_('wbpHideKeywords').value = '';
+	click(_('wbpAddBlackKeyword'), function () {
+		addKeywords('wbpBlackKeywordList', _('wbpBlackKeywords').value);
+		_('wbpBlackKeywords').value = '';
 	});
-	click(_('wbpAddCensoredKeyword'), function () {
-		addKeywords('wbpCensoredKeywordList', _('wbpCensoredKeywords').value);
-		_('wbpCensoredKeywords').value = '';
+	click(_('wbpAddGrayKeyword'), function () {
+		addKeywords('wbpGrayKeywordList', _('wbpGrayKeywords').value);
+		_('wbpGrayKeywords').value = '';
 	});
 	click(_('wbpAddURLKeyword'), function () {
 		addKeywords('wbpURLKeywordList', _('wbpURLKeywords').value);
@@ -456,8 +494,8 @@ function loadSettingsWindow() {
 	});
 	// 删除关键词事件
 	click(_('wbpWhiteKeywordList'), deleteKeyword);
-	click(_('wbpHideKeywordList'), deleteKeyword);
-	click(_('wbpCensoredKeywordList'), deleteKeyword);
+	click(_('wbpBlackKeywordList'), deleteKeyword);
+	click(_('wbpGrayKeywordList'), deleteKeyword);
 	click(_('wbpURLKeywordList'), deleteKeyword);
 	// 标签点击事件
 	click(_('wbpTabHeaders'), function (event) {
@@ -474,6 +512,7 @@ function loadSettingsWindow() {
 			event.stopPropagation();
 		}
 	});
+	click(_('wbpTabHeaderSettings'), updateSettings);
 	click(_('wbpBlockAll'), function () {
 		for (var i = 0, len = $blocks.length; i < len; ++i) {
 			_('wbpBlock' + $blocks[i][0]).checked = true;
@@ -486,16 +525,12 @@ function loadSettingsWindow() {
 		}
 	});
 	// 对话框按钮点击事件
+	click(_('wbpImportBtn'), function () {
+		if (reloadSettings(_('wbpSettingsString').value)) {alert('设置导入成功！'); }
+	});
 	click(_('wbpOKBtn'), function () {
-		GM_setValue($uid + '.whiteKeywords', getKeywords('wbpWhiteKeywordList'));
-		GM_setValue($uid + '.censoredKeywords', getKeywords('wbpCensoredKeywordList'));
-		GM_setValue($uid + '.hideKeywords', getKeywords('wbpHideKeywordList'));
-		GM_setValue($uid + '.URLKeywords', getKeywords('wbpURLKeywordList'));
-		GM_setValue($uid + '.tipBackColor', _('wbpTipBackColor').value);
-		GM_setValue($uid + '.tipTextColor', _('wbpTipTextColor').value);
-		for (var i = 0, len = $blocks.length; i < len; ++i) {
-			GM_setValue($uid + '.block' + $blocks[i][0], _('wbpBlock' + $blocks[i][0]).checked);
-		}
+		updateSettings();
+		GM_setValue($uid.toString(), JSON.stringify($options));
 		_('wbpSettingsBack').style.display = 'none';
 		_('wbpSettings').style.display = 'none';
 		applySettings();
