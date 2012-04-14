@@ -16,24 +16,23 @@
 var $version = 0.8;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
-		['Fun', 'pl_common_fun'],
-		['Topic', 'pl_content_promotetopic'],
-		['InterestUser', 'pl_content_homeInterest'],
-		['PopularUser', 'pl_relation_recommendPopularUsers'],
+		['Fun', '#pl_common_fun'],
+		['Topic', '#pl_content_promotetopic'],
+		['InterestUser', '#pl_content_homeInterest'],
+		['PopularUser', '#pl_relation_recommendPopularUsers'],
 		// 2012年2月27日起，新浪微博“可能感兴趣的微群”模块ID发生变化
-		['InterestGroup', 'pl_common_thirdmodule_1005'],
-		['InterestApp', 'pl_content_allInOne'],
-		['Notice', 'pl_common_noticeboard'],
-		['HelpFeedback', ['pl_common_help', 'pl_common_feedback']],
-		['Ads'],
-		['BottomAds', 'ads_bottom_1'],
-		['PullyList', 'pl_content_pullylist'],
+		['InterestGroup', '#pl_common_thirdmodule_1005'],
+		['InterestApp', '#pl_content_allInOne'],
+		['Notice', '#pl_common_noticeboard'],
+		['HelpFeedback', '#pl_common_help, #pl_common_feedback'],
+		['Ads', '#plc_main .W_main_r div[id^=ads_], div[ad-data], #ads_bottom_1'],
+		['PullyList', '#pl_content_pullylist'],
 		['RecommendedTopic'],
-		['Mood', 'pl_content_mood'],
-		['Medal'],
-		['Game', 'pl_leftNav_game'],
-		['App', 'pl_leftNav_app'],
-		['Tasks', 'pl_content_tasks']
+		['Mood', '#pl_content_mood'],
+		['Medal', '#pl_content_medal, .declist'],
+		['Game', '#pl_leftNav_game'],
+		['App', '#pl_leftNav_app'],
+		['Tasks', '#pl_content_tasks']
 	];
 var $options = {};
 	
@@ -312,15 +311,9 @@ function applySettings() {
 	for (i = 0, len = $blocks.length; i < len; ++i) {
 		var isBlocked = ($options.hideBlock && $options.hideBlock[$blocks[i][0]] === true);
 		if ($blocks[i].length === 2) {
-			var block;
-			if (typeof $blocks[i][1] === 'string') {
-				block = _($blocks[i][1]);
-				if (block) {block.style.display = isBlocked ? 'none' : ''; }
-			} else { // 数组
-				for (j = 0, l = $blocks[i][1].length; j < l; ++j) {
-					block = _($blocks[i][1][j]);
-					if (block) {block.style.display = isBlocked ? 'none' : ''; }
-				}
+			var blocks = document.querySelectorAll($blocks[i][1]);
+			for (j = 0, l = blocks.length; j < l; ++j) {
+				blocks[j].style.display = isBlocked ? 'none' : '';
 			}
 			continue;
 		}
@@ -407,16 +400,17 @@ function updateSettings() {
 function reloadSettings() {
 	$options = {};
 	var options = arguments[0] || GM_getValue($uid.toString(), '');
-	if (!options) {return false; }
-	try {
-		$options = JSON.parse(options.replace(/\n/g, ''));
-		if (typeof $options !== 'object') {throw 0; }
-	} catch (e) {
-		if (arguments[0]) {
-			alert('设置导入失败！\n设置信息格式有问题。');
-			return false;
-		} else {
-			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
+	if (options) {
+		try {
+			$options = JSON.parse(options.replace(/\n/g, ''));
+			if (typeof $options !== 'object') {throw 0; }
+		} catch (e) {
+			if (arguments[0]) {
+				alert('设置导入失败！\n设置信息格式有问题。');
+				return false;
+			} else {
+				alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
+			}
 		}
 	}
 	_('wbpWhiteKeywordList').innerHTML = '';
