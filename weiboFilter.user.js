@@ -4,16 +4,15 @@
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
 // @features		增加设置导入导出功能（注意：新版不兼容旧版设置！）；标签页改为竖版；关键词分隔符改为空格；关键词不再区分大小写
-// @version			0.8
-// @created			2011.08.15
-// @modified		2012.04.14
+// @version			0.8b1
+// @revision		33
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // ==/UserScript==
 
-var $version = 0.8;
+var $version = '0.8b1', $revision = 33;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Fun', '#pl_common_fun'],
@@ -255,14 +254,17 @@ function reloadTimer() {
 	}
 }
 
+// 检查更新
 function checkUpdate() {
 	GM_xmlhttpRequest({
 		method: 'GET',
+		// 只载入metadata
 		url: 'http://userscripts.org/scripts/source/114087.meta.js',
 		onload: function (result) {
-			if (!result.responseText.match(/@version\s+(\d+\.\d+)/)) {return; }
+			if (!result.responseText.match(/@version\s+(.*)/)) {return; }
 			var ver = RegExp.$1;
-			if (parseFloat(ver) <= $version) { // 已经是最新版
+			if (!result.responseText.match(/@revision\s+(\d+)/) ||
+				parseInt(RegExp.$1) <= $revision) { // 已经是最新版
 				alert('脚本已经是最新版。');
 				return;
 			}
