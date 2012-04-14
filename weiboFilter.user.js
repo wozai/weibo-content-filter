@@ -24,9 +24,9 @@ var $blocks = [ // 模块屏蔽设置
 		['InterestApp', '#pl_content_allInOne'],
 		['Notice', '#pl_common_noticeboard'],
 		['HelpFeedback', '#pl_common_help, #pl_common_feedback'],
-		['Ads', '#plc_main .W_main_r div[id^=ads_], div[ad-data], #ads_bottom_1'],
+		['Ads', '#plc_main .W_main_r div[id^="ads_"], div[ad-data], #ads_bottom_1'],
 		['PullyList', '#pl_content_pullylist'],
-		['RecommendedTopic'],
+		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
 		['Mood', '#pl_content_mood'],
 		['Medal', '#pl_content_medal, .declist'],
 		['Game', '#pl_leftNav_game'],
@@ -313,7 +313,13 @@ function applySettings() {
 		var isBlocked = ($options.hideBlock && $options.hideBlock[$blocks[i][0]] === true),
 			blocks = document.querySelectorAll($blocks[i][1]);
 		for (j = 0, l = blocks.length; j < l; ++j) {
-			blocks[j].style.display = isBlocked ? 'none' : '';
+			if ($blocks[i][0] === 'RecommendedTopic') {
+				// 推荐话题的display属性在微博输入框获得焦点时被重置，
+				// 因此需要通过设置visibility属性实现隐藏
+				blocks[j].style.visibility = isBlocked ? 'hidden' : '';
+			} else {
+				blocks[j].style.display = isBlocked ? 'none' : '';
+			}
 		}
 	}
 }
