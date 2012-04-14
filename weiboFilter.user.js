@@ -4,15 +4,15 @@
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
 // @features		增加设置导入导出功能（注意：新版不兼容旧版设置！）；标签页改为竖版；关键词分隔符改为空格；关键词不再区分大小写
-// @version			0.8b1
-// @revision		33
+// @version			0.8b2
+// @revision		34
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // ==/UserScript==
 
-var $version = '0.8b1', $revision = 33;
+var $version = '0.8b2', $revision = 34;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Fun', '#pl_common_fun'],
@@ -34,7 +34,7 @@ var $blocks = [ // 模块屏蔽设置
 		['Tasks', '#pl_content_tasks']
 	];
 var $options = {};
-	
+
 var _ = function (s) {
 	return document.getElementById(s);
 };
@@ -106,9 +106,9 @@ function getScope() {
 
 // 搜索指定文本中是否包含列表中的关键词
 function searchKeyword(str, key) {
-	var text = str.toLowerCase(), keywords = $options[key];
+	var text = str.toLowerCase(), keywords = $options[key], i, len;
 	if (keywords === undefined) {return ''; }
-	for (var i = 0, len = keywords.length; i < len; ++i) {
+	for (i = 0, len = keywords.length; i < len; ++i) {
 		if (keywords[i] && text.indexOf(keywords[i].toLowerCase()) > -1) {
 			return keywords[i];
 		}
@@ -143,11 +143,11 @@ function filterFeed(node) {
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 		return true;
 	}
-	var links = content.getElementsByTagName('A');
-	for (var i = 0, len = links.length; i < len; ++i) {
-		if (links[i].href.substring(0,12) === 'http://t.cn/' && searchKeyword(links[i].title, 'URLKeywords')) {
+	var links = content.getElementsByTagName('A'), i, len;
+	for (i = 0, len = links.length; i < len; ++i) {
+		if (links[i].href.substring(0, 12) === 'http://t.cn/' && searchKeyword(links[i].title, 'URLKeywords')) {
 			node.style.display = 'none';
-			return true;	
+			return true;
 		}
 	}
 	node.style.display = '';
@@ -263,8 +263,7 @@ function checkUpdate() {
 		onload: function (result) {
 			if (!result.responseText.match(/@version\s+(.*)/)) {return; }
 			var ver = RegExp.$1;
-			if (!result.responseText.match(/@revision\s+(\d+)/) ||
-				parseInt(RegExp.$1) <= $revision) { // 已经是最新版
+			if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= $revision) {
 				alert('脚本已经是最新版。');
 				return;
 			}
@@ -281,7 +280,7 @@ function checkUpdate() {
 }
 
 function showSettingsWindow(event) {
-	_('wbpSettingsBack').style.cssText = 'background-image: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: black; opacity: 0.3; position: fixed; top: 0px; left: 0px; z-index: 10001; width: ' + window.innerWidth + 'px; height: '+ window.innerHeight + 'px;';
+	_('wbpSettingsBack').style.cssText = 'background-image: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: black; opacity: 0.3; position: fixed; top: 0px; left: 0px; z-index: 10001; width: ' + window.innerWidth + 'px; height: ' + window.innerHeight + 'px;';
 	var block = _('wbpSettings');
 	// Chrome与Firefox的scrollLeft, scrollTop储存于不同位置
 	var left = document.body.scrollLeft === 0 ? document.documentElement.scrollLeft : document.body.scrollLeft;
@@ -311,40 +310,10 @@ function applySettings() {
 	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
 	// 屏蔽版面内容
 	for (i = 0, len = $blocks.length; i < len; ++i) {
-		var isBlocked = ($options.hideBlock && $options.hideBlock[$blocks[i][0]] === true);
-		if ($blocks[i].length === 2) {
-			var blocks = document.querySelectorAll($blocks[i][1]);
-			for (j = 0, l = blocks.length; j < l; ++j) {
-				blocks[j].style.display = isBlocked ? 'none' : '';
-			}
-			continue;
-		}
-		// 单独处理广告
-		if ($blocks[i][0] === 'Ads') {
-			var sideBar = __('#plc_main .W_main_r');
-			if (sideBar) {
-				for (j = 0, l = sideBar.childNodes.length; j < l; ++j) {
-					var elem = sideBar.childNodes[j];
-					if (elem.tagName === 'DIV' && (elem.id.substring(0,4) === 'ads_' || elem.hasAttribute('ad-data'))) {
-						elem.style.display = isBlocked ? 'none' : '';
-					}
-				}
-			}
-		} else if ($blocks[i][0] === 'RecommendedTopic') {
-			// 单独处理推荐话题
-			var recommendedTopic = __('#pl_content_publisherTop .key');
-			if (recommendedTopic && recommendedTopic.getAttribute('node-type') === 'recommendTopic') {
-				recommendedTopic.style.visibility = isBlocked ? 'hidden' : '';
-			}
-		} else if ($blocks[i][0] === 'Medal') { // 单独处理勋章
-			// 传统版
-			var medalList = _('pl_content_medal');
-			if (medalList) {
-				medalList.style.display = isBlocked ? 'none' : '';
-			} else { // 体验版
-				medalList = __('.declist');
-				if (medalList) {medalList.style.display = isBlocked ? 'none' : ''; }
-			}
+		var isBlocked = ($options.hideBlock && $options.hideBlock[$blocks[i][0]] === true),
+			blocks = document.querySelectorAll($blocks[i][1]);
+		for (j = 0, l = blocks.length; j < l; ++j) {
+			blocks[j].style.display = isBlocked ? 'none' : '';
 		}
 	}
 }
@@ -352,8 +321,8 @@ function applySettings() {
 // 从显示列表建立关键词数组
 function getKeywords(id) {
 	if (!_(id).hasChildNodes()) {return []; }
-	var keywords = _(id).childNodes, list = [];
-	for (var i = 0, len = keywords.length; i < len; ++i) {
+	var keywords = _(id).childNodes, list = [], i, len;
+	for (i = 0, len = keywords.length; i < len; ++i) {
 		if (keywords[i].tagName === 'A') {list.push(keywords[i].innerHTML); }
 	}
 	return list;
@@ -361,8 +330,8 @@ function getKeywords(id) {
 
 // 将关键词添加到显示列表
 function addKeywords(id, list) {
-	var keywords = list instanceof Array ? list : list.split(' ');
-	for (var i = 0, len = keywords.length; i < len; ++i) {
+	var keywords = list instanceof Array ? list : list.split(' '), i, len;
+	for (i = 0, len = keywords.length; i < len; ++i) {
 		var currentKeywords = ' ' + getKeywords(id).join(' ') + ' ';
 		if (keywords[i] && currentKeywords.indexOf(' ' + keywords[i] + ' ') === -1) {
 			var keywordLink = document.createElement('a');
@@ -384,35 +353,36 @@ function deleteKeyword(event) {
 
 // 根据当前设置（可能未保存）更新$options
 function updateSettings() {
-	$options = {};
-	$options.whiteKeywords = getKeywords('wbpWhiteKeywordList');
-	$options.blackKeywords = getKeywords('wbpBlackKeywordList');
-	$options.grayKeywords = getKeywords('wbpGrayKeywordList');
-	$options.URLKeywords = getKeywords('wbpURLKeywordList');
-	$options.tipBackColor = _('wbpTipBackColor').value;
-	$options.tipTextColor = _('wbpTipTextColor').value;
-	$options.hideBlock = {};
-	for (var i = 0, len = $blocks.length; i < len; ++i) {
+	$options = {
+		whiteKeywords : getKeywords('wbpWhiteKeywordList'),
+		blackKeywords : getKeywords('wbpBlackKeywordList'),
+		grayKeywords : getKeywords('wbpGrayKeywordList'),
+		URLKeywords : getKeywords('wbpURLKeywordList'),
+		tipBackColor : _('wbpTipBackColor').value,
+		tipTextColor : _('wbpTipTextColor').value,
+		hideBlock : {}
+	};
+	var i, len;
+	for (i = 0, len = $blocks.length; i < len; ++i) {
 		$options.hideBlock[$blocks[i][0]] = _('wbpBlock' + $blocks[i][0]).checked;
 	}
 	_('wbpSettingsString').value = JSON.stringify($options);
 }
 
 // 重新载入设置（丢弃未保存设置）
-function reloadSettings() {
+function reloadSettings(str) {
 	$options = {};
-	var options = arguments[0] || GM_getValue($uid.toString(), '');
+	var options = str || GM_getValue($uid.toString(), '');
 	if (options) {
 		try {
 			$options = JSON.parse(options.replace(/\n/g, ''));
 			if (typeof $options !== 'object') {throw 0; }
 		} catch (e) {
-			if (arguments[0]) {
+			if (str) {
 				alert('设置导入失败！\n设置信息格式有问题。');
 				return false;
-			} else {
-				alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 			}
+			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 		}
 	}
 	_('wbpWhiteKeywordList').innerHTML = '';
@@ -436,7 +406,8 @@ function reloadSettings() {
 	tipSample.style.borderColor = tipTextColor;
 	tipSample.style.color = tipTextColor;
 	if ($options.hideBlock) {
-		for (var i = 0, len = $blocks.length; i < len; ++i) {
+		var i, len;
+		for (i = 0, len = $blocks.length; i < len; ++i) {
 			_('wbpBlock' + $blocks[i][0]).checked = ($options.hideBlock[$blocks[i][0]] === true);
 		}
 	}
@@ -474,7 +445,7 @@ function loadSettingsWindow() {
 	// 添加关键词按钮点击事件
 	click(_('wbpAddWhiteKeyword'), function () {
 		addKeywords('wbpWhiteKeywordList', _('wbpWhiteKeywords').value);
-		wbpWhiteKeywords.value = '';
+		_('wbpWhiteKeywords').value = '';
 	});
 	click(_('wbpAddBlackKeyword'), function () {
 		addKeywords('wbpBlackKeywordList', _('wbpBlackKeywords').value);
@@ -495,11 +466,11 @@ function loadSettingsWindow() {
 	click(_('wbpURLKeywordList'), deleteKeyword);
 	// 标签点击事件
 	click(_('wbpTabHeaders'), function (event) {
-		var node = event.target;
+		var node = event.target, i, len;
 		if (node && node.tagName === 'A') {
 			node.className = 'current';
 			_(node.getAttribute('tab')).style.display = '';
-			for (var i = 0, l = this.childNodes.length; i < l; ++i) {
+			for (i = 0, len = this.childNodes.length; i < len; ++i) {
 				if (node !== this.childNodes[i]) {
 					this.childNodes[i].className = '';
 					_(this.childNodes[i].getAttribute('tab')).style.display = 'none';
@@ -510,13 +481,15 @@ function loadSettingsWindow() {
 	});
 	click(_('wbpTabHeaderSettings'), updateSettings);
 	click(_('wbpBlockAll'), function () {
-		for (var i = 0, len = $blocks.length; i < len; ++i) {
+		var i, len;
+		for (i = 0, len = $blocks.length; i < len; ++i) {
 			_('wbpBlock' + $blocks[i][0]).checked = true;
 		}
 	});
 	click(_('wbpBlockInvert'), function () {
-		for (var i = 0, len = $blocks.length; i < len; ++i) {
-			var item = _('wbpBlock' + $blocks[i][0]);
+		var i, len, item;
+		for (i = 0, len = $blocks.length; i < len; ++i) {
+			item = _('wbpBlock' + $blocks[i][0]);
 			item.checked = !item.checked;
 		}
 	});
