@@ -5,14 +5,14 @@
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
 // @features		增加设置导入导出功能（注意：新版不兼容旧版设置！）；标签页改为竖版；关键词分隔符改为空格；关键词不再区分大小写
 // @version			0.8b2
-// @revision		34
+// @revision		36
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // ==/UserScript==
 
-var $version = '0.8b2', $revision = 34;
+var $version = '0.8b2', $revision = 36;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Fun', '#pl_common_fun'],
