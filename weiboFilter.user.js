@@ -5,14 +5,14 @@
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
 // @features		增加设置导入导出功能（注意：新版不兼容旧版设置！）；标签页改为竖版；关键词分隔符改为空格；关键词不再区分大小写
 // @version			0.8b2
-// @revision		36
+// @revision		37
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // ==/UserScript==
 
-var $version = '0.8b2', $revision = 36;
+var $version = '0.8b2', $revision = 37;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Fun', '#pl_common_fun'],
@@ -106,11 +106,20 @@ function getScope() {
 
 // 搜索指定文本中是否包含列表中的关键词
 function searchKeyword(str, key) {
-	var text = str.toLowerCase(), keywords = $options[key], i, len;
+	var text = str.toLowerCase(), keywords = $options[key], keyword, i, len;
 	if (keywords === undefined) {return ''; }
 	for (i = 0, len = keywords.length; i < len; ++i) {
-		if (keywords[i] && text.indexOf(keywords[i].toLowerCase()) > -1) {
-			return keywords[i];
+		keyword = keywords[i];
+		if (!keyword) {continue; }
+		if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
+			try {
+				// 尝试匹配正则表达式
+				if (RegExp(keyword.substring(1, keyword.length - 1)).test(str)) {return keyword; }
+			} catch (e) {
+				continue;
+			}
+		} else if (text.indexOf(keyword.toLowerCase()) > -1) {
+			return keyword;
 		}
 	}
 	return '';
@@ -336,17 +345,33 @@ function getKeywords(id) {
 
 // 将关键词添加到显示列表
 function addKeywords(id, list) {
-	var keywords = list instanceof Array ? list : list.split(' '), i, len;
+	var keywords = list instanceof Array ? list : list.split(' '),
+		i, len, malformed = [];
 	for (i = 0, len = keywords.length; i < len; ++i) {
-		var currentKeywords = ' ' + getKeywords(id).join(' ') + ' ';
-		if (keywords[i] && currentKeywords.indexOf(' ' + keywords[i] + ' ') === -1) {
+		var currentKeywords = ' ' + getKeywords(id).join(' ') + ' ', keyword = keywords[i];
+		if (keyword && currentKeywords.indexOf(' ' + keyword + ' ') === -1) {
 			var keywordLink = document.createElement('a');
+			if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
+				try {
+					// 尝试创建正则表达式，检验正则表达式的有效性
+					// 调用test()是必须的，否则浏览器可能跳过该语句
+					RegExp(keyword.substring(1, keyword.length - 1)).test('');
+				} catch (e) {
+					malformed.push(keyword);
+					continue;
+				}
+				keywordLink.className = 'regex';
+			}
 			keywordLink.title = '删除关键词';
 			keywordLink.href = 'javascript:void(0)';
-			keywordLink.innerHTML = keywords[i];
+			keywordLink.innerHTML = keyword;
 			_(id).appendChild(keywordLink);
 		}
 	}
+	if (malformed.length > 0) {
+		alert('下列正则表达式无效：\n' + malformed.join('\n'));
+	}
+	return malformed.join(' ');
 }
 
 // 点击删除关键词（由上级div冒泡事件处理）
@@ -450,20 +475,16 @@ function loadSettingsWindow() {
 	});
 	// 添加关键词按钮点击事件
 	click(_('wbpAddWhiteKeyword'), function () {
-		addKeywords('wbpWhiteKeywordList', _('wbpWhiteKeywords').value);
-		_('wbpWhiteKeywords').value = '';
+		_('wbpWhiteKeywords').value = addKeywords('wbpWhiteKeywordList', _('wbpWhiteKeywords').value);
 	});
 	click(_('wbpAddBlackKeyword'), function () {
-		addKeywords('wbpBlackKeywordList', _('wbpBlackKeywords').value);
-		_('wbpBlackKeywords').value = '';
+		_('wbpBlackKeywords').value = addKeywords('wbpBlackKeywordList', _('wbpBlackKeywords').value);
 	});
 	click(_('wbpAddGrayKeyword'), function () {
-		addKeywords('wbpGrayKeywordList', _('wbpGrayKeywords').value);
-		_('wbpGrayKeywords').value = '';
+		_('wbpGrayKeywords').value = addKeywords('wbpGrayKeywordList', _('wbpGrayKeywords').value);
 	});
 	click(_('wbpAddURLKeyword'), function () {
-		addKeywords('wbpURLKeywordList', _('wbpURLKeywords').value);
-		_('wbpURLKeywords').value = '';
+		_('wbpURLKeywords').value = addKeywords('wbpURLKeywordList', _('wbpURLKeywords').value);
 	});
 	// 删除关键词事件
 	click(_('wbpWhiteKeywordList'), deleteKeyword);
