@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		增加设置导入导出功能（注意：新版不兼容旧版设置！）；标签页改为竖版；关键词分隔符改为空格；关键词不再区分大小写
-// @version			0.8b2
-// @revision		38
+// @features		增加设置导入导出功能（注意：新版不兼容旧版设置！）；支持正则表达式过滤；标签页改为竖版；关键词分隔符改为空格；关键词不再区分大小写；解决了由于动态载入导致页面模块屏蔽偶尔失效的问题
+// @version			0.8b3
+// @revision		39
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -318,19 +318,27 @@ function applySettings() {
 	var feeds = document.querySelectorAll('.feed_list'), i, len, j, l;
 	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
 	// 屏蔽版面内容
+	var cssText = '';
 	for (i = 0, len = $blocks.length; i < len; ++i) {
-		var isBlocked = ($options.hideBlock && $options.hideBlock[$blocks[i][0]] === true),
-			blocks = document.querySelectorAll($blocks[i][1]);
-		for (j = 0, l = blocks.length; j < l; ++j) {
+		if ($options.hideBlock && $options.hideBlock[$blocks[i][0]] === true) {
+			cssText += $blocks[i][1];
 			if ($blocks[i][0] === 'RecommendedTopic') {
 				// 推荐话题的display属性在微博输入框获得焦点时被重置，
 				// 因此需要通过设置visibility属性实现隐藏
-				blocks[j].style.visibility = isBlocked ? 'hidden' : '';
+				cssText += ' { visibility: hidden; } ';
 			} else {
-				blocks[j].style.display = isBlocked ? 'none' : '';
+				cssText += ' { display: none; } ';
 			}
 		}
 	}
+	blockStyles = _('wbpBlockStyles');
+	if (!blockStyles) {
+		blockStyles = document.createElement('style');
+		blockStyles.type = 'text/css';
+		blockStyles.id = 'wbpBlockStyles';
+		document.getElementsByTagName('head')[0].appendChild(blockStyles);
+	}
+	blockStyles.innerHTML = cssText + '\n';
 }
 
 // 从显示列表建立关键词数组
