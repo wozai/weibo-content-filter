@@ -4,8 +4,8 @@
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
 // @features		增加设置导入导出功能（注意：新版不兼容旧版设置！）；支持正则表达式过滤；标签页改为竖版；关键词分隔符改为空格；关键词不再区分大小写；解决了由于动态载入导致页面模块屏蔽偶尔失效的问题
-// @version			0.8b3
-// @revision		39
+// @version			0.8
+// @revision		40
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -336,7 +336,7 @@ function applySettings() {
 		blockStyles = document.createElement('style');
 		blockStyles.type = 'text/css';
 		blockStyles.id = 'wbpBlockStyles';
-		document.getElementsByTagName('head')[0].appendChild(blockStyles);
+		document.head.appendChild(blockStyles);
 	}
 	blockStyles.innerHTML = cssText + '\n';
 }
