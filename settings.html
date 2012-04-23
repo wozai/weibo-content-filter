@@ -23,25 +23,24 @@
 <a href="/salviati" title="欢迎私信、评论或@作者提出脚本建议">联系作者</a>
 </div>
 </div>
-<div id="wbpTabHeaders" node-type="forward_tab" class="tab tab_bottom tab_forward W_texta">
-<span class="tab_title">您要屏蔽：</span>
-<a id="wbpTabHeader1" order="1" href="javascript:void(0);" class="current W_texta">关键词</a>
-<em class="W_vline">|</em>
-<a id="wbpTabHeader2" order="2" href="javascript:void(0);">链接地址</a>
-<em class="W_vline">|</em>
-<a id="wbpTabHeader3" order="3" href="javascript:void(0);">用户/来源</a>
-<em class="W_vline">|</em>
-<a id="wbpTabHeader4" order="4" href="javascript:void(0);">版面内容</a>
+<div class="clearfix">
+<div id="wbpTabHeaders" style="float: left; width: 100px;">
+<a tab="wbpTabKeywords" href="javascript:void(0);" class="current">关键词</a>
+<a tab="wbpTabLinks" href="javascript:void(0);">链接地址</a>
+<a tab="wbpTabUserSource" href="javascript:void(0);">用户/来源</a>
+<a tab="wbpTabModules" href="javascript:void(0);">版面模块</a>
+<a id="wbpTabHeaderSettings" tab="wbpTabSettings" href="javascript:void(0);">设置导入/导出</a>
 </div>
-<div id="wbpTab1">
-<div class="wbpKeywordBlock">
+<div style="float: right; width: 440px;">
+<div id="wbpTabKeywords">
+<div class="wbpKeywordBlock" style="margin-top: 0px;">
 <em>白名单</em>包含下列关键词的微博不会被屏蔽
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px; margin-top: 8px;">
 <tbody>
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" id="wbpWhiteKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+<input type="text" id="wbpWhiteKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
 </div>
 </td>
 <td style="width: 60px; text-align: right;">
@@ -50,9 +49,8 @@
 </tr>
 </tbody>
 </table>
-<div id="wbpWhiteKeywordList" class="wbpKeywordList">
+<div id="wbpWhiteKeywordList" class="wbpKeywordList clearfix">
 </div>
-<div class="clear"></div>
 </div>
 <div class="wbpKeywordBlock">
 <em>黑名单</em>包含下列关键词的微博将被屏蔽
@@ -61,18 +59,17 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" id="wbpHideKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+<input type="text" id="wbpBlackKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
 </div>
 </td>
 <td style="width: 60px; text-align: right;">
-<a href="javascript:void(0);" class="W_btn_a" id="wbpAddHideKeyword"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpAddBlackKeyword"><span>添加</span></a>
 </td>
 </tr>
 </tbody>
 </table>
-<div id="wbpHideKeywordList" class="wbpKeywordList">
+<div id="wbpBlackKeywordList" class="wbpKeywordList clearfix">
 </div>
-<div class="clear"></div>
 </div>
 <div class="wbpKeywordBlock">
 <em>灰名单</em>包含下列关键词的微博将被屏蔽<span style="color: red;">并提示</span>
@@ -81,18 +78,17 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" id="wbpCensoredKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+<input type="text" id="wbpGrayKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
 </div>
 </td>
 <td style="width: 60px; text-align: right;">
-<a href="javascript:void(0);" class="W_btn_a" id="wbpAddCensoredKeyword"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpAddGrayKeyword"><span>添加</span></a>
 </td>
 </tr>
 </tbody>
 </table>
-<div id="wbpCensoredKeywordList" class="wbpKeywordList">
+<div id="wbpGrayKeywordList" class="wbpKeywordList clearfix">
 </div>
-<div class="clear"></div>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px;">
 <tbody>
 <tr>
@@ -127,14 +123,14 @@
 </table>
 </div>
 </div>
-<div id="wbpTab2" style="display: none;">
+<div id="wbpTabLinks" style="display: none;">
 <p>如果一条微博中包含链接且目标地址中包含下列关键词，微博将被屏蔽（无提示）。如将taobao.com设为关键词可屏蔽所有包含淘宝链接的微博。</p>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px; margin-top: 8px;">
 <tbody>
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" id="wbpURLKeywords" class="input" placeholder="多个关键词用半角分号隔开">
+<input type="text" id="wbpURLKeywords" class="input" placeholder="多个关键词用空格隔开">
 </div>
 </td>
 <td style="width: 60px; text-align: right;">
@@ -147,23 +143,21 @@
 </div>
 <div class="clear"></div>
 </div>
-<div id="wbpTab3" style="display: none;">
-<p>新浪微博官方已提供针对指定用户或来源（如“皮皮时光机”）的屏蔽功能，而且在移动客户端上有效。</p>
-<p style="margin-top: 20px;" target="_blank">请点击<a href="http://account.weibo.com/set/feed">此处</a>设置屏蔽用户；点击<a href="http://account.weibo.com/set/feedsource">此处</a>设置屏蔽来源。</p>
+<div id="wbpTabUserSource" style="display: none;">
+<p>新浪微博官方已提供针对指定用户或来源（如“皮皮时光机”）的屏蔽功能，而且在所有浏览器和移动客户端上都有效。</p>
+<p style="margin-top: 10px;">但是，官方的用户屏蔽功能仅对已关注用户有效，而且只能屏蔽用户<span style="color: red;">本人</span>发布的微博。如果您的其它关注对象转发了屏蔽用户的微博，您仍能看到。如果您希望某个名字彻底从主页消失，请使用“眼不见心不烦”提供的关键词屏蔽功能。</p>
+<p style="margin-top: 10px;">请点击<a href="http://account.weibo.com/set/feed" target="_blank">此处</a>设置屏蔽用户；点击<a href="http://account.weibo.com/set/feedsource" target="_blank">此处</a>设置屏蔽来源。</p>
 </div>
-<div id="wbpTab4" style="display: none;">
+<div id="wbpTabModules" style="display: none;">
 <p>请选择要屏蔽的内容。</p>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 24px; margin-top: 15px;">
 <tbody>
 <tr>
-<td><input type="checkbox" id="wbpBlockAds"><label for="wbpBlockAds">右边栏广告</label></td>
-<td><input type="checkbox" id="wbpBlockBottomAds"><label for="wbpBlockBottomAds">底栏广告</label></td>
-</tr>
-<tr>
+<td><input type="checkbox" id="wbpBlockAds"><label for="wbpBlockAds">右边栏/页底广告</label></td>
 <td><input type="checkbox" id="wbpBlockPullyList"><label for="wbpBlockPullyList">微博看点（顶栏广告）</label></td>
-<td><input type="checkbox" id="wbpBlockRecommendedTopic"><label for="wbpBlockRecommendedTopic">推荐微话题</label></td>
 </tr>
 <tr>
+<td><input type="checkbox" id="wbpBlockRecommendedTopic"><label for="wbpBlockRecommendedTopic">推荐微话题</label></td>
 <td><input type="checkbox" id="wbpBlockTasks"><label for="wbpBlockTasks">微博任务（微博宝典）</label></td>
 </tr>
 <tr>
@@ -196,6 +190,17 @@
 <a href="javascript:void(0);" class="W_btn_a" id="wbpBlockAll"><span>全选</span></a>
 <a href="javascript:void(0);" class="W_btn_a" style="margin-left: 10px;" id="wbpBlockInvert"><span>反选</span></a>
 </p>
+</div>
+<div id="wbpTabSettings" style="display: none;">
+<div class="clearfix">
+<div style="float: left; width: 385px;">
+<p>当前账号的设置信息在下列文本框中，您可以将其复制到其它位置保存。需要导入设置时，请将设置信息粘贴到文本框中，然后点击“导入”。</p>
+</div>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpImportBtn" style="float: right; margin-top: 6px;"><span>导入</span></a>
+</div>
+<textarea id="wbpSettingsString" rows="10" style="width: 440px; margin-top: 10px; border: 1px solid #D2D5D8;"></textarea>
+</div>
+</div>
 </div>
 <p class="btn">
 <a href="javascript:void(0);" class="W_btn_b" id="wbpOKBtn"><span>确定</span></a>

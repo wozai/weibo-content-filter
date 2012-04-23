@@ -3,6 +3,7 @@
 CSS=`sed 's/^\s*//;s/\s*$//' settings.css | tr '\n' ' ' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
 HTML=`sed 's/^\s*//;s/\s*$//' settings.html | tr -d '\n' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
 VER=`sed -n '\|^// @version\s\+\([^\s]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
+REV=`sed -n '\|^// @revision\s\+\([0-9]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
 OUTFILE="weiboFilter-v${VER}.user.js"
 while getopts ":no:" optname
 do
@@ -13,9 +14,9 @@ do
 		":") echo "Missing argument value for option -$OPTARG"; exit 1;;
 	esac
 done
-sed 's/#settings.css#/'"${CSS}"'/;s/#settings.html#/'"${HTML}"'/' weiboFilter.user.js > $OUTFILE
+sed 's/#settings.css#/'"${CSS}"'/;s/#settings.html#/'"${HTML}"'/;s/var \$version, \$revision;/var \$version = "'"${VER}"'", \$revision = '"${REV}"';/' weiboFilter.user.js > $OUTFILE
 [ $NO_COMPRESS ] && exit 0
-head -n 14 weiboFilter.user.js > weiboFilter.user.head.js
+head -n 13 weiboFilter.user.js > weiboFilter.user.head.js
 if [ ! -f compiler.jar ]
 then
 	wget -q http://closure-compiler.googlecode.com/files/compiler-latest.tar.gz

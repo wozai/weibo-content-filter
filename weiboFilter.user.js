@@ -3,38 +3,37 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		修正了从部分页面返回首页时脚本失效的问题
-// @version			0.73
-// @created			2011.08.15
-// @modified		2012.04.06
+// @features		增加设置导入导出功能（注意：新版不兼容旧版设置！）；支持正则表达式过滤；标签页改为竖版；关键词分隔符改为空格；关键词不再区分大小写；解决了由于动态载入导致页面模块屏蔽偶尔失效的问题
+// @version			0.8
+// @revision		40
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // ==/UserScript==
 
-var $version = 0.73;
+var $version, $revision;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
-		['Fun', 'pl_common_fun'],
-		['Topic', 'pl_content_promotetopic'],
-		['InterestUser', 'pl_content_homeInterest'],
-		['PopularUser', 'pl_relation_recommendPopularUsers'],
+		['Fun', '#pl_common_fun'],
+		['Topic', '#pl_content_promotetopic'],
+		['InterestUser', '#pl_content_homeInterest'],
+		['PopularUser', '#pl_relation_recommendPopularUsers'],
 		// 2012年2月27日起，新浪微博“可能感兴趣的微群”模块ID发生变化
-		['InterestGroup', 'pl_common_thirdmodule_1005'],
-		['InterestApp', 'pl_content_allInOne'],
-		['Notice', 'pl_common_noticeboard'],
-		['HelpFeedback', ['pl_common_help', 'pl_common_feedback']],
-		['Ads'],
-		['BottomAds', 'ads_bottom_1'],
-		['PullyList', 'pl_content_pullylist'],
-		['RecommendedTopic'],
-		['Mood', 'pl_content_mood'],
-		['Medal'],
-		['Game', 'pl_leftNav_game'],
-		['App', 'pl_leftNav_app'],
-		['Tasks', 'pl_content_tasks']
+		['InterestGroup', '#pl_common_thirdmodule_1005'],
+		['InterestApp', '#pl_content_allInOne'],
+		['Notice', '#pl_common_noticeboard'],
+		['HelpFeedback', '#pl_common_help, #pl_common_feedback'],
+		['Ads', '#plc_main .W_main_r div[id^="ads_"], div[ad-data], #ads_bottom_1'],
+		['PullyList', '#pl_content_pullylist'],
+		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
+		['Mood', '#pl_content_mood'],
+		['Medal', '#pl_content_medal, .declist'],
+		['Game', '#pl_leftNav_game'],
+		['App', '#pl_leftNav_app'],
+		['Tasks', '#pl_content_tasks']
 	];
+var $options = {};
 
 var _ = function (s) {
 	return document.getElementById(s);
@@ -107,14 +106,26 @@ function getScope() {
 
 // 搜索指定文本中是否包含列表中的关键词
 function searchKeyword(str, key) {
-	var keywords = GM_getValue($uid + '.' + key, '').split(';');
-	for (var i = 0, len = keywords.length; i < len; ++i) {
-		if (keywords[i] && str.indexOf(keywords[i]) > -1) {return keywords[i]; }
+	var text = str.toLowerCase(), keywords = $options[key], keyword, i, len;
+	if (keywords === undefined) {return ''; }
+	for (i = 0, len = keywords.length; i < len; ++i) {
+		keyword = keywords[i];
+		if (!keyword) {continue; }
+		if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
+			try {
+				// 尝试匹配正则表达式
+				if (RegExp(keyword.substring(1, keyword.length - 1)).test(str)) {return keyword; }
+			} catch (e) {
+				continue;
+			}
+		} else if (text.indexOf(keyword.toLowerCase()) > -1) {
+			return keyword;
+		}
 	}
 	return '';
 }
 
-function hideFeed(node) {
+function filterFeed(node) {
 	if (node.firstChild.tagName === 'A') {node.removeChild(node.firstChild); } // 已被屏蔽过
 	var content, scope = getScope();
 	switch (scope) {
@@ -137,19 +148,19 @@ function hideFeed(node) {
 		node.childNodes[3].style.opacity = 1;
 		return false;
 	}
-	if (searchKeyword(content.textContent, 'hideKeywords')) {
+	if (searchKeyword(content.textContent, 'blackKeywords')) {
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 		return true;
 	}
-	var links = content.getElementsByTagName('A');
-	for (var i = 0, len = links.length; i < len; ++i) {
-		if (links[i].href.substring(0,12) === 'http://t.cn/' && searchKeyword(links[i].title, 'URLKeywords')) {
+	var links = content.getElementsByTagName('A'), i, len;
+	for (i = 0, len = links.length; i < len; ++i) {
+		if (links[i].href.substring(0, 12) === 'http://t.cn/' && searchKeyword(links[i].title, 'URLKeywords')) {
 			node.style.display = 'none';
-			return true;	
+			return true;
 		}
 	}
 	node.style.display = '';
-	var keyword = searchKeyword(content.textContent, 'censoredKeywords');
+	var keyword = searchKeyword(content.textContent, 'grayKeywords');
 	if (!keyword) {
 		node.childNodes[1].style.display = '';
 		node.childNodes[3].style.display = '';
@@ -170,8 +181,8 @@ function hideFeed(node) {
 	}
 	// 找到了待隐藏的微博
 	node.childNodes[1].style.display = 'none';
-	var tipBackColor = GM_getValue($uid + '.tipBackColor', '#FFD0D0');
-	var tipTextColor = GM_getValue($uid + '.tipTextColor', '#FF8080');
+	var tipBackColor = $options.tipBackColor || '#FFD0D0';
+	var tipTextColor = $options.tipTextColor || '#FF8080';
 	var showFeed = document.createElement('a');
 	showFeed.href = 'javascript:void(0)';
 	showFeed.className = 'notes';
@@ -223,12 +234,12 @@ function onDOMNodeInsertion(event) {
 	var node = event.target;
 	if (node.tagName === 'DL' && node.classList.contains('feed_list')) {
 		// 处理动态载入的微博
-		return hideFeed(node);
+		return filterFeed(node);
 	}
 	if (node.tagName === 'DIV' && node.getAttribute('node-type') === 'feed_nav') {
 		// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
 		// 需要重新载入设置页面、按钮及刷新微博列表
-		if ($reloadTimerID != null) {
+		if ($reloadTimerID !== null) {
 			clearTimeout($reloadTimerID);
 			$reloadTimerID = null;
 		}
@@ -237,7 +248,7 @@ function onDOMNodeInsertion(event) {
 	} else if (node.tagName === 'DIV' && node.classList.contains('feed_lists')) {
 		// 微博列表作为pagelet被一次性载入
 		applySettings();
-	} else if ($reloadTimerID == null && !_('wbpShowSettings')) {
+	} else if ($reloadTimerID === null && !_('wbpShowSettings')) {
 		// 由于各版块载入顺序不定，有时设置窗口及按钮未载入，使用定时器保险
 		$reloadTimerID = setTimeout(reloadTimer, 1000);
 	}
@@ -252,14 +263,16 @@ function reloadTimer() {
 	}
 }
 
+// 检查更新
 function checkUpdate() {
 	GM_xmlhttpRequest({
 		method: 'GET',
+		// 只载入metadata
 		url: 'http://userscripts.org/scripts/source/114087.meta.js',
 		onload: function (result) {
-			if (!result.responseText.match(/@version\s+(\d+\.\d+)/)) {return; }
+			if (!result.responseText.match(/@version\s+(.*)/)) {return; }
 			var ver = RegExp.$1;
-			if (parseFloat(ver) <= $version) { // 已经是最新版
+			if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= $revision) {
 				alert('脚本已经是最新版。');
 				return;
 			}
@@ -276,7 +289,7 @@ function checkUpdate() {
 }
 
 function showSettingsWindow(event) {
-	_('wbpSettingsBack').style.cssText = 'background-image: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: black; opacity: 0.3; position: fixed; top: 0px; left: 0px; z-index: 10001; width: ' + window.innerWidth + 'px; height: '+ window.innerHeight + 'px;';
+	_('wbpSettingsBack').style.cssText = 'background-image: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: black; opacity: 0.3; position: fixed; top: 0px; left: 0px; z-index: 10001; width: ' + window.innerWidth + 'px; height: ' + window.innerHeight + 'px;';
 	var block = _('wbpSettings');
 	// Chrome与Firefox的scrollLeft, scrollTop储存于不同位置
 	var left = document.body.scrollLeft === 0 ? document.documentElement.scrollLeft : document.body.scrollLeft;
@@ -303,74 +316,70 @@ function showSettingsBtn() {
 function applySettings() {
 	// 处理非动态载入内容
 	var feeds = document.querySelectorAll('.feed_list'), i, len, j, l;
-	for (i = 0, len = feeds.length; i < len; ++i) {hideFeed(feeds[i]); }
+	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
 	// 屏蔽版面内容
+	var cssText = '';
 	for (i = 0, len = $blocks.length; i < len; ++i) {
-		var isBlocked = (GM_getValue($uid + '.block' + $blocks[i][0], 'false') === 'true');
-		if ($blocks[i].length === 2) {
-			var block;
-			if (typeof $blocks[i][1] === 'string') {
-				block = _($blocks[i][1]);
-				if (block) {block.style.display = isBlocked ? 'none' : ''; }
-			} else { // 数组
-				for (j = 0, l = $blocks[i][1].length; j < l; ++j) {
-					block = _($blocks[i][1][j]);
-					if (block) {block.style.display = isBlocked ? 'none' : ''; }
-				}
-			}
-			continue;
-		}
-		// 单独处理广告
-		if ($blocks[i][0] === 'Ads') {
-			var sideBar = __('#plc_main .W_main_r');
-			if (sideBar) {
-				for (j = 0, l = sideBar.childNodes.length; j < l; ++j) {
-					var elem = sideBar.childNodes[j];
-					if (elem.tagName === 'DIV' && (elem.id.substring(0,4) === 'ads_' || elem.hasAttribute('ad-data'))) {
-						elem.style.display = isBlocked ? 'none' : '';
-					}
-				}
-			}
-		} else if ($blocks[i][0] === 'RecommendedTopic') {
-			// 单独处理推荐话题
-			var recommendedTopic = __('#pl_content_publisherTop .key');
-			if (recommendedTopic && recommendedTopic.getAttribute('node-type') === 'recommendTopic') {
-				recommendedTopic.style.visibility = isBlocked ? 'hidden' : '';
-			}
-		} else if ($blocks[i][0] === 'Medal') { // 单独处理勋章
-			// 传统版
-			var medalList = _('pl_content_medal');
-			if (medalList) {
-				medalList.style.display = isBlocked ? 'none' : '';
-			} else { // 体验版
-				medalList = __('.declist');
-				if (medalList) {medalList.style.display = isBlocked ? 'none' : ''; }
+		if ($options.hideBlock && $options.hideBlock[$blocks[i][0]] === true) {
+			cssText += $blocks[i][1];
+			if ($blocks[i][0] === 'RecommendedTopic') {
+				// 推荐话题的display属性在微博输入框获得焦点时被重置，
+				// 因此需要通过设置visibility属性实现隐藏
+				cssText += ' { visibility: hidden; } ';
+			} else {
+				cssText += ' { display: none; } ';
 			}
 		}
 	}
+	blockStyles = _('wbpBlockStyles');
+	if (!blockStyles) {
+		blockStyles = document.createElement('style');
+		blockStyles.type = 'text/css';
+		blockStyles.id = 'wbpBlockStyles';
+		document.head.appendChild(blockStyles);
+	}
+	blockStyles.innerHTML = cssText + '\n';
 }
 
+// 从显示列表建立关键词数组
 function getKeywords(id) {
-	if (!_(id).hasChildNodes()) {return ''; }
-	var keywords = _(id).childNodes, list = [];
-	for (var i = 0, len = keywords.length; i < len; ++i) {
+	if (!_(id).hasChildNodes()) {return []; }
+	var keywords = _(id).childNodes, list = [], i, len;
+	for (i = 0, len = keywords.length; i < len; ++i) {
 		if (keywords[i].tagName === 'A') {list.push(keywords[i].innerHTML); }
 	}
-	return list.join(';');
+	return list;
 }
 
-function addKeywords(id, str) {
-	var keywords = str.split(';'),
-		currentKeywords = ';' + getKeywords(id) + ';';
-	for (var i = 0, len = keywords.length; i < len; ++i) {
-		if (keywords[i] && currentKeywords.indexOf(';' + keywords[i] + ';') === -1) {
+// 将关键词添加到显示列表
+function addKeywords(id, list) {
+	var keywords = list instanceof Array ? list : list.split(' '),
+		i, len, malformed = [];
+	for (i = 0, len = keywords.length; i < len; ++i) {
+		var currentKeywords = ' ' + getKeywords(id).join(' ') + ' ', keyword = keywords[i];
+		if (keyword && currentKeywords.indexOf(' ' + keyword + ' ') === -1) {
 			var keywordLink = document.createElement('a');
+			if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
+				try {
+					// 尝试创建正则表达式，检验正则表达式的有效性
+					// 调用test()是必须的，否则浏览器可能跳过该语句
+					RegExp(keyword.substring(1, keyword.length - 1)).test('');
+				} catch (e) {
+					malformed.push(keyword);
+					continue;
+				}
+				keywordLink.className = 'regex';
+			}
 			keywordLink.title = '删除关键词';
 			keywordLink.href = 'javascript:void(0)';
-			keywordLink.innerHTML = keywords[i];
+			keywordLink.innerHTML = keyword;
 			_(id).appendChild(keywordLink);
 		}
 	}
+	if (malformed.length > 0) {
+		alert('下列正则表达式无效：\n' + malformed.join('\n'));
+	}
+	return malformed.join(' ');
 }
 
 // 点击删除关键词（由上级div冒泡事件处理）
@@ -381,32 +390,68 @@ function deleteKeyword(event) {
 	}
 }
 
-function reloadSettings() {
+// 根据当前设置（可能未保存）更新$options
+function updateSettings() {
+	$options = {
+		whiteKeywords : getKeywords('wbpWhiteKeywordList'),
+		blackKeywords : getKeywords('wbpBlackKeywordList'),
+		grayKeywords : getKeywords('wbpGrayKeywordList'),
+		URLKeywords : getKeywords('wbpURLKeywordList'),
+		tipBackColor : _('wbpTipBackColor').value,
+		tipTextColor : _('wbpTipTextColor').value,
+		hideBlock : {}
+	};
+	var i, len;
+	for (i = 0, len = $blocks.length; i < len; ++i) {
+		$options.hideBlock[$blocks[i][0]] = _('wbpBlock' + $blocks[i][0]).checked;
+	}
+	_('wbpSettingsString').value = JSON.stringify($options);
+}
+
+// 重新载入设置（丢弃未保存设置）
+function reloadSettings(str) {
+	$options = {};
+	var options = str || GM_getValue($uid.toString(), '');
+	if (options) {
+		try {
+			$options = JSON.parse(options.replace(/\n/g, ''));
+			if (typeof $options !== 'object') {throw 0; }
+		} catch (e) {
+			if (str) {
+				alert('设置导入失败！\n设置信息格式有问题。');
+				return false;
+			}
+			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
+		}
+	}
 	_('wbpWhiteKeywordList').innerHTML = '';
-	_('wbpHideKeywordList').innerHTML = '';
-	_('wbpCensoredKeywordList').innerHTML = '';
+	_('wbpBlackKeywordList').innerHTML = '';
+	_('wbpGrayKeywordList').innerHTML = '';
 	_('wbpURLKeywordList').innerHTML = '';
-	addKeywords('wbpWhiteKeywordList', GM_getValue($uid + '.whiteKeywords', ''));
-	addKeywords('wbpHideKeywordList', GM_getValue($uid + '.hideKeywords', ''));
-	addKeywords('wbpCensoredKeywordList', GM_getValue($uid + '.censoredKeywords', ''));
-	addKeywords('wbpURLKeywordList', GM_getValue($uid + '.URLKeywords', ''));
+	addKeywords('wbpWhiteKeywordList', $options.whiteKeywords || '');
+	addKeywords('wbpBlackKeywordList', $options.blackKeywords || '');
+	addKeywords('wbpGrayKeywordList', $options.grayKeywords || '');
+	addKeywords('wbpURLKeywordList', $options.URLKeywords || '');
 	_('wbpWhiteKeywords').value = '';
-	_('wbpHideKeywords').value = '';
-	_('wbpCensoredKeywords').value = '';
+	_('wbpBlackKeywords').value = '';
+	_('wbpGrayKeywords').value = '';
 	_('wbpURLKeywords').value = '';
-	var tipBackColor = GM_getValue($uid + '.tipBackColor', '#FFD0D0');
-	var tipTextColor = GM_getValue($uid + '.tipTextColor', '#FF8080');
+	var tipBackColor = $options.tipBackColor || '#FFD0D0';
+	var tipTextColor = $options.tipTextColor || '#FF8080';
 	_('wbpTipBackColor').value = tipBackColor;
 	_('wbpTipTextColor').value = tipTextColor;
 	var tipSample = _('wbpTipSample');
 	tipSample.style.backgroundColor = tipBackColor;
 	tipSample.style.borderColor = tipTextColor;
 	tipSample.style.color = tipTextColor;
-	for (var i = 0, len = $blocks.length; i < len; ++i) {
-		if (GM_getValue($uid + '.block' + $blocks[i][0], 'false') === 'true') {
-			_('wbpBlock' + $blocks[i][0]).checked = true;
+	if ($options.hideBlock) {
+		var i, len;
+		for (i = 0, len = $blocks.length; i < len; ++i) {
+			_('wbpBlock' + $blocks[i][0]).checked = ($options.hideBlock[$blocks[i][0]] === true);
 		}
 	}
+	_('wbpSettingsString').value = JSON.stringify($options);
+	return true;
 }
 
 function loadSettingsWindow() {
@@ -422,7 +467,7 @@ function loadSettingsWindow() {
 	var keywordBlock = document.createElement('div');
 	keywordBlock.className = 'W_layer';
 	keywordBlock.id = 'wbpSettings';
-	keywordBlock.style.cssText = 'width: 500px; margin-left: -250px; z-index: 10001; position: absolute; display: none;';
+	keywordBlock.style.cssText = 'width: 600px; margin-left: -300px; z-index: 10001; position: absolute; display: none;';
 	keywordBlock.innerHTML = '#settings.html#';
 	document.body.appendChild(keywordBack);
 	document.body.appendChild(keywordBlock);
@@ -438,66 +483,58 @@ function loadSettingsWindow() {
 	});
 	// 添加关键词按钮点击事件
 	click(_('wbpAddWhiteKeyword'), function () {
-		var wbpWhiteKeywords = _('wbpWhiteKeywords');
-		addKeywords('wbpWhiteKeywordList', wbpWhiteKeywords.value);
-		wbpWhiteKeywords.value = '';
+		_('wbpWhiteKeywords').value = addKeywords('wbpWhiteKeywordList', _('wbpWhiteKeywords').value);
 	});
-	click(_('wbpAddHideKeyword'), function () {
-		addKeywords('wbpHideKeywordList', _('wbpHideKeywords').value);
-		_('wbpHideKeywords').value = '';
+	click(_('wbpAddBlackKeyword'), function () {
+		_('wbpBlackKeywords').value = addKeywords('wbpBlackKeywordList', _('wbpBlackKeywords').value);
 	});
-	click(_('wbpAddCensoredKeyword'), function () {
-		addKeywords('wbpCensoredKeywordList', _('wbpCensoredKeywords').value);
-		_('wbpCensoredKeywords').value = '';
+	click(_('wbpAddGrayKeyword'), function () {
+		_('wbpGrayKeywords').value = addKeywords('wbpGrayKeywordList', _('wbpGrayKeywords').value);
 	});
 	click(_('wbpAddURLKeyword'), function () {
-		addKeywords('wbpURLKeywordList', _('wbpURLKeywords').value);
-		_('wbpURLKeywords').value = '';
+		_('wbpURLKeywords').value = addKeywords('wbpURLKeywordList', _('wbpURLKeywords').value);
 	});
 	// 删除关键词事件
 	click(_('wbpWhiteKeywordList'), deleteKeyword);
-	click(_('wbpHideKeywordList'), deleteKeyword);
-	click(_('wbpCensoredKeywordList'), deleteKeyword);
+	click(_('wbpBlackKeywordList'), deleteKeyword);
+	click(_('wbpGrayKeywordList'), deleteKeyword);
 	click(_('wbpURLKeywordList'), deleteKeyword);
 	// 标签点击事件
 	click(_('wbpTabHeaders'), function (event) {
-		var node = event.target;
+		var node = event.target, i, len;
 		if (node && node.tagName === 'A') {
-			var i = node.getAttribute('order');
-			for (var j = 1; j <= 4; ++j) {
-				if (i == j) {
-					_('wbpTabHeader' + j).className = 'current W_texta';
-					_('wbpTab' + j).style.display = '';
-				} else {
-					_('wbpTabHeader' + j).className = '';
-					_('wbpTab' + j).style.display = 'none';
+			node.className = 'current';
+			_(node.getAttribute('tab')).style.display = '';
+			for (i = 0, len = this.childNodes.length; i < len; ++i) {
+				if (node !== this.childNodes[i]) {
+					this.childNodes[i].className = '';
+					_(this.childNodes[i].getAttribute('tab')).style.display = 'none';
 				}
 			}
 			event.stopPropagation();
 		}
 	});
+	click(_('wbpTabHeaderSettings'), updateSettings);
 	click(_('wbpBlockAll'), function () {
-		for (var i = 0, len = $blocks.length; i < len; ++i) {
+		var i, len;
+		for (i = 0, len = $blocks.length; i < len; ++i) {
 			_('wbpBlock' + $blocks[i][0]).checked = true;
 		}
 	});
 	click(_('wbpBlockInvert'), function () {
-		for (var i = 0, len = $blocks.length; i < len; ++i) {
-			var item = _('wbpBlock' + $blocks[i][0]);
+		var i, len, item;
+		for (i = 0, len = $blocks.length; i < len; ++i) {
+			item = _('wbpBlock' + $blocks[i][0]);
 			item.checked = !item.checked;
 		}
 	});
 	// 对话框按钮点击事件
+	click(_('wbpImportBtn'), function () {
+		if (reloadSettings(_('wbpSettingsString').value)) {alert('设置导入成功！'); }
+	});
 	click(_('wbpOKBtn'), function () {
-		GM_setValue($uid + '.whiteKeywords', getKeywords('wbpWhiteKeywordList'));
-		GM_setValue($uid + '.censoredKeywords', getKeywords('wbpCensoredKeywordList'));
-		GM_setValue($uid + '.hideKeywords', getKeywords('wbpHideKeywordList'));
-		GM_setValue($uid + '.URLKeywords', getKeywords('wbpURLKeywordList'));
-		GM_setValue($uid + '.tipBackColor', _('wbpTipBackColor').value);
-		GM_setValue($uid + '.tipTextColor', _('wbpTipTextColor').value);
-		for (var i = 0, len = $blocks.length; i < len; ++i) {
-			GM_setValue($uid + '.block' + $blocks[i][0], _('wbpBlock' + $blocks[i][0]).checked);
-		}
+		updateSettings();
+		GM_setValue($uid.toString(), JSON.stringify($options));
 		_('wbpSettingsBack').style.display = 'none';
 		_('wbpSettings').style.display = 'none';
 		applySettings();
