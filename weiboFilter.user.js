@@ -3,8 +3,8 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		增加设置导入导出功能（注意：新版不兼容旧版设置！）；支持正则表达式过滤；标签页改为竖版；关键词分隔符改为空格；关键词不再区分大小写；解决了由于动态载入导致页面模块屏蔽偶尔失效的问题
-// @version			0.8
+// @features		修正4月27日新浪微博改版导致右边栏部分模块无法被屏蔽的问题；修正关键词过长时屏蔽提示文字溢出的问题
+// @version			0.81
 // @revision		40
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
@@ -16,14 +16,13 @@ var $version, $revision;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Fun', '#pl_common_fun'],
-		['Topic', '#pl_content_promotetopic'],
-		['InterestUser', '#pl_content_homeInterest'],
+		['Topic', '#pl_content_promotetopic, #trustPagelete_zt_hottopic'],
+		['InterestUser', '#pl_content_homeInterest, #trustPagelete_recom_interest'],
 		['PopularUser', '#pl_relation_recommendPopularUsers'],
-		// 2012年2月27日起，新浪微博“可能感兴趣的微群”模块ID发生变化
 		['InterestGroup', '#pl_common_thirdmodule_1005'],
-		['InterestApp', '#pl_content_allInOne'],
-		['Notice', '#pl_common_noticeboard'],
-		['HelpFeedback', '#pl_common_help, #pl_common_feedback'],
+		['InterestApp', '#pl_content_allInOne, #trustPagelete_recom_allinone'],
+		['Notice', '#pl_common_noticeboard, #pl_rightmod_noticeboard'],
+		['HelpFeedback', '#pl_common_help, #pl_common_feedback, #pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle'],
 		['Ads', '#plc_main .W_main_r div[id^="ads_"], div[ad-data], #ads_bottom_1'],
 		['PullyList', '#pl_content_pullylist'],
 		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
@@ -186,7 +185,7 @@ function filterFeed(node) {
 	var showFeed = document.createElement('a');
 	showFeed.href = 'javascript:void(0)';
 	showFeed.className = 'notes';
-	showFeed.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px';
+	showFeed.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px; height: auto;';
 	var keywordLink = document.createElement('a');
 	keywordLink.href = 'javascript:void(0)';
 	keywordLink.innerHTML = keyword;
