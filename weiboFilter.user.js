@@ -3,8 +3,8 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		修正4月27日新浪微博改版导致右边栏部分模块无法被屏蔽的问题
-// @version			0.81b1
+// @features		修正4月27日新浪微博改版导致右边栏部分模块无法被屏蔽的问题；修正关键词过长时屏蔽提示文字溢出的问题
+// @version			0.81
 // @revision		40
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
@@ -185,7 +185,7 @@ function filterFeed(node) {
 	var showFeed = document.createElement('a');
 	showFeed.href = 'javascript:void(0)';
 	showFeed.className = 'notes';
-	showFeed.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px';
+	showFeed.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px; height: auto;';
 	var keywordLink = document.createElement('a');
 	keywordLink.href = 'javascript:void(0)';
 	keywordLink.innerHTML = keyword;
