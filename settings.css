@@ -53,6 +53,7 @@
 #wbpSettings .wbpKeywordList
 {
 	margin-top: 8px;
+	overflow: hidden;
 }
 #wbpSettings .wbpKeywordList a
 {
