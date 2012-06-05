@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		修正4月27日新浪微博改版导致右边栏部分模块无法被屏蔽的问题；修正关键词过长时屏蔽提示文字溢出的问题
-// @version			0.81
-// @revision		40
+// @features		增加对微博推广链接的屏蔽
+// @version			0.82
+// @revision		42
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -27,10 +27,11 @@ var $blocks = [ // 模块屏蔽设置
 		['PullyList', '#pl_content_pullylist'],
 		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
 		['Mood', '#pl_content_mood'],
-		['Medal', '#pl_content_medal, .declist'],
+		['Medal', '#pl_content_medal, #pl_rightmod_medal, .declist'],
 		['Game', '#pl_leftNav_game'],
 		['App', '#pl_leftNav_app'],
-		['Tasks', '#pl_content_tasks']
+		['Tasks', '#pl_content_tasks'],
+		['Promotion', '#pl_rightmod_promotion']
 	];
 var $options = {};
 
