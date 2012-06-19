@@ -16,7 +16,7 @@
 <div style="float: right; display: inline; position: relative;">
 <a id="wbpCheckUpdate" href="javascript:void(0);" title="检查脚本是否有新版本">检查更新</a>
 <em class="W_vline" style="margin: 0 8px">|</em>
-<a href="http://userscripts.org/scripts/show/114087" title="脚本新版本在此页面发布" target="_blank">脚本页面</a>
+<a href="http://userscripts.org/scripts/show/114087" title="新版本在此页面发布" target="_blank">插件主页</a>
 <em class="W_vline" style="margin: 0 8px">|</em>
 <a href="http://code.google.com/p/weibo-content-filter/wiki/FAQ" title="遇到问题请先阅读FAQ" target="_blank">常见问题</a>
 <em class="W_vline" style="margin: 0 8px">|</em>
@@ -144,9 +144,8 @@
 <div class="clear"></div>
 </div>
 <div id="wbpTabUserSource" style="display: none;">
-<p>新浪微博官方已提供针对指定用户或来源（如“皮皮时光机”）的屏蔽功能，而且在所有浏览器和移动客户端上都有效。</p>
-<p style="margin-top: 10px;">但是，官方的用户屏蔽功能仅对已关注用户有效，而且只能屏蔽用户<span style="color: red;">本人</span>发布的微博。如果您的其它关注对象转发了屏蔽用户的微博，您仍能看到。如果您希望某个名字彻底从主页消失，请使用“眼不见心不烦”提供的关键词屏蔽功能。</p>
-<p style="margin-top: 10px;">请点击<a href="http://account.weibo.com/set/feed" target="_blank">此处</a>设置屏蔽用户；点击<a href="http://account.weibo.com/set/feedsource" target="_blank">此处</a>设置屏蔽来源。</p>
+<p>新浪微博官方已提供针对指定<a href="http://account.weibo.com/set/feed" target="_blank">用户</a>或<a href="http://account.weibo.com/set/feedsource" target="_blank">来源</a>（如“皮皮时光机”）的屏蔽功能，而且在所有浏览器和移动客户端上都有效。但是，如果不开通<a href="http://vip.weibo.com/" target="_blank">微博会员</a>，最多只能屏蔽5个用户，不能屏蔽来源。</p>
+<p style="margin-top: 10px;"><span style="color: red;">您可以使用“眼不见心不烦”的关键词屏蔽功能来免费、无限制地屏蔽用户或来源：</span>要屏蔽某位用户，将其用户名（不要带前面的@）设为屏蔽关键词即可；要屏蔽某种来源，将其名字前加上“来自”并设为屏蔽关键词即可（如“来自皮皮时光机”）。</p>
 </div>
 <div id="wbpTabModules" style="display: none;">
 <p>请选择要屏蔽的内容。</p>
@@ -165,11 +164,16 @@
 <td><input type="checkbox" id="wbpBlockMedal"><label for="wbpBlockMedal">勋章</label></td>
 </tr>
 <tr>
+<td><input type="checkbox" id="wbpBlockLevel"><label for="wbpBlockLevel">微博等级</label></td>
 <td><input type="checkbox" id="wbpBlockFun"><label for="wbpBlockFun">玩转微博</label></td>
-<td><input type="checkbox" id="wbpBlockTopic"><label for="wbpBlockTopic">热门话题/关注的话题</label></td>
 </tr>
 <tr>
+<td><input type="checkbox" id="wbpBlockTopic"><label for="wbpBlockTopic">热门话题/关注的话题</label></td>
 <td><input type="checkbox" id="wbpBlockPromotion"><label for="wbpBlockPromotion">微博推广</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" id="wbpBlockMember"><label for="wbpBlockMember">会员专区</label></td>
+<td><input type="checkbox" id="wbpBlockMemberIcon"><label for="wbpBlockMemberIcon">会员专属标识</label></td>
 </tr>
 <tr>
 <td><input type="checkbox" id="wbpBlockInterestUser"><label for="wbpBlockInterestUser">可能感兴趣的人</label></td>

@@ -2,10 +2,10 @@
 // @name			眼不见心不烦（新浪微博）
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
-// @description		在新浪微博（weibo.com）用户主页隐藏包含指定关键词的微博。
-// @features		增加对微博推广链接的屏蔽
-// @version			0.82
-// @revision		42
+// @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
+// @features		增加对微博等级、会员专区、会员标识的屏蔽；提示用户可以通过设置关键词屏蔽用户/来源
+// @version			0.83
+// @revision		43
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -31,7 +31,10 @@ var $blocks = [ // 模块屏蔽设置
 		['Game', '#pl_leftNav_game'],
 		['App', '#pl_leftNav_app'],
 		['Tasks', '#pl_content_tasks'],
-		['Promotion', '#pl_rightmod_promotion']
+		['Promotion', '#pl_rightmod_promotion'],
+		['Level', '#pl_content_personInfo p.level, #pl_leftNav_common dd.nameBox p'],
+		['Member', '#trustPagelet_recom_member'],
+		['MemberIcon', '.ico_member']
 	];
 var $options = {};
 
