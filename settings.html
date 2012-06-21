@@ -20,7 +20,7 @@
 <em class="W_vline" style="margin: 0 8px">|</em>
 <a href="http://code.google.com/p/weibo-content-filter/wiki/FAQ" title="遇到问题请先阅读FAQ" target="_blank">常见问题</a>
 <em class="W_vline" style="margin: 0 8px">|</em>
-<a href="/salviati" title="欢迎私信、评论或@作者提出脚本建议">联系作者</a>
+<a href="/salviati" title="欢迎私信、评论或@作者提出脚本建议" target="_blank">联系作者</a>
 </div>
 </div>
 <div class="clearfix">
@@ -33,7 +33,8 @@
 </div>
 <div style="float: right; width: 440px;">
 <div id="wbpTabKeywords">
-<div class="wbpKeywordBlock" style="margin-top: 0px;">
+<input type="checkbox" id="wbpKeywordPaused" style="vertical-align: middle; margin-right: 5px;"><label for="wbpKeywordPaused"><span style="color: red;">暂停屏蔽</span>：选中时暂时解除对关键词的屏蔽</label>
+<div class="wbpKeywordBlock">
 <em>白名单</em>包含下列关键词的微博不会被屏蔽
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px; margin-top: 8px;">
 <tbody>
@@ -43,8 +44,9 @@
 <input type="text" id="wbpWhiteKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
 </div>
 </td>
-<td style="width: 60px; text-align: right;">
+<td style="width: 120px; text-align: right;">
 <a href="javascript:void(0);" class="W_btn_a" id="wbpAddWhiteKeyword"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpClearWhiteKeyword" style="margin-left: 5px;"><span>清空</span></a>
 </td>
 </tr>
 </tbody>
@@ -62,8 +64,9 @@
 <input type="text" id="wbpBlackKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
 </div>
 </td>
-<td style="width: 60px; text-align: right;">
+<td style="width: 120px; text-align: right;">
 <a href="javascript:void(0);" class="W_btn_a" id="wbpAddBlackKeyword"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpClearBlackKeyword" style="margin-left: 5px;"><span>清空</span></a>
 </td>
 </tr>
 </tbody>
@@ -81,8 +84,9 @@
 <input type="text" id="wbpGrayKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
 </div>
 </td>
-<td style="width: 60px; text-align: right;">
+<td style="width: 120px; text-align: right;">
 <a href="javascript:void(0);" class="W_btn_a" id="wbpAddGrayKeyword"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpClearGrayKeyword" style="margin-left: 5px;"><span>清空</span></a>
 </td>
 </tr>
 </tbody>
@@ -133,8 +137,9 @@
 <input type="text" id="wbpURLKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
 </div>
 </td>
-<td style="width: 60px; text-align: right;">
+<td style="width: 120px; text-align: right;">
 <a href="javascript:void(0);" class="W_btn_a" id="wbpAddURLKeyword"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpClearURLKeyword" style="margin-left: 5px;"><span>清空</span></a>
 </td>
 </tr>
 </tbody>
@@ -160,15 +165,11 @@
 <td><input type="checkbox" id="wbpBlockTasks"><label for="wbpBlockTasks">微博任务（微博宝典）</label></td>
 </tr>
 <tr>
-<td><input type="checkbox" id="wbpBlockMood"><label for="wbpBlockMood">心情</label></td>
 <td><input type="checkbox" id="wbpBlockMedal"><label for="wbpBlockMedal">勋章</label></td>
+<td><input type="checkbox" id="wbpBlockMood"><label for="wbpBlockMood">心情</label></td>
 </tr>
 <tr>
 <td><input type="checkbox" id="wbpBlockLevel"><label for="wbpBlockLevel">微博等级</label></td>
-<td><input type="checkbox" id="wbpBlockFun"><label for="wbpBlockFun">玩转微博</label></td>
-</tr>
-<tr>
-<td><input type="checkbox" id="wbpBlockTopic"><label for="wbpBlockTopic">热门话题/关注的话题</label></td>
 <td><input type="checkbox" id="wbpBlockPromotion"><label for="wbpBlockPromotion">微博推广</label></td>
 </tr>
 <tr>
@@ -177,15 +178,14 @@
 </tr>
 <tr>
 <td><input type="checkbox" id="wbpBlockInterestUser"><label for="wbpBlockInterestUser">可能感兴趣的人</label></td>
-<td><input type="checkbox" id="wbpBlockPopularUser"><label for="wbpBlockPopularUser">人气用户推荐</label></td>
+<td><input type="checkbox" id="wbpBlockTopic"><label for="wbpBlockTopic">热门话题/关注的话题</label></td>
 </tr>
 <tr>
-<td><input type="checkbox" id="wbpBlockInterestGroup"><label for="wbpBlockInterestGroup">可能感兴趣的微群</label></td>
-<td><input type="checkbox" id="wbpBlockInterestApp"><label for="wbpBlockInterestApp">可能感兴趣的应用/活动</label></td>
-</tr>
-<tr>
+<td><input type="checkbox" id="wbpBlockInterestApp"><label for="wbpBlockInterestApp">可能感兴趣的微群/应用/活动</label></td>
 <td><input type="checkbox" id="wbpBlockNotice"><label for="wbpBlockNotice">公告栏</label></td>
-<td><input type="checkbox" id="wbpBlockHelpFeedback"><label for="wbpBlockHelpFeedback">帮助/意见反馈/小贴士</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" id="wbpBlockHelpFeedback"><label for="wbpBlockHelpFeedback">玩转微博/意见反馈</label></td>
 </tr>
 <tr>
 <td><input type="checkbox" id="wbpBlockGame"><label for="wbpBlockGame">游戏（体验版左边栏）</label></td>

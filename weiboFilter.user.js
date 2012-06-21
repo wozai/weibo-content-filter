@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加对微博等级、会员专区、会员标识的屏蔽；提示用户可以通过设置关键词屏蔽用户/来源
-// @version			0.83
-// @revision		43
+// @features		增加暂停屏蔽关键词选项；增加清空关键词按钮；修正了玩转微博、微博推广等版块的屏蔽问题
+// @version			0.84
+// @revision		44
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -15,24 +15,21 @@
 var $version, $revision;
 var $uid;
 var $blocks = [ // 模块屏蔽设置
-		['Fun', '#pl_common_fun'],
 		['Topic', '#pl_content_promotetopic, #trustPagelete_zt_hottopic'],
 		['InterestUser', '#pl_content_homeInterest, #trustPagelete_recom_interest'],
-		['PopularUser', '#pl_relation_recommendPopularUsers'],
-		['InterestGroup', '#pl_common_thirdmodule_1005'],
 		['InterestApp', '#pl_content_allInOne, #trustPagelete_recom_allinone'],
 		['Notice', '#pl_common_noticeboard, #pl_rightmod_noticeboard'],
 		['HelpFeedback', '#pl_common_help, #pl_common_feedback, #pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle'],
 		['Ads', '#plc_main .W_main_r div[id^="ads_"], div[ad-data], #ads_bottom_1'],
-		['PullyList', '#pl_content_pullylist'],
+		['PullyList', '#pl_content_pullylist, #pl_content_biztips'],
 		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
 		['Mood', '#pl_content_mood'],
 		['Medal', '#pl_content_medal, #pl_rightmod_medal, .declist'],
 		['Game', '#pl_leftNav_game'],
 		['App', '#pl_leftNav_app'],
 		['Tasks', '#pl_content_tasks'],
-		['Promotion', '#pl_rightmod_promotion'],
-		['Level', '#pl_content_personInfo p.level, #pl_leftNav_common dd.nameBox p'],
+		['Promotion', '#pl_rightmod_promotion, #trustPagelet_ugrowth_invite'],
+		['Level', '#pl_content_personInfo p.level, #pl_leftNav_common dd.nameBox p, #pl_content_hisPersonalInfo span.W_level_ico'],
 		['Member', '#trustPagelet_recom_member'],
 		['MemberIcon', '.ico_member']
 	];
@@ -143,7 +140,7 @@ function filterFeed(node) {
 	}
 	if (content.tagName !== 'DD' || !content.classList.contains('content')) {return false; }
 	// 在微博内容中搜索屏蔽关键词
-	if (searchKeyword(content.textContent, 'whiteKeywords')) {
+	if ($options.keywordPaused || searchKeyword(content.textContent, 'whiteKeywords')) {
 		node.style.display = '';
 		node.childNodes[1].style.display = '';
 		node.childNodes[3].style.display = '';
@@ -396,6 +393,7 @@ function deleteKeyword(event) {
 // 根据当前设置（可能未保存）更新$options
 function updateSettings() {
 	$options = {
+		keywordPaused : _('wbpKeywordPaused').checked,
 		whiteKeywords : getKeywords('wbpWhiteKeywordList'),
 		blackKeywords : getKeywords('wbpBlackKeywordList'),
 		grayKeywords : getKeywords('wbpGrayKeywordList'),
@@ -427,6 +425,7 @@ function reloadSettings(str) {
 			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 		}
 	}
+	_('wbpKeywordPaused').checked = ($options.keywordPaused === true);
 	_('wbpWhiteKeywordList').innerHTML = '';
 	_('wbpBlackKeywordList').innerHTML = '';
 	_('wbpGrayKeywordList').innerHTML = '';
@@ -496,6 +495,19 @@ function loadSettingsWindow() {
 	});
 	click(_('wbpAddURLKeyword'), function () {
 		_('wbpURLKeywords').value = addKeywords('wbpURLKeywordList', _('wbpURLKeywords').value);
+	});
+	// 清空关键词按钮点击事件
+	click(_('wbpClearWhiteKeyword'), function () {
+		_('wbpWhiteKeywordList').innerHTML = '';
+	});
+	click(_('wbpClearBlackKeyword'), function () {
+		_('wbpBlackKeywordList').innerHTML = '';
+	});
+	click(_('wbpClearGrayKeyword'), function () {
+		_('wbpGrayKeywordList').innerHTML = '';
+	});
+	click(_('wbpClearURLKeyword'), function () {
+		_('wbpURLKeywordList').innerHTML = '';
 	});
 	// 删除关键词事件
 	click(_('wbpWhiteKeywordList'), deleteKeyword);
