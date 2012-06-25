@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加暂停屏蔽关键词选项；增加清空关键词按钮；修正了玩转微博、微博推广等版块的屏蔽问题
-// @version			0.84
-// @revision		44
+// @features		增加对个人/机构认证（黄/蓝V）及微博达人标识的屏蔽
+// @version			0.85
+// @revision		45
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -31,7 +31,9 @@ var $blocks = [ // 模块屏蔽设置
 		['Promotion', '#pl_rightmod_promotion, #trustPagelet_ugrowth_invite'],
 		['Level', '#pl_content_personInfo p.level, #pl_leftNav_common dd.nameBox p, #pl_content_hisPersonalInfo span.W_level_ico'],
 		['Member', '#trustPagelet_recom_member'],
-		['MemberIcon', '.ico_member']
+		['MemberIcon', '.ico_member'],
+		['VerifyIcon', '.approve, .approve_co'],
+		['DarenIcon', '.ico_club']
 	];
 var $options = {};
 
