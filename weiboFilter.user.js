@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加对个人/机构认证（黄/蓝V）及微博达人标识的屏蔽
+// @features		增加对个人/机构认证（黄/蓝V）、微博达人、微博女郎标识的屏蔽；修正关键词过长时屏蔽提示文字溢出的问题
 // @version			0.85
-// @revision		45
+// @revision		46
 // @author			@富平侯(/salviati)
 // @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -33,7 +33,8 @@ var $blocks = [ // 模块屏蔽设置
 		['Member', '#trustPagelet_recom_member'],
 		['MemberIcon', '.ico_member'],
 		['VerifyIcon', '.approve, .approve_co'],
-		['DarenIcon', '.ico_club']
+		['DarenIcon', '.ico_club'],
+		['VgirlIcon', '.ico_vgirl']
 	];
 var $options = {};
 
@@ -215,14 +216,14 @@ function filterFeed(node) {
 		this.parentNode.childNodes[4].style.display = '';
 		this.parentNode.childNodes[2].style.opacity = 0.5;
 		this.parentNode.childNodes[4].style.opacity = 0.5;
-		this.style.cssText = 'background-color: #D0FFD0; border-color: #40D040; color: #40D040;';
+		this.style.cssText = 'background-color: #D0FFD0; border-color: #40D040; color: #40D040; height: auto;';
 	});
 	bind(showFeed, 'mouseout', function () {
 		if (!this.parentNode) {return; }
 		this.parentNode.childNodes[2].style.display = 'none';
 		this.parentNode.childNodes[4].style.display = 'none';
 		this.parentNode.style.cssText = '';
-		this.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px';
+		this.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px; height: auto;';
 	});
 	node.insertBefore(showFeed, node.firstChild);
 	return true;
