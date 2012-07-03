@@ -3,13 +3,13 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加对个人/机构认证（黄/蓝V）、微博达人、微博女郎标识的屏蔽；修正关键词过长时屏蔽提示文字溢出的问题
-// @version			0.85
-// @revision		46
+// @features		增加极简阅读模式
+// @version			0.9b1
+// @revision		47
 // @author			@富平侯(/salviati)
-// @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
-// @include			http://weibo.com/*
-// @include			http://www.weibo.com/*
+// @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
+// @match			http://weibo.com/*
+// @match			http://www.weibo.com/*
 // ==/UserScript==
 
 var $version, $revision;
@@ -315,11 +315,45 @@ function showSettingsBtn() {
 	return true;
 }
 
+// 极简阅读模式（仅在个人首页生效）
+function readerMode() {
+	var readerModeStyles = _('wbpReaderModeStyles');
+	if (getScope() === 1 && $options.readerMode === true) {		
+		if (!readerModeStyles) {
+			readerModeStyles = document.createElement('style');
+			readerModeStyles.type = 'text/css';
+			readerModeStyles.id = 'wbpReaderModeStyles';
+			document.head.appendChild(readerModeStyles);
+		}
+		if (_('Box_left')) { // 体验版
+			readerModeStyles.innerHTML = '#pl_content_top, #Box_left, #Box_right, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #Box_center { width: 800px; } .W_miniblog { background-position-y: -35px; } .W_main { padding-top: 17px; width: 845px; } .W_main_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 688px; } #base_scrollToTop { margin-left: 424px; }';
+		
+		} else { // 传统版
+			readerModeStyles.innerHTML = '#pl_content_top, #plc_main .W_main_r, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #plc_main .W_main_c { width: 800px; } .W_miniblog { background-position-y: -35px; } #plc_main .custom_content_bg { padding-top: 30px; } .W_main_narrow { padding-top: 17px; } .W_main_narrow_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 628px; }';
+		}
+	} else {
+		if (readerModeStyles) document.head.removeChild(readerModeStyles);
+	}
+}
+
+// 检测按键，开关极简阅读模式
+function onKeyPress(event) {
+	if (getScope() === 1 && event.keyCode === 119)
+	{
+		_('wbpReaderMode').checked = !_('wbpReaderMode').checked;
+		updateSettings();
+		GM_setValue($uid.toString(), JSON.stringify($options));
+		readerMode();
+	}
+}
+			 
 // 根据当前设置屏蔽/显示所有内容
 function applySettings() {
 	// 处理非动态载入内容
 	var feeds = document.querySelectorAll('.feed_list'), i, len, j, l;
 	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
+	// 极简阅读模式
+	readerMode();
 	// 屏蔽版面内容
 	var cssText = '';
 	for (i = 0, len = $blocks.length; i < len; ++i) {
@@ -403,6 +437,8 @@ function updateSettings() {
 		URLKeywords : getKeywords('wbpURLKeywordList'),
 		tipBackColor : _('wbpTipBackColor').value,
 		tipTextColor : _('wbpTipTextColor').value,
+		readerMode: _('wbpReaderMode').checked,
+		readerModeBackColor : _('wbpReaderModeBackColor').value,
 		hideBlock : {}
 	};
 	var i, len;
@@ -428,6 +464,8 @@ function reloadSettings(str) {
 			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 		}
 	}
+	_('wbpReaderMode').checked = ($options.readerMode === true);
+	_('wbpReaderModeBackColor').value = $options.readerModeBackColor || 'rgba(100%, 100%, 100%, 0.8)';
 	_('wbpKeywordPaused').checked = ($options.keywordPaused === true);
 	_('wbpWhiteKeywordList').innerHTML = '';
 	_('wbpBlackKeywordList').innerHTML = '';
@@ -582,3 +620,5 @@ if (getScope() !== 0) {
 
 // 处理动态载入内容
 document.addEventListener('DOMNodeInserted', onDOMNodeInsertion, false);
+// 处理按键（极简阅读模式）
+document.addEventListener("keyup", onKeyPress, false);
