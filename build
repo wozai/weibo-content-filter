@@ -16,7 +16,7 @@ do
 done
 sed 's/#settings.css#/'"${CSS}"'/;s/#settings.html#/'"${HTML}"'/;s/var \$version, \$revision;/var \$version = "'"${VER}"'", \$revision = '"${REV}"';/' weiboFilter.user.js > $OUTFILE
 [ $NO_COMPRESS ] && exit 0
-head -n 13 weiboFilter.user.js > weiboFilter.user.head.js
+head -n 13 weiboFilter.user.js | sed 's/^\(\/\/ @version\s\+\)\([0-9]\+\)\(\.[0-9]\+\)\+.*$/\1\2\3/' > weiboFilter.user.head.js
 if [ ! -f compiler.jar ]
 then
 	wget -q http://closure-compiler.googlecode.com/files/compiler-latest.tar.gz
