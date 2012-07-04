@@ -3,11 +3,11 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加对个人/机构认证（黄/蓝V）、微博达人、微博女郎标识的屏蔽；修正关键词过长时屏蔽提示文字溢出的问题
-// @version			0.85
-// @revision		46
+// @features		增加对“361°伦敦行动”徽章的屏蔽
+// @version			0.86
+// @revision		47
 // @author			@富平侯(/salviati)
-// @thanksto		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
+// @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // ==/UserScript==
@@ -34,7 +34,8 @@ var $blocks = [ // 模块屏蔽设置
 		['MemberIcon', '.ico_member'],
 		['VerifyIcon', '.approve, .approve_co'],
 		['DarenIcon', '.ico_club'],
-		['VgirlIcon', '.ico_vgirl']
+		['VgirlIcon', '.ico_vgirl'],
+		['Oly361', '.ico_oly361']
 	];
 var $options = {};
 
