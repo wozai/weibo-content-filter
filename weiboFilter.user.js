@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加对“361°伦敦行动”徽章的屏蔽
+// @features		增加对“361°伦敦行动”徽章的屏蔽；修正了微博女郎标识的屏蔽问题
 // @version			0.86
 // @revision		47
 // @author			@富平侯(/salviati)
@@ -34,7 +34,7 @@ var $blocks = [ // 模块屏蔽设置
 		['MemberIcon', '.ico_member'],
 		['VerifyIcon', '.approve, .approve_co'],
 		['DarenIcon', '.ico_club'],
-		['VgirlIcon', '.ico_vgirl'],
+		['VgirlIcon', '.ico_vlady'],
 		['Oly361', '.ico_oly361']
 	];
 var $options = {};
