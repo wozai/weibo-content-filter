@@ -1,0 +1,28 @@
+#!/bin/sh
+
+CSS=`sed 's/^\s*//;s/\s*$//' settings.css | tr '\n' ' ' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
+HTML=`sed 's/^\s*//;s/\s*$//' settings.html | tr -d '\n' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
+VER=`sed -n '\|^// @version\s\+\([^\s]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
+REV=`sed -n '\|^// @revision\s\+\([0-9]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
+OUTFILE="weiboFilter-v${VER}.user.js"
+while getopts ":no:" optname
+do
+	case "$optname" in
+		"n") NO_COMPRESS=1;;
+		"o") OUTFILE=$OPTARG;;
+		"?") echo "Unknown option -$OPTARG"; exit 1;;
+		":") echo "Missing argument value for option -$OPTARG"; exit 1;;
+	esac
+done
+sed 's/#settings.css#/'"${CSS}"'/;s/#settings.html#/'"${HTML}"'/;s/var \$version, \$revision;/var \$version = "'"${VER}"'", \$revision = '"${REV}"';/' weiboFilter.user.js > $OUTFILE
+[ $NO_COMPRESS ] && exit 0
+head -n 13 weiboFilter.user.js | sed 's/^\(\/\/ @version\s\+\)\([0-9]\+\)\(\.[0-9]\+\)\+.*$/\1\2\3/' > weiboFilter.user.head.js
+if [ ! -f compiler.jar ]
+then
+	wget -q http://closure-compiler.googlecode.com/files/compiler-latest.tar.gz
+	tar -xzf compiler-latest.tar.gz compiler.jar
+	rm compiler-latest.tar.gz
+fi
+java -jar compiler.jar --charset=UTF-8 --compilation_level SIMPLE_OPTIMIZATIONS --js=$OUTFILE --js_output_file=weiboFilter.user.body.js
+cat weiboFilter.user.head.js weiboFilter.user.body.js > $OUTFILE
+rm weiboFilter.user.head.js weiboFilter.user.body.js
