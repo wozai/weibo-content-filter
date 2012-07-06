@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加极简阅读模式
-// @version			0.9b2
-// @revision		48
+// @features		增加极简阅读模式；增加对已删除微博的转发的屏蔽
+// @version			0.9b3
+// @revision		49
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @match			http://weibo.com/*
@@ -143,6 +143,10 @@ function filterFeed(node) {
 		return false;
 	}
 	if (content.tagName !== 'DD' || !content.classList.contains('content')) {return false; }
+	if ($options.hideDeleted && node.getAttribute('isforward') === '1' && content.querySelector('dt[node-type="feed_list_forwardContent"]').childNodes[1].tagName === 'EM') { // 已删除微博的转发，原文中没有原作者链接
+		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
+		return true;
+	}
 	// 在微博内容中搜索屏蔽关键词
 	if ($options.keywordPaused || searchKeyword(content.textContent, 'whiteKeywords')) {
 		node.style.display = '';
@@ -440,6 +444,7 @@ function updateSettings() {
 		tipTextColor : _('wbpTipTextColor').value,
 		readerMode: _('wbpReaderMode').checked,
 		readerModeBackColor : _('wbpReaderModeBackColor').value,
+		hideDeleted : _('wbpHideDeleted').checked,
 		hideBlock : {}
 	};
 	var i, len;
@@ -468,6 +473,7 @@ function reloadSettings(str) {
 	_('wbpReaderMode').checked = ($options.readerMode === true);
 	_('wbpReaderModeBackColor').value = $options.readerModeBackColor || 'rgba(100%, 100%, 100%, 0.8)';
 	_('wbpKeywordPaused').checked = ($options.keywordPaused === true);
+	_('wbpHideDeleted').checked = ($options.hideDeleted === true);
 	_('wbpWhiteKeywordList').innerHTML = '';
 	_('wbpBlackKeywordList').innerHTML = '';
 	_('wbpGrayKeywordList').innerHTML = '';
