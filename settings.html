@@ -27,15 +27,15 @@
 <div id="wbpTabHeaders" style="float: left; width: 100px;">
 <a tab="wbpTabKeywords" href="javascript:void(0);" class="current">关键词</a>
 <a tab="wbpTabLinks" href="javascript:void(0);">链接地址</a>
-<a tab="wbpTabUserSource" href="javascript:void(0);">用户/来源</a>
+<a tab="wbpTabUser" href="javascript:void(0);">用户</a>
+<a tab="wbpTabSource" href="javascript:void(0);">来源</a>
 <a tab="wbpTabModules" href="javascript:void(0);">版面模块</a>
+<a tab="wbpTabAdvanced" href="javascript:void(0);">高级</a>
 <a id="wbpTabHeaderSettings" tab="wbpTabSettings" href="javascript:void(0);">设置导入/导出</a>
 </div>
 <div style="float: right; width: 440px;">
 <div id="wbpTabKeywords">
-<p><input type="checkbox" id="wbpKeywordPaused" style="vertical-align: middle; margin-right: 5px;"><label for="wbpKeywordPaused"><span style="color: red;">暂停屏蔽</span>：选中时暂时停止对关键词（包括链接地址）的屏蔽</label></p>
-<p style="margin-top: 5px;"><input type="checkbox" id="wbpHideDeleted" style="vertical-align: middle; margin-right: 5px;"><label for="wbpHideDeleted">屏蔽已删除微博的转发</label></p>
-<div class="wbpKeywordBlock">
+<div class="wbpKeywordBlock" style="margin-top: 0px;">
 <em>白名单</em>包含下列关键词的微博不会被屏蔽
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px; margin-top: 8px;">
 <tbody>
@@ -149,35 +149,46 @@
 </div>
 <div class="clear"></div>
 </div>
-<div id="wbpTabUserSource" style="display: none;">
-<p>新浪微博官方已提供针对指定<a href="http://account.weibo.com/set/feed" target="_blank">用户</a>或<a href="http://account.weibo.com/set/feedsource" target="_blank">来源</a>（如“皮皮时光机”）的屏蔽功能，而且在所有浏览器和移动客户端上都有效。但是，如果不开通<a href="http://vip.weibo.com/" target="_blank">微博会员</a>，最多只能屏蔽5个用户，不能屏蔽来源。</p>
-<p style="margin-top: 10px;"><span style="color: red;">您可以使用“眼不见心不烦”的关键词屏蔽功能来免费、无限制地屏蔽用户或来源：</span>要屏蔽某位用户，将其用户名（不要带前面的@）设为屏蔽关键词即可；要屏蔽某种来源，将其名字前加上“来自”并设为屏蔽关键词即可（如“来自皮皮时光机”）。</p>
+<div id="wbpTabUser" style="display: none;">
+<p>新浪微博官方已提供针对指定<a href="http://account.weibo.com/set/feed" target="_blank">用户</a>的屏蔽功能，而且在所有浏览器和移动客户端上都有效。但是，如果不开通<a href="http://vip.weibo.com/" target="_blank">微博会员</a>，最多只能屏蔽5个用户。</p>
+<p>您可以使用“眼不见心不烦”的关键词屏蔽功能来免费、无限制地屏蔽用户。将要屏蔽的用户名（<span style="color: red;">包括前面的@</span>）设为屏蔽关键词即可。</p>
 </div>
-<div id="wbpTabModules" style="display: none;">
-<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px;">
+<div id="wbpTabSource" style="display: none;">
+<p>新浪微博官方已提供针对指定<a href="http://account.weibo.com/set/feedsource" target="_blank">来源</a>（如“皮皮时光机”）的屏蔽功能，而且在所有浏览器和移动客户端上都有效，但必须开通<a href="http://vip.weibo.com/" target="_blank">微博会员</a>才能使用此功能。</p>
+<p>您可以使用“眼不见心不烦”来免费、无限制地屏蔽来源。如果一条微博的来源（包括转发的原微博的来源）名称中包含下列关键词，微博将被屏蔽（无提示）。如将“时光机”设为关键词可屏蔽所有来自<a href="http://time.xuapp.com/" target="_blank">时光机</a>或<a href="http://weibo.pp.cc/time/" target="_blank">皮皮时光机</a>等应用的微博。</p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px; margin-top: 8px;">
 <tbody>
 <tr>
 <td>
-<input type="checkbox" id="wbpReaderMode" style="vertical-align: middle; margin-right: 5px;"><label title="去掉所有无关模块，可在个人主页按F8切换" for="wbpReaderMode"><span style="color: red;">极简阅读模式</span></label>
-</td>
-<td style="width: 60px;">背景颜色：</td>
-<td>
 <div class="wbpInput">
-<input type="text" id="wbpReaderModeBackColor" class="input">
+<input type="text" id="wbpSourceKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
 </div>
+</td>
+<td style="width: 120px; text-align: right;">
+<a href="javascript:void(0);" class="W_btn_a" id="wbpAddSourceKeyword"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" id="wbpClearSourceKeyword" style="margin-left: 5px;"><span>清空</span></a>
 </td>
 </tr>
 </tbody>
 </table>
+<div id="wbpSourceKeywordList" class="wbpKeywordList">
+</div>
+<div class="clear"></div>
+</div>
+<div id="wbpTabModules" style="display: none;">
+<p>请选择要屏蔽的版面内容。</p>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 24px; margin-top: 15px;">
 <tbody>
 <tr>
 <td><input type="checkbox" id="wbpBlockAds"><label for="wbpBlockAds">右边栏/页底广告</label></td>
-<td><input type="checkbox" id="wbpBlockPullyList"><label for="wbpBlockPullyList">微博看点（顶栏广告）</label></td>
 </tr>
 <tr>
+<td><input type="checkbox" id="wbpBlockPullyList"><label for="wbpBlockPullyList">微博看点（顶栏广告）</label></td>
 <td><input type="checkbox" id="wbpBlockRecommendedTopic"><label for="wbpBlockRecommendedTopic">推荐微话题</label></td>
-<td><input type="checkbox" id="wbpBlockTasks"><label for="wbpBlockTasks">微博任务（微博宝典）</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" id="wbpBlockUserGuide"><label for="wbpBlockUserGuide">微博精选（新用户）</label></td>
+<td><input type="checkbox" id="wbpBlockTasks"><label for="wbpBlockTasks">微博宝典（新用户）</label></td>
 </tr>
 <tr>
 <td><input type="checkbox" id="wbpBlockMedal"><label for="wbpBlockMedal">勋章</label></td>
@@ -220,6 +231,23 @@
 <a href="javascript:void(0);" class="W_btn_a" id="wbpBlockAll"><span>全选</span></a>
 <a href="javascript:void(0);" class="W_btn_a" style="margin-left: 10px;" id="wbpBlockInvert"><span>反选</span></a>
 </p>
+</div>
+<div id="wbpTabAdvanced" style="display: none;">
+<p><input type="checkbox" id="wbpReaderMode"><label for="wbpReaderMode"><span style="color: red;">极简阅读模式</span>：去掉所有无关模块，可在个人主页按F8切换</label></p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 30px;">
+<tbody>
+<tr>
+<td style="width: 60px; padding-left: 18px;">背景颜色：</td>
+<td>
+<div class="wbpInput">
+<input type="text" id="wbpReaderModeBackColor" class="input">
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<p><input type="checkbox" id="wbpFilterPaused"><label for="wbpFilterPaused"><span style="color: red;">暂停屏蔽</span>：选中时暂时停止对微博的屏蔽，可按F7切换</label></p>
+<p><input type="checkbox" id="wbpHideDeleted"><label for="wbpHideDeleted">屏蔽已删除微博的转发</label></p>
 </div>
 <div id="wbpTabSettings" style="display: none;">
 <div class="clearfix">

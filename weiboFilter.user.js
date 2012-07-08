@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加极简阅读模式；增加对已删除微博的转发的屏蔽
-// @version			0.9b3
-// @revision		49
+// @features		增加极简阅读模式；增加单独的屏蔽来源功能；增加对已删除微博的转发的屏蔽；增加对微博精选模块的屏蔽
+// @version			0.9b4
+// @revision		50
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @match			http://weibo.com/*
@@ -28,6 +28,7 @@ var $blocks = [ // 模块屏蔽设置
 		['Game', '#pl_leftNav_game'],
 		['App', '#pl_leftNav_app'],
 		['Tasks', '#pl_content_tasks'],
+		['UserGuide', '#pl_guide_oldUser'],
 		['Promotion', '#pl_rightmod_promotion, #trustPagelet_ugrowth_invite'],
 		['Level', '#pl_content_personInfo p.level, #pl_leftNav_common dd.nameBox p, #pl_content_hisPersonalInfo span.W_level_ico'],
 		['Member', '#trustPagelet_recom_member'],
@@ -42,7 +43,6 @@ var $options = {};
 var _ = function (s) {
 	return document.getElementById(s);
 };
-
 var __ = function (s) {
 	return document.querySelector(s);
 };
@@ -111,7 +111,7 @@ function getScope() {
 // 搜索指定文本中是否包含列表中的关键词
 function searchKeyword(str, key) {
 	var text = str.toLowerCase(), keywords = $options[key], keyword, i, len;
-	if (keywords === undefined) {return ''; }
+	if (str === '' || keywords === undefined) {return ''; }
 	for (i = 0, len = keywords.length; i < len; ++i) {
 		keyword = keywords[i];
 		if (!keyword) {continue; }
@@ -129,26 +129,23 @@ function searchKeyword(str, key) {
 	return '';
 }
 
+function filterSource(source) {
+	if (!source) {
+		source = '未通过审核应用';
+	} else {
+		// 过长的应用名称会被压缩，完整名称存放在title属性中
+		source = source.title ? source.title : source.innerHTML;
+	}
+	return searchKeyword(source, 'sourceKeywords') !== ''
+}
+
 function filterFeed(node) {
 	if (node.firstChild.tagName === 'A') {node.removeChild(node.firstChild); } // 已被屏蔽过
-	var content, scope = getScope();
-	switch (scope) {
-	case 1:
-		content = node.childNodes[3];
-		break;
-	case 2:
-		content = node.childNodes[1]; // 他人主页的微博没有用户信息
-		break;
-	default:
-		return false;
-	}
-	if (content.tagName !== 'DD' || !content.classList.contains('content')) {return false; }
-	if ($options.hideDeleted && node.getAttribute('isforward') === '1' && content.querySelector('dt[node-type="feed_list_forwardContent"]').childNodes[1].tagName === 'EM') { // 已删除微博的转发，原文中没有原作者链接
-		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
-		return true;
-	}
-	// 在微博内容中搜索屏蔽关键词
-	if ($options.keywordPaused || searchKeyword(content.textContent, 'whiteKeywords')) {
+	var scope = getScope(), text = '@', isForward = (node.getAttribute('isforward') === '1'),
+		content = node.querySelector('dd.content > p[node-type="feed_list_content"]'),
+		forwardContent = node.querySelector('dd.content > dl.comment > dt[node-type="feed_list_forwardContent"]');
+	if (!content) {return false; }
+	if ($options.filterPaused) {
 		node.style.display = '';
 		node.childNodes[1].style.display = '';
 		node.childNodes[3].style.display = '';
@@ -156,11 +153,38 @@ function filterFeed(node) {
 		node.childNodes[3].style.opacity = 1;
 		return false;
 	}
-	if (searchKeyword(content.textContent, 'blackKeywords')) {
+	// 屏蔽已删除微博的转发
+	if ($options.hideDeleted && isForward && forwardContent.childNodes[1].tagName === 'EM') { // 已删除微博的转发，原文中没有原作者链接
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 		return true;
 	}
-	var links = content.getElementsByTagName('A'), i, len;
+	// 屏蔽指定来源
+	if (filterSource(node.querySelector('dd.content > p.info > a[target="_blank"]')) || 
+		(isForward && filterSource(node.querySelector('dd.content > dl.comment > dd.info > a[target="_blank"]')))) {
+		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
+		return true;
+	}
+	// 在微博内容中搜索屏蔽关键词
+	if (scope === 2) {text = ''; } // 他人主页没有原作者链接
+	text += content.textContent.replace(/[\r\n\t]/g, '').trim();
+	if (isForward) {
+		// 转发内容
+		text += '//' + forwardContent.textContent.replace(/[\r\n\t]/g, '').trim();
+	}
+	if (searchKeyword(text, 'whiteKeywords')) {
+		node.style.display = '';
+		node.childNodes[1].style.display = '';
+		node.childNodes[3].style.display = '';
+		node.childNodes[1].style.opacity = 1;
+		node.childNodes[3].style.opacity = 1;
+		return false;
+	}
+	if (searchKeyword(text, 'blackKeywords')) {
+		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
+		return true;
+	}
+	// 搜索t.cn短链接
+	var links = node.getElementsByTagName('A'), i, len;
 	for (i = 0, len = links.length; i < len; ++i) {
 		if (links[i].href.substring(0, 12) === 'http://t.cn/' && searchKeyword(links[i].title, 'URLKeywords')) {
 			node.style.display = 'none';
@@ -168,7 +192,7 @@ function filterFeed(node) {
 		}
 	}
 	node.style.display = '';
-	var keyword = searchKeyword(content.textContent, 'grayKeywords');
+	var keyword = searchKeyword(text, 'grayKeywords');
 	if (!keyword) {
 		node.childNodes[1].style.display = '';
 		node.childNodes[3].style.display = '';
@@ -179,8 +203,7 @@ function filterFeed(node) {
 	var authorClone;
 	if (scope === 1) {
 		// 2011年11月15日起，新浪微博提供了屏蔽功能，由于屏蔽按钮的存在，微博发布者链接的位置发生了变化
-		var author = content.childNodes[3].childNodes[1];
-		if (author.tagName !== 'A') {return false; } // 不要屏蔽自己的微博
+		var author = content.childNodes[1];
 		node.childNodes[3].style.display = 'none';
 		// 添加隐藏提示链接
 		authorClone = author.cloneNode(false);
@@ -341,14 +364,18 @@ function readerMode() {
 	}
 }
 
-// 检测按键，开关极简阅读模式
+// 检测按键，开关极简阅读模式和屏蔽开关
 function onKeyPress(event) {
-	if (getScope() === 1 && event.keyCode === 119)
-	{
+	if (getScope() === 1 && event.keyCode === 119) {
 		_('wbpReaderMode').checked = !_('wbpReaderMode').checked;
 		updateSettings();
 		GM_setValue($uid.toString(), JSON.stringify($options));
 		readerMode();
+	} else if (getScope() && event.keyCode === 118) {
+		_('wbpFilterPaused').checked = !_('wbpFilterPaused').checked;
+		updateSettings();
+		GM_setValue($uid.toString(), JSON.stringify($options));
+		applySettings();
 	}
 }
 			 
@@ -435,11 +462,12 @@ function deleteKeyword(event) {
 // 根据当前设置（可能未保存）更新$options
 function updateSettings() {
 	$options = {
-		keywordPaused : _('wbpKeywordPaused').checked,
+		filterPaused : _('wbpFilterPaused').checked,
 		whiteKeywords : getKeywords('wbpWhiteKeywordList'),
 		blackKeywords : getKeywords('wbpBlackKeywordList'),
 		grayKeywords : getKeywords('wbpGrayKeywordList'),
 		URLKeywords : getKeywords('wbpURLKeywordList'),
+		sourceKeywords : getKeywords('wbpSourceKeywordList'),
 		tipBackColor : _('wbpTipBackColor').value,
 		tipTextColor : _('wbpTipTextColor').value,
 		readerMode: _('wbpReaderMode').checked,
@@ -472,20 +500,23 @@ function reloadSettings(str) {
 	}
 	_('wbpReaderMode').checked = ($options.readerMode === true);
 	_('wbpReaderModeBackColor').value = $options.readerModeBackColor || 'rgba(100%, 100%, 100%, 0.8)';
-	_('wbpKeywordPaused').checked = ($options.keywordPaused === true);
+	_('wbpFilterPaused').checked = ($options.filterPaused === true);
 	_('wbpHideDeleted').checked = ($options.hideDeleted === true);
 	_('wbpWhiteKeywordList').innerHTML = '';
 	_('wbpBlackKeywordList').innerHTML = '';
 	_('wbpGrayKeywordList').innerHTML = '';
 	_('wbpURLKeywordList').innerHTML = '';
+	_('wbpSourceKeywordList').innerHTML = '';
 	addKeywords('wbpWhiteKeywordList', $options.whiteKeywords || '');
 	addKeywords('wbpBlackKeywordList', $options.blackKeywords || '');
 	addKeywords('wbpGrayKeywordList', $options.grayKeywords || '');
 	addKeywords('wbpURLKeywordList', $options.URLKeywords || '');
+	addKeywords('wbpSourceKeywordList', $options.sourceKeywords || '');
 	_('wbpWhiteKeywords').value = '';
 	_('wbpBlackKeywords').value = '';
 	_('wbpGrayKeywords').value = '';
 	_('wbpURLKeywords').value = '';
+	_('wbpSourceKeywords').value = '';
 	var tipBackColor = $options.tipBackColor || '#FFD0D0';
 	var tipTextColor = $options.tipTextColor || '#FF8080';
 	_('wbpTipBackColor').value = tipBackColor;
@@ -544,6 +575,9 @@ function loadSettingsWindow() {
 	click(_('wbpAddURLKeyword'), function () {
 		_('wbpURLKeywords').value = addKeywords('wbpURLKeywordList', _('wbpURLKeywords').value);
 	});
+	click(_('wbpAddSourceKeyword'), function () {
+		_('wbpSourceKeywords').value = addKeywords('wbpSourceKeywordList', _('wbpSourceKeywords').value);
+	});
 	// 清空关键词按钮点击事件
 	click(_('wbpClearWhiteKeyword'), function () {
 		_('wbpWhiteKeywordList').innerHTML = '';
@@ -557,11 +591,15 @@ function loadSettingsWindow() {
 	click(_('wbpClearURLKeyword'), function () {
 		_('wbpURLKeywordList').innerHTML = '';
 	});
+	click(_('wbpClearSourceKeyword'), function () {
+		_('wbpSourceKeywordList').innerHTML = '';
+	})
 	// 删除关键词事件
 	click(_('wbpWhiteKeywordList'), deleteKeyword);
 	click(_('wbpBlackKeywordList'), deleteKeyword);
 	click(_('wbpGrayKeywordList'), deleteKeyword);
 	click(_('wbpURLKeywordList'), deleteKeyword);
+	click(_('wbpSourceKeywordList'), deleteKeyword);
 	// 标签点击事件
 	click(_('wbpTabHeaders'), function (event) {
 		var node = event.target, i, len;
