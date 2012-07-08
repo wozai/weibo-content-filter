@@ -2,6 +2,10 @@
 {
 	line-height: 150%;
 }
+#wbpSettings p + p
+{
+	margin-top: 10px;
+}
 #wbpTabHeaders a {
 	display: block;
 	padding: 6px 0;
@@ -81,16 +85,16 @@
 	border-color: #008000;
 	background-color: #D0FFD0;
 }
-#wbpBlackKeywordList a, #wbpURLKeywordList a
+#wbpBlackKeywordList a, #wbpURLKeywordList a, #wbpSourceKeywordList a
 {
 	border-color: #D00000;
 	color: #D00000;
 }
-#wbpBlackKeywordList a.regex, #wbpURLKeywordList a.regex
+#wbpBlackKeywordList a.regex, #wbpURLKeywordList a.regex, #wbpSourceKeywordList a.regex
 {
 	background-color: #FFB0B0;
 }
-#wbpBlackKeywordList a:hover, #wbpURLKeywordList a:hover {
+#wbpBlackKeywordList a:hover, #wbpURLKeywordList a:hover, #wbpSourceKeywordList a:hover {
 	border-color: #FF0000;
 	background-color: #FFD0D0;
 }
@@ -109,4 +113,8 @@
 }
 #wbpTabModules tr.wbpRowSpacing td {
 	padding-top: 10px;
+}
+#wbpTabAdvanced input {
+	vertical-align: middle;
+	margin-right: 5px;
 }
