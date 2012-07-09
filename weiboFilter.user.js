@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加极简阅读模式；增加单独的屏蔽来源功能；增加对已删除微博的转发的屏蔽；增加对微博精选模块的屏蔽
+// @features		增加极简阅读模式；增加反版聊功能；增加单独的屏蔽来源功能；增加对已删除微博的转发的屏蔽；增加对微博精选模块的屏蔽
 // @version			0.9b4
 // @revision		50
 // @author			@富平侯(/salviati)
@@ -38,7 +38,7 @@ var $blocks = [ // 模块屏蔽设置
 		['VgirlIcon', '.ico_vlady'],
 		['Oly361', '.ico_oly361']
 	];
-var $options = {};
+var $options = {}, $forwardFeeds = {};
 
 var _ = function (s) {
 	return document.getElementById(s);
@@ -139,22 +139,36 @@ function filterSource(source) {
 	return searchKeyword(source, 'sourceKeywords') !== ''
 }
 
+function showFeed(node, fwdLink) {
+	node.style.display = '';
+	node.childNodes[1].style.display = '';
+	node.childNodes[3].style.display = '';
+	node.childNodes[1].style.opacity = 1;
+	node.childNodes[3].style.opacity = 1;
+	if (!$options.filterPaused && $options.filterDupFwd && fwdLink) {
+		$forwardFeeds[fwdLink.href] = node.getAttribute('mid');
+	}
+}
+
 function filterFeed(node) {
 	if (node.firstChild.tagName === 'A') {node.removeChild(node.firstChild); } // 已被屏蔽过
 	var scope = getScope(), text = '@', isForward = (node.getAttribute('isforward') === '1'),
 		content = node.querySelector('dd.content > p[node-type="feed_list_content"]'),
-		forwardContent = node.querySelector('dd.content > dl.comment > dt[node-type="feed_list_forwardContent"]');
-	if (!content) {return false; }
-	if ($options.filterPaused) {
-		node.style.display = '';
-		node.childNodes[1].style.display = '';
-		node.childNodes[3].style.display = '';
-		node.childNodes[1].style.opacity = 1;
-		node.childNodes[3].style.opacity = 1;
+		forwardContent = node.querySelector('dd.content > dl.comment > dt[node-type="feed_list_forwardContent"]'),
+		forwardLink = node.querySelector('dd.content > dl.comment > dd.info > a.date');
+	if (!content) {return false; }	
+	if (scope === 2) {text = ''; } // 他人主页没有原作者链接
+	text += content.textContent.replace(/[\r\n\t]/g, '').trim();
+	if (isForward) {
+		// 转发内容
+		text += '//' + forwardContent.textContent.replace(/[\r\n\t]/g, '').trim();
+	}
+	if ($options.filterPaused || searchKeyword(text, 'whiteKeywords')) { // 白名单检查
+		showFeed(node, forwardLink);
 		return false;
 	}
 	// 屏蔽已删除微博的转发
-	if ($options.hideDeleted && isForward && forwardContent.childNodes[1].tagName === 'EM') { // 已删除微博的转发，原文中没有原作者链接
+	if ($options.filterDeleted && isForward && forwardContent.childNodes[1].tagName === 'EM') { // 已删除微博的转发，原文中没有原作者链接
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 		return true;
 	}
@@ -164,21 +178,18 @@ function filterFeed(node) {
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 		return true;
 	}
+	// 反版聊（屏蔽重复转发）
+	if ($options.filterDupFwd && isForward) {
+		var mid = $forwardFeeds[forwardLink.href];
+		if (mid) {
+			var lastShown = __('dl.feed_list[mid="' + mid + '"]');
+			if (lastShown && lastShown.style.display !== 'none') {
+				node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
+				return true;
+			}
+		}
+	}
 	// 在微博内容中搜索屏蔽关键词
-	if (scope === 2) {text = ''; } // 他人主页没有原作者链接
-	text += content.textContent.replace(/[\r\n\t]/g, '').trim();
-	if (isForward) {
-		// 转发内容
-		text += '//' + forwardContent.textContent.replace(/[\r\n\t]/g, '').trim();
-	}
-	if (searchKeyword(text, 'whiteKeywords')) {
-		node.style.display = '';
-		node.childNodes[1].style.display = '';
-		node.childNodes[3].style.display = '';
-		node.childNodes[1].style.opacity = 1;
-		node.childNodes[3].style.opacity = 1;
-		return false;
-	}
 	if (searchKeyword(text, 'blackKeywords')) {
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 		return true;
@@ -194,10 +205,7 @@ function filterFeed(node) {
 	node.style.display = '';
 	var keyword = searchKeyword(text, 'grayKeywords');
 	if (!keyword) {
-		node.childNodes[1].style.display = '';
-		node.childNodes[3].style.display = '';
-		node.childNodes[1].style.opacity = 1;
-		node.childNodes[3].style.opacity = 1;
+		showFeed(node, forwardLink);
 		return false;
 	}
 	var authorClone;
@@ -214,10 +222,10 @@ function filterFeed(node) {
 	node.childNodes[1].style.display = 'none';
 	var tipBackColor = $options.tipBackColor || '#FFD0D0';
 	var tipTextColor = $options.tipTextColor || '#FF8080';
-	var showFeed = document.createElement('a');
-	showFeed.href = 'javascript:void(0)';
-	showFeed.className = 'notes';
-	showFeed.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px; height: auto;';
+	var showFeedLink = document.createElement('a');
+	showFeedLink.href = 'javascript:void(0)';
+	showFeedLink.className = 'notes';
+	showFeedLink.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px; height: auto;';
 	var keywordLink = document.createElement('a');
 	keywordLink.href = 'javascript:void(0)';
 	keywordLink.innerHTML = keyword;
@@ -226,34 +234,34 @@ function filterFeed(node) {
 		event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
 	});
 	if (scope === 1) {
-		showFeed.appendChild(document.createTextNode('本条来自'));
-		showFeed.appendChild(authorClone);
-		showFeed.appendChild(document.createTextNode('的微博因包含关键词“'));
+		showFeedLink.appendChild(document.createTextNode('本条来自'));
+		showFeedLink.appendChild(authorClone);
+		showFeedLink.appendChild(document.createTextNode('的微博因包含关键词“'));
 	} else if (scope === 2) {
-		showFeed.appendChild(document.createTextNode('本条微博因包含关键词“'));
+		showFeedLink.appendChild(document.createTextNode('本条微博因包含关键词“'));
 	}
-	showFeed.appendChild(keywordLink);
-	showFeed.appendChild(document.createTextNode('”而被隐藏，点击显示'));
-	click(showFeed, function () {
+	showFeedLink.appendChild(keywordLink);
+	showFeedLink.appendChild(document.createTextNode('”而被隐藏，点击显示'));
+	click(showFeedLink, function () {
 		this.parentNode.childNodes[2].style.opacity = 1;
 		this.parentNode.childNodes[4].style.opacity = 1;
 		this.parentNode.removeChild(this);
 	});
-	bind(showFeed, 'mouseover', function () {
+	bind(showFeedLink, 'mouseover', function () {
 		this.parentNode.childNodes[2].style.display = '';
 		this.parentNode.childNodes[4].style.display = '';
 		this.parentNode.childNodes[2].style.opacity = 0.5;
 		this.parentNode.childNodes[4].style.opacity = 0.5;
 		this.style.cssText = 'background-color: #D0FFD0; border-color: #40D040; color: #40D040; height: auto;';
 	});
-	bind(showFeed, 'mouseout', function () {
+	bind(showFeedLink, 'mouseout', function () {
 		if (!this.parentNode) {return; }
 		this.parentNode.childNodes[2].style.display = 'none';
 		this.parentNode.childNodes[4].style.display = 'none';
 		this.parentNode.style.cssText = '';
 		this.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px; height: auto;';
 	});
-	node.insertBefore(showFeed, node.firstChild);
+	node.insertBefore(showFeedLink, node.firstChild);
 	return true;
 }
 
@@ -383,6 +391,7 @@ function onKeyPress(event) {
 function applySettings() {
 	// 处理非动态载入内容
 	var feeds = document.querySelectorAll('.feed_list'), i, len, j, l;
+	$forwardFeeds = {};
 	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
 	// 极简阅读模式
 	readerMode();
@@ -462,7 +471,6 @@ function deleteKeyword(event) {
 // 根据当前设置（可能未保存）更新$options
 function updateSettings() {
 	$options = {
-		filterPaused : _('wbpFilterPaused').checked,
 		whiteKeywords : getKeywords('wbpWhiteKeywordList'),
 		blackKeywords : getKeywords('wbpBlackKeywordList'),
 		grayKeywords : getKeywords('wbpGrayKeywordList'),
@@ -472,7 +480,9 @@ function updateSettings() {
 		tipTextColor : _('wbpTipTextColor').value,
 		readerMode: _('wbpReaderMode').checked,
 		readerModeBackColor : _('wbpReaderModeBackColor').value,
-		hideDeleted : _('wbpHideDeleted').checked,
+		filterPaused : _('wbpFilterPaused').checked,
+		filterDupFwd : _('wbpFilterDupFwd').checked,
+		filterDeleted : _('wbpFilterDeleted').checked,
 		hideBlock : {}
 	};
 	var i, len;
@@ -501,7 +511,8 @@ function reloadSettings(str) {
 	_('wbpReaderMode').checked = ($options.readerMode === true);
 	_('wbpReaderModeBackColor').value = $options.readerModeBackColor || 'rgba(100%, 100%, 100%, 0.8)';
 	_('wbpFilterPaused').checked = ($options.filterPaused === true);
-	_('wbpHideDeleted').checked = ($options.hideDeleted === true);
+	_('wbpFilterDupFwd').checked = ($options.filterDupFwd === true);
+	_('wbpFilterDeleted').checked = ($options.filterDeleted === true);
 	_('wbpWhiteKeywordList').innerHTML = '';
 	_('wbpBlackKeywordList').innerHTML = '';
 	_('wbpGrayKeywordList').innerHTML = '';
