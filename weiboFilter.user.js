@@ -379,7 +379,7 @@ function onKeyPress(event) {
 		updateSettings();
 		GM_setValue($uid.toString(), JSON.stringify($options));
 		readerMode();
-	} else if (getScope() && event.keyCode === 118) {
+	} else if (getScope() && event.keyCode === 120) {
 		_('wbpFilterPaused').checked = !_('wbpFilterPaused').checked;
 		updateSettings();
 		GM_setValue($uid.toString(), JSON.stringify($options));
