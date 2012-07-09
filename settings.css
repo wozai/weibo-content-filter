@@ -1,10 +1,15 @@
-#wbpSettings p
-{
+#wbpSettings p {
 	line-height: 150%;
 }
-#wbpSettings p + p
-{
+#wbpSettings p + p {
 	margin-top: 10px;
+}
+#wbpSettings em.W_vline {
+	margin: 0 8px;
+}
+#wbpSettings div.content table {
+	line-height: 30px;
+	margin-top: 8px;
 }
 #wbpTabHeaders a {
 	display: block;
@@ -20,13 +25,11 @@
 	color: white;
 	cursor: default;
 }
-#wbpSettings .wbpInput 
-{
+#wbpSettings .wbpInput {
 	border: 1px solid #D2D5D8; 
 	padding: 0 2px;
 }
-#wbpSettings .wbpInput input
-{
+#wbpSettings .wbpInput input {
 	width: 100%;
 	height: 22px;
 	border: 0;
@@ -34,33 +37,30 @@
 	margin: 0;
 	display: block;
 }
-#wbpSettings .detail > div
-{
+#wbpSettings .detail > div {
 	margin-top: 15px;
 }
-#wbpTabModules input
-{
+#wbpTabModules input {
 	vertical-align: middle; 
 	margin-right: 5px;
 }
-#wbpSettings .wbpKeywordBlock
-{
+#wbpSettings .wbpKeywordBlock {
 	margin-top: 10px;
 	border: 1px solid #D2D5D8;
 	padding: 8px 8px 0;
 }
-#wbpSettings .wbpKeywordBlock em
-{
+#wbpSettings .wbpKeywordBlock em {
 	font-weight: bold;
 	margin-right: 15px;
 }
-#wbpSettings .wbpKeywordList
-{
+#wbpSettings .wbpKeywordBlock a.W_btn_a + a.W_btn_a {
+	margin-left: 5px;
+}
+#wbpSettings .wbpKeywordList {
 	margin-top: 8px;
 	overflow: hidden;
 }
-#wbpSettings .wbpKeywordList a
-{
+#wbpSettings .wbpKeywordList a {
 	margin: 0 5px 8px 0;
 	padding: 0 4px;
 	border: 1px solid;
@@ -72,39 +72,33 @@
 #wbpSettings .wbpKeywordList a:hover {
 	text-decoration: none;
 }
-#wbpWhiteKeywordList a
-{
+#wbpWhiteKeywordList a {
 	border-color: #008000;
 	color: #008000;
 }
-#wbpWhiteKeywordList a.regex
-{
+#wbpWhiteKeywordList a.regex {
 	background-color: #80FF80;
 }
 #wbpWhiteKeywordList a:hover {
 	border-color: #008000;
 	background-color: #D0FFD0;
 }
-#wbpBlackKeywordList a, #wbpURLKeywordList a, #wbpSourceKeywordList a
-{
+#wbpBlackKeywordList a, #wbpURLKeywordList a, #wbpSourceKeywordList a {
 	border-color: #D00000;
 	color: #D00000;
 }
-#wbpBlackKeywordList a.regex, #wbpURLKeywordList a.regex, #wbpSourceKeywordList a.regex
-{
+#wbpBlackKeywordList a.regex, #wbpURLKeywordList a.regex, #wbpSourceKeywordList a.regex {
 	background-color: #FFB0B0;
 }
 #wbpBlackKeywordList a:hover, #wbpURLKeywordList a:hover, #wbpSourceKeywordList a:hover {
 	border-color: #FF0000;
 	background-color: #FFD0D0;
 }
-#wbpGrayKeywordList a
-{
+#wbpGrayKeywordList a {
 	border-color: #808000;
 	color: #808000;
 }
-#wbpGrayKeywordList a.regex
-{
+#wbpGrayKeywordList a.regex {
 	background-color: #FFFF00;
 }
 #wbpGrayKeywordList a:hover {
