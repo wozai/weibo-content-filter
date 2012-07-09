@@ -4,8 +4,8 @@
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
 // @features		增加极简阅读模式；增加反版聊功能；增加单独的屏蔽来源功能；增加对已删除微博的转发的屏蔽；增加对微博精选模块的屏蔽
-// @version			0.9b4
-// @revision		50
+// @version			0.9b5
+// @revision		51
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @match			http://weibo.com/*
