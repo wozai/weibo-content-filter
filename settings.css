@@ -40,6 +40,11 @@
 #wbpSettings .detail > div {
 	margin-top: 15px;
 }
+#wbpSettings textarea {
+	width: 440px;
+	margin-top: 10px;
+	border: 1px solid #D2D5D8;
+}
 #wbpTabModules input {
 	vertical-align: middle; 
 	margin-right: 5px;
@@ -53,7 +58,7 @@
 	font-weight: bold;
 	margin-right: 15px;
 }
-#wbpSettings .wbpKeywordBlock a.W_btn_a + a.W_btn_a {
+#wbpSettings a.W_btn_a + a.W_btn_a {
 	margin-left: 5px;
 }
 #wbpSettings .wbpKeywordList {
