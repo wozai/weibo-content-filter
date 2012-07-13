@@ -4,12 +4,14 @@
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
 // @features		增加极简阅读模式；增加反版聊功能；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选模块的屏蔽
-// @version			0.9b5
-// @revision		51
+// @version			0.9b6
+// @revision		52
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @match			http://weibo.com/*
 // @match			http://www.weibo.com/*
+// @updateURL		https://userscripts.org/scripts/source/114087.meta.js
+// @downloadURL		https://userscripts.org/scripts/source/114087.user.js
 // ==/UserScript==
 
 var $version, $revision;
@@ -326,7 +328,7 @@ function checkUpdate() {
 				features = '- ' + RegExp.$1.split('；').join('\n- ') + '\n\n';
 			}
 			// 显示更新提示
-			if (confirm('“眼不见心不烦”新版本v' + ver + '可用。\n\n' + features + '如果您希望更新，请点击“确认”打开脚本页面。')) {
+			if (confirm('“眼不见心不烦”新版本v' + ver + '可用。\n\n' + features + '如果您希望更新，请点击“确认”打开插件主页。')) {
 				window.open('http://userscripts.org/scripts/show/114087');
 			}
 		}
