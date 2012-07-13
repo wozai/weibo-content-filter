@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加极简阅读模式；增加反版聊功能；增加单独的屏蔽来源功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选模块的屏蔽
+// @features		增加极简阅读模式；增加反版聊功能；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选模块的屏蔽
 // @version			0.9b5
 // @revision		51
 // @author			@富平侯(/salviati)
@@ -36,7 +36,8 @@ var $blocks = [ // 模块屏蔽设置
 		['VerifyIcon', '.approve, .approve_co'],
 		['DarenIcon', '.ico_club'],
 		['VgirlIcon', '.ico_vlady'],
-		['Oly361', '.ico_oly361']
+		['Oly361', '.ico_oly361'],
+		['Custom']
 	];
 var $options = {}, $forwardFeeds = {};
 
@@ -404,13 +405,17 @@ function applySettings() {
 	var cssText = '';
 	for (i = 0, len = $blocks.length; i < len; ++i) {
 		if ($options.hideBlock && $options.hideBlock[$blocks[i][0]] === true) {
-			cssText += $blocks[i][1];
 			if ($blocks[i][0] === 'RecommendedTopic') {
 				// 推荐话题的display属性在微博输入框获得焦点时被重置，
 				// 因此需要通过设置visibility属性实现隐藏
-				cssText += ' { visibility: hidden; } ';
+				cssText += $blocks[i][1] + ' { visibility: hidden; } ';
+			} else if ($blocks[i][0] === 'Custom') {
+				// 自定义屏蔽
+				if ($options.customBlocks.length) {
+					cssText += $options.customBlocks.join(', ') + ' { display: none; } ';
+				}
 			} else {
-				cssText += ' { display: none; } ';
+				cssText += $blocks[i][1] + ' { display: none; } ';
 			}
 		}
 	}
@@ -489,11 +494,16 @@ function updateSettings() {
 		filterDupFwd : _('wbpFilterDupFwd').checked,
 		filterDeleted : _('wbpFilterDeleted').checked,
 		filterFeelings : _('wbpFilterFeelings').checked,
-		hideBlock : {}
+		hideBlock : {},
+		customBlocks : []
 	};
-	var i, len;
+	var i, len, blocks = _('wbpCustomBlocks').value.split('\n'), block;
 	for (i = 0, len = $blocks.length; i < len; ++i) {
 		$options.hideBlock[$blocks[i][0]] = _('wbpBlock' + $blocks[i][0]).checked;
+	}
+	for (i = 0, len = blocks.length; i < len; ++i) {
+		block = blocks[i].trim();
+		if (block) { $options.customBlocks.push(block); }
 	}
 	_('wbpSettingsString').value = JSON.stringify($options);
 }
@@ -548,6 +558,11 @@ function reloadSettings(str) {
 		for (i = 0, len = $blocks.length; i < len; ++i) {
 			_('wbpBlock' + $blocks[i][0]).checked = ($options.hideBlock[$blocks[i][0]] === true);
 		}
+	}
+	if ($options.customBlocks) {
+		_('wbpCustomBlocks').value = $options.customBlocks.join('\n');
+	} else {
+		_('wbpCustomBlocks').value = '';
 	}
 	_('wbpSettingsString').value = JSON.stringify($options);
 	return true;
