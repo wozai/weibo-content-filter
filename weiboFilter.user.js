@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加极简阅读模式；增加反版聊功能；增加单独的屏蔽来源功能；增加对已删除微博的转发的屏蔽；增加对微博精选模块的屏蔽
+// @features		增加极简阅读模式；增加反版聊功能；增加单独的屏蔽来源功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选模块的屏蔽
 // @version			0.9b5
 // @revision		51
 // @author			@富平侯(/salviati)
@@ -171,6 +171,11 @@ function filterFeed(node) {
 	if ($options.filterDeleted && isForward && forwardContent.childNodes[1].tagName === 'EM') { // 已删除微博的转发，原文中没有原作者链接
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 		return true;
+	}
+	// 屏蔽写心情微博
+	if ($options.filterFeelings && node.querySelector('dd.content > div.feelingBoxS')) {
+		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
+		return true;	
 	}
 	// 屏蔽指定来源
 	if (filterSource(node.querySelector('dd.content > p.info > a[target="_blank"]')) || 
@@ -483,6 +488,7 @@ function updateSettings() {
 		filterPaused : _('wbpFilterPaused').checked,
 		filterDupFwd : _('wbpFilterDupFwd').checked,
 		filterDeleted : _('wbpFilterDeleted').checked,
+		filterFeelings : _('wbpFilterFeelings').checked,
 		hideBlock : {}
 	};
 	var i, len;
@@ -513,6 +519,7 @@ function reloadSettings(str) {
 	_('wbpFilterPaused').checked = ($options.filterPaused === true);
 	_('wbpFilterDupFwd').checked = ($options.filterDupFwd === true);
 	_('wbpFilterDeleted').checked = ($options.filterDeleted === true);
+	_('wbpFilterFeelings').checked = ($options.filterFeelings === true);
 	_('wbpWhiteKeywordList').innerHTML = '';
 	_('wbpBlackKeywordList').innerHTML = '';
 	_('wbpGrayKeywordList').innerHTML = '';
