@@ -58,6 +58,10 @@ var click = function (el, handler) {
 	bind(el, 'click', handler);
 };
 
+function getScope() {
+	return "B_index" === document.body.className ? 1 : "B_my_profile_other" === document.body.className ? 2 : 0;
+}
+
 // Chrome提供的GM_getValue()等有问题（早期版本则不支持），需要使用localStorage重新定义
 // Firefox 2+, Internet Explorer 8+, Safari 4+和Chrome均支持DOM Storage (HTML5)
 if (window.localStorage) {
@@ -76,41 +80,13 @@ if (window.localStorage) {
 	};
 }
 
-if (!window.chrome) {
-	// 非Chrome浏览器，优先使用unsafeWindow获取全局变量
-	// 由于varname中可能包括'.'，因此使用eval()获取变量值
-	var getGlobalVar = function (varname) {
-		return eval('unsafeWindow.' + varname);
-	};
-} else {
-	// Chrome原生不支持unsafeWindow，脚本运行在沙箱中，因此不能访问全局变量。
-	// 但用户脚本与页面共享DOM，所以可以设法将脚本注入host页
-	// 详见http://voodooattack.blogspot.com/2010/01/writing-google-chrome-extension-how-to.html
-	var getGlobalVar = function (varname) {
-		var elem = document.createElement('script'), id = '';
-		// 生成脚本元素的随机索引
-		while (id.length < 16) {
-			id += String.fromCharCode(((!id.length || Math.random() > 0.5) ? 0x61 + Math.floor(Math.random() * 0x19) : 0x30 + Math.floor(Math.random() * 0x9)));
-		}
-		// 生成脚本
-		elem.id = id;
-		elem.type = 'text/javascript';
-		elem.innerHTML = '(function(){document.getElementById("' + id + '").innerText=' + varname + '; }());';
-		// 将元素插入DOM（马上执行脚本）
-		document.head.appendChild(elem);
-		// 获取返回值
-		var ret = elem.innerText;
-		// 移除元素
-		document.head.removeChild(elem);
-		elem = null;
-		return ret;
-	};
-}
-
-function getScope() {
-	return "B_index" === document.body.className ? 1 : "B_my_profile_other" === document.body.className ? 2 : 0;
-}
-
+// 对于Chrome和Opera，通过脚本注入获得unsafeWindow
+var $window = ('chrome' in window || 'opera' in window) ? (function () {
+		var e = document.createElement('p');
+		e.setAttribute('onclick', 'return window;');
+		return e.onclick();
+	}()) : unsafeWindow;
+	
 // 搜索指定文本中是否包含列表中的关键词
 function searchKeyword(str, key) {
 	var text = str.toLowerCase(), keywords = $options[key], keyword, i, len;
@@ -572,7 +548,7 @@ function reloadSettings(str) {
 
 function loadSettingsWindow() {
 	if (_('wbpSettings')) {return true; }
-	$uid = getGlobalVar('$CONFIG.uid');
+	$uid = $window.$CONFIG.uid;
 	if (!$uid) {return false; }
 
 	// 加入选项设置
