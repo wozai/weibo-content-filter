@@ -354,10 +354,9 @@ function readerMode() {
 			document.head.appendChild(readerModeStyles);
 		}
 		if (_('Box_left')) { // 体验版
-			readerModeStyles.innerHTML = '#pl_content_top, #Box_left, #Box_right, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #Box_center { width: 800px; } .W_miniblog { background-position-y: -35px; } .W_main { padding-top: 17px; width: 845px; } .W_main_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 688px; } #base_scrollToTop { margin-left: 424px; }';
-		
+			readerModeStyles.innerHTML = '#Box_left, #Box_right, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #pl_content_top .global_header {top: -35px; } #Box_center { width: 800px; } .W_miniblog { background-position-y: -35px; } .W_main { padding-top: 17px; width: 845px; } .W_main_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 688px; } #base_scrollToTop { margin-left: 424px; }';
 		} else { // 传统版
-			readerModeStyles.innerHTML = '#pl_content_top, #plc_main .W_main_r, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #plc_main .W_main_c { width: 800px; } .W_miniblog { background-position-y: -35px; } #plc_main .custom_content_bg { padding-top: 30px; } .W_main_narrow { padding-top: 17px; } .W_main_narrow_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 628px; }';
+			readerModeStyles.innerHTML = '#plc_main .W_main_r, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #pl_content_top .global_header {top: -35px; } #plc_main .W_main_c { width: 800px; } .W_miniblog { background-position-y: -35px; } #plc_main .custom_content_bg { padding-top: 30px; } .W_main_narrow { padding-top: 17px; } .W_main_narrow_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 628px; }';
 		}
 	} else {
 		if (readerModeStyles) document.head.removeChild(readerModeStyles);
