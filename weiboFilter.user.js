@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加极简阅读模式；增加反版聊功能；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选模块的屏蔽
+// @features		增加极简阅读模式；增加反版聊功能；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选模块的屏蔽；修正网速较慢时脚本失效的问题
 // @version			0.9b6
 // @revision		52
 // @author			@富平侯(/salviati)
@@ -251,39 +251,47 @@ function filterFeed(node) {
 
 var $reloadTimerID = null;
 
+function reloadTimer() {
+	// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
+	// 各版块载入顺序不定，脚本运行时可能页面尚未载入完成，在网速较慢时尤为明显
+	// 需要等待页面载入完成时重新载入设置页面、按钮及刷新微博列表
+	if (getScope() === 0) {
+		return $reloadTimerID = null;
+	}
+	try {
+		var scriptReady = (typeof $window.STK.ui.dialog === 'function');
+	} finally {
+		if (loadSettingsWindow() && showSettingsBtn() && scriptReady && __('div.feed_lists dl.feed_list')) {
+			if ($reloadTimerID !== true) {applySettings(); }
+			return $reloadTimerID = true;
+		} else {
+			return $reloadTimerID = setTimeout(reloadTimer, 1000);
+		}
+	}
+}
+
 // 处理动态载入内容
 function onDOMNodeInsertion(event) {
-	if (getScope() === 0) {return false; }
+	if (getScope() === 0) {
+		$reloadTimerID = null;
+		return false; 
+	} else if ($reloadTimerID === null) {
+		// 第一次载入或从其它页面转入作用范围内页面
+		$reloadTimerID = 0;
+		reloadTimer();
+	}
 	var node = event.target;
 	if (node.tagName === 'DL' && node.classList.contains('feed_list')) {
 		// 处理动态载入的微博
 		return filterFeed(node);
-	}
-	if (node.tagName === 'DIV' && node.getAttribute('node-type') === 'feed_nav') {
-		// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
-		// 需要重新载入设置页面、按钮及刷新微博列表
-		if ($reloadTimerID !== null) {
-			clearTimeout($reloadTimerID);
-			$reloadTimerID = null;
-		}
-		loadSettingsWindow();
-		showSettingsBtn();
 	} else if (node.tagName === 'DIV' && node.classList.contains('feed_lists')) {
 		// 微博列表作为pagelet被一次性载入
-		applySettings();
-	} else if ($reloadTimerID === null && !_('wbpShowSettings')) {
-		// 由于各版块载入顺序不定，有时设置窗口及按钮未载入，使用定时器保险
-		$reloadTimerID = setTimeout(reloadTimer, 1000);
+		if (loadSettingsWindow()) {
+			$reloadTimerID = true;
+			applySettings();
+		}
 	}
 	return false;
-}
-
-function reloadTimer() {
-	if (getScope() === 0 || (loadSettingsWindow() && showSettingsBtn())) {
-		$reloadTimerID = null;
-	} else {
-		$reloadTimerID = setTimeout(reloadTimer, 1000);
-	}
 }
 
 // 检查更新
@@ -667,12 +675,8 @@ function loadSettingsWindow() {
 	return true;
 }
 
-// 仅在个人首页与他人页面生效
-if (getScope() !== 0) {
-	loadSettingsWindow();
-	showSettingsBtn();
-	applySettings();
-}
+// 等待页面载入完成
+reloadTimer();
 
 // 处理动态载入内容
 document.addEventListener('DOMNodeInserted', onDOMNodeInsertion, false);
