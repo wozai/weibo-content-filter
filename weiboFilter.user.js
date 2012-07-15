@@ -249,47 +249,58 @@ function filterFeed(node) {
 	return true;
 }
 
-var $reloadTimerID = null;
+var $loadingState = null;
 
-function reloadTimer() {
+function asyncLoad() {
 	// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
 	// 各版块载入顺序不定，脚本运行时可能页面尚未载入完成，在网速较慢时尤为明显
-	// 需要等待页面载入完成时重新载入设置页面、按钮及刷新微博列表
+	// 需要等待页面载入完成时重新载入设置按钮及刷新微博列表
+	// 载入顺序[内容(依赖)]：$options($CONFIG.$uid) -> [设置按钮(STK.ui.dialog); 微博列表(.feed_lists)]
 	if (getScope() === 0) {
-		return $reloadTimerID = null;
+		return $loadingState = null;
 	}
-	try {
-		var scriptReady = (typeof $window.STK.ui.dialog === 'function');
-	} finally {
-		if (loadSettingsWindow() && showSettingsBtn() && scriptReady && __('div.feed_lists dl.feed_list')) {
-			if ($reloadTimerID !== true) {applySettings(); }
-			return $reloadTimerID = true;
-		} else {
-			return $reloadTimerID = setTimeout(reloadTimer, 1000);
+	if (!$loadingState) { // 包括0, null和undefined
+		if (!$window.$CONFIG) {
+			return $loadingState = 0;
 		}
+		$uid = $window.$CONFIG.uid;
+		if (!reloadSettings()) {
+			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
+		}
+		GM_addStyle('#settings.css#');
+		$loadingState = 1;
 	}
+	if (($loadingState & 1) && !($loadingState & 2)) {
+		try {
+			if (typeof $window.STK.ui.dialog === 'function' && showSettingsBtn()) {
+				$loadingState |= 2;
+			}
+		} catch (e) { }
+	}
+	if (($loadingState & 1) && !($loadingState & 4) && __('div.feed_lists dl.feed_list')) {
+		applySettings();
+		$loadingState |= 4;
+	}
+	if ($loadingState !== 7) {
+		setTimeout(asyncLoad, 1000);
+	}
+	return $loadingState;
 }
 
 // 处理动态载入内容
 function onDOMNodeInsertion(event) {
 	if (getScope() === 0) {
-		$reloadTimerID = null;
+		$loadingState = null;
 		return false; 
-	} else if ($reloadTimerID === null) {
+	} else if ($loadingState === null) {
 		// 第一次载入或从其它页面转入作用范围内页面
-		$reloadTimerID = 0;
-		reloadTimer();
+		$loadingState = 0;
+		asyncLoad();
 	}
 	var node = event.target;
 	if (node.tagName === 'DL' && node.classList.contains('feed_list')) {
 		// 处理动态载入的微博
 		return filterFeed(node);
-	} else if (node.tagName === 'DIV' && node.classList.contains('feed_lists')) {
-		// 微博列表作为pagelet被一次性载入
-		if (loadSettingsWindow()) {
-			$reloadTimerID = true;
-			applySettings();
-		}
 	}
 	return false;
 }
@@ -319,15 +330,109 @@ function checkUpdate() {
 	});
 }
 
-function showSettingsWindow(event) {
-	_('wbpSettingsBack').style.cssText = 'background-image: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: black; opacity: 0.3; position: fixed; top: 0px; left: 0px; z-index: 10001; width: ' + window.innerWidth + 'px; height: ' + window.innerHeight + 'px;';
-	var block = _('wbpSettings');
-	// Chrome与Firefox的scrollLeft, scrollTop储存于不同位置
-	var left = document.body.scrollLeft === 0 ? document.documentElement.scrollLeft : document.body.scrollLeft;
-	var top = document.body.scrollTop === 0 ? document.documentElement.scrollTop : document.body.scrollTop;
-	block.style.left = (left + event.clientX) + 'px';
-	block.style.top = (top + event.clientY + 10) + 'px';
-	block.style.display = '';
+function showSettingsWindow() {
+	var settingsWindow = $window.STK.ui.dialog();
+	settingsWindow.setContent('#settings.html#');
+    settingsWindow.setTitle('“眼不见心不烦”(v' + $version + ')设置');
+	settingsWindow.show().setMiddle();
+	
+	// 修改屏蔽提示颜色事件
+	bind(_('wbpTipBackColor'), 'blur', function () {
+		_('wbpTipSample').style.backgroundColor = this.value;
+	});
+	bind(_('wbpTipTextColor'), 'blur', function () {
+		var wbpTipSample = _('wbpTipSample');
+		wbpTipSample.style.borderColor = this.value;
+		wbpTipSample.style.color = this.value;
+	});
+	// 添加关键词按钮点击事件
+	click(_('wbpAddWhiteKeyword'), function () {
+		_('wbpWhiteKeywords').value = addKeywords('wbpWhiteKeywordList', _('wbpWhiteKeywords').value);
+	});
+	click(_('wbpAddBlackKeyword'), function () {
+		_('wbpBlackKeywords').value = addKeywords('wbpBlackKeywordList', _('wbpBlackKeywords').value);
+	});
+	click(_('wbpAddGrayKeyword'), function () {
+		_('wbpGrayKeywords').value = addKeywords('wbpGrayKeywordList', _('wbpGrayKeywords').value);
+	});
+	click(_('wbpAddURLKeyword'), function () {
+		_('wbpURLKeywords').value = addKeywords('wbpURLKeywordList', _('wbpURLKeywords').value);
+	});
+	click(_('wbpAddSourceKeyword'), function () {
+		_('wbpSourceKeywords').value = addKeywords('wbpSourceKeywordList', _('wbpSourceKeywords').value);
+	});
+	// 清空关键词按钮点击事件
+	click(_('wbpClearWhiteKeyword'), function () {
+		_('wbpWhiteKeywordList').innerHTML = '';
+	});
+	click(_('wbpClearBlackKeyword'), function () {
+		_('wbpBlackKeywordList').innerHTML = '';
+	});
+	click(_('wbpClearGrayKeyword'), function () {
+		_('wbpGrayKeywordList').innerHTML = '';
+	});
+	click(_('wbpClearURLKeyword'), function () {
+		_('wbpURLKeywordList').innerHTML = '';
+	});
+	click(_('wbpClearSourceKeyword'), function () {
+		_('wbpSourceKeywordList').innerHTML = '';
+	})
+	// 删除关键词事件
+	click(_('wbpWhiteKeywordList'), deleteKeyword);
+	click(_('wbpBlackKeywordList'), deleteKeyword);
+	click(_('wbpGrayKeywordList'), deleteKeyword);
+	click(_('wbpURLKeywordList'), deleteKeyword);
+	click(_('wbpSourceKeywordList'), deleteKeyword);
+	// 标签点击事件
+	click(_('wbpTabHeaders'), function (event) {
+		var node = event.target, i, len;
+		if (node && node.tagName === 'A') {
+			node.className = 'current';
+			_(node.getAttribute('tab')).style.display = '';
+			for (i = 0, len = this.childNodes.length; i < len; ++i) {
+				if (node !== this.childNodes[i]) {
+					this.childNodes[i].className = '';
+					_(this.childNodes[i].getAttribute('tab')).style.display = 'none';
+				}
+			}
+			event.stopPropagation();
+		}
+	});
+	click(_('wbpTabHeaderSettings'), updateSettings);
+	click(_('wbpBlockAll'), function () {
+		var i, len;
+		for (i = 0, len = $blocks.length; i < len; ++i) {
+			_('wbpBlock' + $blocks[i][0]).checked = true;
+		}
+	});
+	click(_('wbpBlockInvert'), function () {
+		var i, len, item;
+		for (i = 0, len = $blocks.length; i < len; ++i) {
+			item = _('wbpBlock' + $blocks[i][0]);
+			item.checked = !item.checked;
+		}
+	});
+	// 对话框按钮点击事件
+	click(_('wbpImportBtn'), function () {
+		if (reloadSettings(_('wbpSettingsString').value)) {
+			updateSettingsWindow();
+			alert('设置导入成功！'); 
+		} else {
+			alert('设置导入失败！\n设置信息格式有问题。');	
+		}
+	});
+	click(_('wbpOKBtn'), function () {
+		$options = updateSettings();
+		GM_setValue($uid.toString(), JSON.stringify($options));
+		applySettings();
+		settingsWindow.hide();
+	});
+	click(_('wbpCancelBtn'), function () {
+		settingsWindow.hide();
+	});
+	click(_('wbpCheckUpdate'), checkUpdate);
+
+	updateSettingsWindow();
 }
 
 function showSettingsBtn() {
@@ -365,14 +470,13 @@ function readerMode() {
 
 // 检测按键，开关极简阅读模式和屏蔽开关
 function onKeyPress(event) {
+	if (!$loadingState) {return; }
 	if (getScope() === 1 && event.keyCode === 119) {
-		_('wbpReaderMode').checked = !_('wbpReaderMode').checked;
-		updateSettings();
+		$options.readerMode = !$options.readerMode;
 		GM_setValue($uid.toString(), JSON.stringify($options));
 		readerMode();
 	} else if (getScope() && event.keyCode === 120) {
-		_('wbpFilterPaused').checked = !_('wbpFilterPaused').checked;
-		updateSettings();
+		$options.filterPaused = !$options.filterPaused;
 		GM_setValue($uid.toString(), JSON.stringify($options));
 		applySettings();
 	}
@@ -465,7 +569,7 @@ function deleteKeyword(event) {
 
 // 根据当前设置（可能未保存）更新$options
 function updateSettings() {
-	$options = {
+	var options = {
 		whiteKeywords : getKeywords('wbpWhiteKeywordList'),
 		blackKeywords : getKeywords('wbpBlackKeywordList'),
 		grayKeywords : getKeywords('wbpGrayKeywordList'),
@@ -484,31 +588,33 @@ function updateSettings() {
 	};
 	var i, len, blocks = _('wbpCustomBlocks').value.split('\n'), block;
 	for (i = 0, len = $blocks.length; i < len; ++i) {
-		$options.hideBlock[$blocks[i][0]] = _('wbpBlock' + $blocks[i][0]).checked;
+		options.hideBlock[$blocks[i][0]] = _('wbpBlock' + $blocks[i][0]).checked;
 	}
 	for (i = 0, len = blocks.length; i < len; ++i) {
 		block = blocks[i].trim();
-		if (block) { $options.customBlocks.push(block); }
+		if (block) { options.customBlocks.push(block); }
 	}
-	_('wbpSettingsString').value = JSON.stringify($options);
+	_('wbpSettingsString').value = JSON.stringify(options);
+	return options;
 }
 
-// 重新载入设置（丢弃未保存设置）
+// 载入/导入设置更新$options
 function reloadSettings(str) {
 	$options = {};
 	var options = str || GM_getValue($uid.toString(), '');
 	if (options) {
 		try {
 			$options = JSON.parse(options.replace(/\n/g, ''));
-			if (typeof $options !== 'object') {throw 0; }
+			//if (typeof $options !== 'object') {throw 0; }
 		} catch (e) {
-			if (str) {
-				alert('设置导入失败！\n设置信息格式有问题。');
-				return false;
-			}
-			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
+			return false;
 		}
 	}
+	return true;
+}
+
+// 更新设置窗口内容，updateSettings()的反过程
+function updateSettingsWindow() {
 	_('wbpReaderMode').checked = ($options.readerMode === true);
 	_('wbpReaderModeBackColor').value = $options.readerModeBackColor || 'rgba(100%, 100%, 100%, 0.8)';
 	_('wbpFilterPaused').checked = ($options.filterPaused === true);
@@ -550,132 +656,10 @@ function reloadSettings(str) {
 		_('wbpCustomBlocks').value = '';
 	}
 	_('wbpSettingsString').value = JSON.stringify($options);
-	return true;
-}
-
-function loadSettingsWindow() {
-	if (_('wbpSettings')) {return true; }
-	$uid = $window.$CONFIG.uid;
-	if (!$uid) {return false; }
-
-	// 加入选项设置
-	GM_addStyle('#settings.css#');
-	var keywordBack = document.createElement('div');
-	keywordBack.id = 'wbpSettingsBack';
-	keywordBack.style.display = 'none';
-	var keywordBlock = document.createElement('div');
-	keywordBlock.className = 'W_layer';
-	keywordBlock.id = 'wbpSettings';
-	keywordBlock.style.cssText = 'width: 600px; margin-left: -300px; z-index: 10001; position: absolute; display: none;';
-	keywordBlock.innerHTML = '#settings.html#';
-	document.body.appendChild(keywordBack);
-	document.body.appendChild(keywordBlock);
-	_('wbpSettingsTitle').innerHTML = '“眼不见心不烦”(v' + $version + ')设置';
-	// 修改屏蔽提示颜色事件
-	bind(_('wbpTipBackColor'), 'blur', function () {
-		_('wbpTipSample').style.backgroundColor = this.value;
-	});
-	bind(_('wbpTipTextColor'), 'blur', function () {
-		var wbpTipSample = _('wbpTipSample');
-		wbpTipSample.style.borderColor = this.value;
-		wbpTipSample.style.color = this.value;
-	});
-	// 添加关键词按钮点击事件
-	click(_('wbpAddWhiteKeyword'), function () {
-		_('wbpWhiteKeywords').value = addKeywords('wbpWhiteKeywordList', _('wbpWhiteKeywords').value);
-	});
-	click(_('wbpAddBlackKeyword'), function () {
-		_('wbpBlackKeywords').value = addKeywords('wbpBlackKeywordList', _('wbpBlackKeywords').value);
-	});
-	click(_('wbpAddGrayKeyword'), function () {
-		_('wbpGrayKeywords').value = addKeywords('wbpGrayKeywordList', _('wbpGrayKeywords').value);
-	});
-	click(_('wbpAddURLKeyword'), function () {
-		_('wbpURLKeywords').value = addKeywords('wbpURLKeywordList', _('wbpURLKeywords').value);
-	});
-	click(_('wbpAddSourceKeyword'), function () {
-		_('wbpSourceKeywords').value = addKeywords('wbpSourceKeywordList', _('wbpSourceKeywords').value);
-	});
-	// 清空关键词按钮点击事件
-	click(_('wbpClearWhiteKeyword'), function () {
-		_('wbpWhiteKeywordList').innerHTML = '';
-	});
-	click(_('wbpClearBlackKeyword'), function () {
-		_('wbpBlackKeywordList').innerHTML = '';
-	});
-	click(_('wbpClearGrayKeyword'), function () {
-		_('wbpGrayKeywordList').innerHTML = '';
-	});
-	click(_('wbpClearURLKeyword'), function () {
-		_('wbpURLKeywordList').innerHTML = '';
-	});
-	click(_('wbpClearSourceKeyword'), function () {
-		_('wbpSourceKeywordList').innerHTML = '';
-	})
-	// 删除关键词事件
-	click(_('wbpWhiteKeywordList'), deleteKeyword);
-	click(_('wbpBlackKeywordList'), deleteKeyword);
-	click(_('wbpGrayKeywordList'), deleteKeyword);
-	click(_('wbpURLKeywordList'), deleteKeyword);
-	click(_('wbpSourceKeywordList'), deleteKeyword);
-	// 标签点击事件
-	click(_('wbpTabHeaders'), function (event) {
-		var node = event.target, i, len;
-		if (node && node.tagName === 'A') {
-			node.className = 'current';
-			_(node.getAttribute('tab')).style.display = '';
-			for (i = 0, len = this.childNodes.length; i < len; ++i) {
-				if (node !== this.childNodes[i]) {
-					this.childNodes[i].className = '';
-					_(this.childNodes[i].getAttribute('tab')).style.display = 'none';
-				}
-			}
-			event.stopPropagation();
-		}
-	});
-	click(_('wbpTabHeaderSettings'), updateSettings);
-	click(_('wbpBlockAll'), function () {
-		var i, len;
-		for (i = 0, len = $blocks.length; i < len; ++i) {
-			_('wbpBlock' + $blocks[i][0]).checked = true;
-		}
-	});
-	click(_('wbpBlockInvert'), function () {
-		var i, len, item;
-		for (i = 0, len = $blocks.length; i < len; ++i) {
-			item = _('wbpBlock' + $blocks[i][0]);
-			item.checked = !item.checked;
-		}
-	});
-	// 对话框按钮点击事件
-	click(_('wbpImportBtn'), function () {
-		if (reloadSettings(_('wbpSettingsString').value)) {alert('设置导入成功！'); }
-	});
-	click(_('wbpOKBtn'), function () {
-		updateSettings();
-		GM_setValue($uid.toString(), JSON.stringify($options));
-		_('wbpSettingsBack').style.display = 'none';
-		_('wbpSettings').style.display = 'none';
-		applySettings();
-	});
-	click(_('wbpCancelBtn'), function () {
-		reloadSettings();
-		_('wbpSettingsBack').style.display = 'none';
-		_('wbpSettings').style.display = 'none';
-	});
-	click(_('wbpCloseBtn'), function () {
-		reloadSettings();
-		_('wbpSettingsBack').style.display = 'none';
-		_('wbpSettings').style.display = 'none';
-	});
-
-	reloadSettings();
-	click(_('wbpCheckUpdate'), checkUpdate);
-	return true;
 }
 
 // 等待页面载入完成
-reloadTimer();
+asyncLoad();
 
 // 处理动态载入内容
 document.addEventListener('DOMNodeInserted', onDOMNodeInsertion, false);
