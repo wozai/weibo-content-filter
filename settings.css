@@ -7,7 +7,7 @@
 #wbpSettings em.W_vline {
 	margin: 0 8px;
 }
-#wbpSettings div.content table {
+#wbpSettings table {
 	line-height: 30px;
 	margin-top: 8px;
 }
@@ -37,7 +37,7 @@
 	margin: 0;
 	display: block;
 }
-#wbpSettings .detail > div {
+#wbpSettings > div {
 	margin-top: 15px;
 }
 #wbpSettings textarea {
