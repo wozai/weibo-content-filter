@@ -81,11 +81,11 @@ a.wbpTip:hover {
 .wbpSettings a.W_btn_a + a.W_btn_a {
 	margin-left: 5px;
 }
-.wbpKeywordList {
+.wbpKeywordsList {
 	margin-top: 8px;
 	overflow: hidden;
 }
-.wbpKeywordList a {
+.wbpKeywordsList a {
 	margin: 0 5px 8px 0;
 	padding: 0 4px;
 	border: 1px solid;
@@ -94,39 +94,39 @@ a.wbpTip:hover {
 	line-height: 18px;
 	white-space: nowrap;
 }
-.wbpKeywordList a:hover {
+.wbpKeywordsList a:hover {
 	text-decoration: none;
 }
-.wbpWhiteKeywordList a {
+.wbpWhiteKeywordsList a {
 	border-color: #008000;
 	color: #008000;
 }
-.wbpWhiteKeywordList a.regex {
+.wbpWhiteKeywordsList a.regex {
 	background-color: #80FF80;
 }
-.wbpWhiteKeywordList a:hover {
+.wbpWhiteKeywordsList a:hover {
 	border-color: #008000;
 	background-color: #D0FFD0;
 }
-.wbpBlackKeywordList a{
+.wbpBlackKeywordsList a{
 	border-color: #D00000;
 	color: #D00000;
 }
-.wbpBlackKeywordList a.regex {
+.wbpBlackKeywordsList a.regex {
 	background-color: #FFB0B0;
 }
-.wbpBlackKeywordList a:hover {
+.wbpBlackKeywordsList a:hover {
 	border-color: #FF0000;
 	background-color: #FFD0D0;
 }
-.wbpGrayKeywordList a {
+.wbpGrayKeywordsList a {
 	border-color: #808000;
 	color: #808000;
 }
-.wbpGrayKeywordList a.regex {
+.wbpGrayKeywordsList a.regex {
 	background-color: #FFFF00;
 }
-.wbpGrayKeywordList a:hover {
+.wbpGrayKeywordsList a:hover {
 	border-color: #808000;
 	background-color: #FFFFB0;
 }
