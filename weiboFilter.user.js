@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选模块的屏蔽；修正网速较慢时脚本失效的问题
+// @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块的屏蔽；修正网速较慢时脚本失效的问题
 // @version			0.9b6
 // @revision		52
 // @author			@富平侯(/salviati)
@@ -23,6 +23,7 @@ var $blocks = [ // 模块屏蔽设置
 		['Notice', '#pl_common_noticeboard, #pl_rightmod_noticeboard'],
 		['HelpFeedback', '#pl_common_help, #pl_common_feedback, #pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle'],
 		['Ads', '#plc_main .W_main_r div[id^="ads_"], div[ad-data], #ads_bottom_1'],
+		['Footer', 'div.global_footer'],
 		['PullyList', '#pl_content_pullylist, #pl_content_biztips'],
 		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
 		['Mood', '#pl_content_mood'],
