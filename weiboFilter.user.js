@@ -431,7 +431,7 @@ function showSettingsWindow() {
 		return content.getDom(node);
 	}
 	var STKbind = function (node, func, event) {
-		$window.STK.addEvent(content.getDom(node), event ? event : 'click', func);
+		$window.STK.core.evt.addEvent(content.getDom(node), event ? event : 'click', func);
 	}
 	// 从显示列表建立关键词数组
 	var getKeywords = function (id) {
@@ -463,6 +463,7 @@ function showSettingsWindow() {
 					keywordLink.className = 'regex';
 				}
 				keywordLink.title = '删除关键词';
+				keywordLink.setAttribute('action-type', 'remove');
 				keywordLink.href = 'javascript:void(0)';
 				keywordLink.innerHTML = keyword;
 				getDom(id).appendChild(keywordLink);
@@ -472,14 +473,6 @@ function showSettingsWindow() {
 			alert('下列正则表达式无效：\n' + malformed.join('\n'));
 		}
 		return malformed.join(' ');
-	}
-
-	// 点击删除关键词（由上级div冒泡事件处理）
-	var deleteKeyword = function (event) {
-		if (event.target.tagName === 'A') {
-			event.target.parentNode.removeChild(event.target);
-			event.stopPropagation();
-		}
 	}
 
 	// 根据当前设置（可能未保存）更新$options
@@ -566,44 +559,19 @@ function showSettingsWindow() {
 		getDom('tipSample').style.borderColor = this.value;
 		getDom('tipSample').style.color = this.value;
 	}, 'blur');
+	var events = $window.STK.core.evt.delegatedEvent(content.getInner());
 	// 添加关键词按钮点击事件
-	STKbind('addWhiteKeyword', function () {
-		getDom('whiteKeywords').value = addKeywords('whiteKeywordList', getDom('whiteKeywords').value);
-	});
-	STKbind('addBlackKeyword', function () {
-		getDom('blackKeywords').value = addKeywords('blackKeywordList', getDom('blackKeywords').value);
-	});
-	STKbind('addGrayKeyword', function () {
-		getDom('grayKeywords').value = addKeywords('grayKeywordList', getDom('grayKeywords').value);
-	});
-	STKbind('addURLKeyword', function () {
-		getDom('URLKeywords').value = addKeywords('URLKeywordList', getDom('URLKeywords').value);
-	});
-	STKbind('addSourceKeyword', function () {
-		getDom('sourceKeywords').value = addKeywords('sourceKeywordList', getDom('sourceKeywords').value);
+	events.add('add', 'click', function (action) {
+		getDom(action.data.text).value = addKeywords(action.data.list, getDom(action.data.text).value);
 	});
 	// 清空关键词按钮点击事件
-	STKbind('clearWhiteKeyword', function () {
-		getDom('whiteKeywordList').innerHTML = '';
+	events.add('clear', 'click', function (action) {
+		getDom(action.data.list).innerHTML = '';
 	});
-	STKbind('clearBlackKeyword', function () {
-		getDom('blackKeywordList').innerHTML = '';
-	});
-	STKbind('clearGrayKeyword', function () {
-		getDom('grayKeywordList').innerHTML = '';
-	});
-	STKbind('clearURLKeyword', function () {
-		getDom('URLKeywordList').innerHTML = '';
-	});
-	STKbind('clearSourceKeyword', function () {
-		getDom('sourceKeywordList').innerHTML = '';
-	})
 	// 删除关键词事件
-	STKbind('whiteKeywordList', deleteKeyword);
-	STKbind('blackKeywordList', deleteKeyword);
-	STKbind('grayKeywordList', deleteKeyword);
-	STKbind('URLKeywordList', deleteKeyword);
-	STKbind('sourceKeywordList', deleteKeyword);
+	events.add('remove', 'click', function (action) {
+		action.el.parentNode.removeChild(action.el);
+	});
 	// 标签点击事件
 	STKbind('tabHeaders', function (event) {
 		var node = event.target, i, len;
@@ -616,7 +584,6 @@ function showSettingsWindow() {
 					getDom(this.childNodes[i].getAttribute('tab')).style.display = 'none';
 				}
 			}
-			event.stopPropagation();
 		}
 	});
 	STKbind('tabHeaderSettings', updateSettings);
