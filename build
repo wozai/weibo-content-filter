@@ -14,9 +14,9 @@ do
 		":") echo "Missing argument value for option -$OPTARG"; exit 1;;
 	esac
 done
-sed 's/#settings.css#/'"${CSS}"'/;s/#settings.html#/'"${HTML}"'/;s/var \$version, \$revision;/var \$version = "'"${VER}"'", \$revision = '"${REV}"';/' weiboFilter.user.js > $OUTFILE
+sed 's/\${CSS}/'"${CSS}"'/;s/\${HTML}/'"${HTML}"'/;s/\${REV}/'"${REV}"'/;s/\${VER}/'"${VER}"'/;s/^\(\/\/ @version\s\+\)\([0-9]\+\)\(\.[0-9]\+\)\+.*$/\1\2\3/' weiboFilter.user.js > $OUTFILE
 [ $NO_COMPRESS ] && exit 0
-head -n 15 weiboFilter.user.js | sed 's/^\(\/\/ @version\s\+\)\([0-9]\+\)\(\.[0-9]\+\)\+.*$/\1\2\3/' > weiboFilter.user.head.js
+head -n 15 weiboFilter.user.js > weiboFilter.user.head.js
 if [ ! -f compiler.jar ]
 then
 	wget -q http://closure-compiler.googlecode.com/files/compiler-latest.tar.gz

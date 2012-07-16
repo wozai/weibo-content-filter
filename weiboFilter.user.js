@@ -4,8 +4,8 @@
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
 // @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块的屏蔽；修正网速较慢时脚本失效的问题
-// @version			0.9b6
-// @revision		52
+// @version			0.9
+// @revision		53
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @match			http://weibo.com/*
@@ -14,7 +14,7 @@
 // @downloadURL		https://userscripts.org/scripts/source/114087.user.js
 // ==/UserScript==
 
-var $version, $revision;
+var $revision = ${REV};
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Topic', '#pl_content_promotetopic, #trustPagelete_zt_hottopic'],
@@ -243,7 +243,7 @@ function asyncLoad() {
 		if (!reloadSettings()) {
 			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 		}
-		GM_addStyle('#settings.css#');
+		GM_addStyle('${CSS}');
 		$loadingState = 1;
 	}
 	if (($loadingState & 1) && !($loadingState & 2)) {
@@ -557,8 +557,8 @@ var $settingsWindow = (function () {
 	// 创建设置窗口
 	var createDialog = function () {
 		dialog = $window.STK.ui.dialog({isHold: true});
-		dialog.setTitle('“眼不见心不烦”(v' + $version + ')设置');
-		content = $window.STK.module.layer('#settings.html#');
+		dialog.setTitle('“眼不见心不烦”(v${VER})设置');
+		content = $window.STK.module.layer('${HTML}');
 		dialog.setContent(content.getOuter());
 		// 修改屏蔽提示颜色事件
 		STKbind('tipBackColor', function () {
