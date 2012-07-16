@@ -42,6 +42,21 @@ var $blocks = [ // 模块屏蔽设置
 		['Oly361', '.ico_oly361'],
 		['Custom']
 	];
+var $optionData = {
+	whiteKeywords : ['keyword'],
+	blackKeywords : ['keyword'],
+	grayKeywords : ['keyword'],
+	URLKeywords : ['keyword'],
+	sourceKeywords : ['keyword'],
+	tipBackColor : ['string', '#FFD0D0'],
+	tipTextColor : ['string', '#FF8080'],
+	readerMode : ['boolean'],
+	readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
+	filterPaused : ['boolean'],
+	filterDupFwd : ['boolean'],
+	filterDeleted : ['boolean'],
+	filterFeelings : ['boolean']
+};
 var $options = {}, $forwardFeeds = {};
 
 var _ = function (s) {
@@ -480,27 +495,26 @@ var $settingsWindow = (function () {
 
 	// 根据当前设置（可能未保存）更新$options
 	var exportSettings = function () {
-		var options = {
-			whiteKeywords : getKeywords('whiteKeywordList'),
-			blackKeywords : getKeywords('blackKeywordList'),
-			grayKeywords : getKeywords('grayKeywordList'),
-			URLKeywords : getKeywords('URLKeywordList'),
-			sourceKeywords : getKeywords('sourceKeywordList'),
-			tipBackColor : getDom('tipBackColor').value,
-			tipTextColor : getDom('tipTextColor').value,
-			readerMode: getDom('readerMode').checked,
-			readerModeBackColor : getDom('readerModeBackColor').value,
-			filterPaused : getDom('filterPaused').checked,
-			filterDupFwd : getDom('filterDupFwd').checked,
-			filterDeleted : getDom('filterDeleted').checked,
-			filterFeelings : getDom('filterFeelings').checked,
-			hideBlock : {},
-			customBlocks : []
-		};
+		var options = {}, option;
+		for (option in $optionData) {
+			switch ($optionData[option][0]) {
+				case 'keyword':
+					options[option] = getKeywords(option + 'List');
+					break;
+				case 'string':
+					options[option] = getDom(option).value;
+					break;
+				case 'boolean':
+					options[option] = getDom(option).checked;
+					break;
+			}
+		}
+		options.hideBlock = {};
 		var i, len, blocks = getDom('customBlocks').value.split('\n'), block;
 		for (i = 0, len = $blocks.length; i < len; ++i) {
 			options.hideBlock[$blocks[i][0]] = getDom('block' + $blocks[i][0]).checked;
 		}
+		options.customBlocks = [];
 		for (i = 0, len = blocks.length; i < len; ++i) {
 			block = blocks[i].trim();
 			if (block) { options.customBlocks.push(block); }
@@ -511,31 +525,24 @@ var $settingsWindow = (function () {
 
 	// 更新设置窗口内容，exportSettings()的反过程
 	var importSettings = function () {
-		getDom('readerMode').checked = ($options.readerMode === true);
-		getDom('readerModeBackColor').value = $options.readerModeBackColor || 'rgba(100%, 100%, 100%, 0.8)';
-		getDom('filterPaused').checked = ($options.filterPaused === true);
-		getDom('filterDupFwd').checked = ($options.filterDupFwd === true);
-		getDom('filterDeleted').checked = ($options.filterDeleted === true);
-		getDom('filterFeelings').checked = ($options.filterFeelings === true);
-		getDom('whiteKeywordList').innerHTML = '';
-		getDom('blackKeywordList').innerHTML = '';
-		getDom('grayKeywordList').innerHTML = '';
-		getDom('URLKeywordList').innerHTML = '';
-		getDom('sourceKeywordList').innerHTML = '';
-		addKeywords('whiteKeywordList', $options.whiteKeywords || '');
-		addKeywords('blackKeywordList', $options.blackKeywords || '');
-		addKeywords('grayKeywordList', $options.grayKeywords || '');
-		addKeywords('URLKeywordList', $options.URLKeywords || '');
-		addKeywords('sourceKeywordList', $options.sourceKeywords || '');
-		getDom('whiteKeywords').value = '';
-		getDom('blackKeywords').value = '';
-		getDom('grayKeywords').value = '';
-		getDom('URLKeywords').value = '';
-		getDom('sourceKeywords').value = '';
-		var tipBackColor = $options.tipBackColor || '#FFD0D0';
-		var tipTextColor = $options.tipTextColor || '#FF8080';
-		getDom('tipBackColor').value = tipBackColor;
-		getDom('tipTextColor').value = tipTextColor;
+		var option;
+		for (option in $optionData) {
+			switch ($optionData[option][0]) {
+				case 'keyword':
+					getDom(option).value = '';
+					getDom(option + 'List').innerHTML = '';
+					addKeywords(option + 'List', $options[option] || $optionData[option][1] || '');
+					break;
+				case 'string':
+					getDom(option).value = $options[option] || $optionData[option][1] || '';
+					break;
+				case 'boolean':
+					getDom(option).checked = $options[option] || $optionData[option][1] || false;
+					break;
+			}
+		}
+		var tipBackColor = getDom('tipBackColor').value;
+		var tipTextColor = getDom('tipTextColor').value;
 		var tipSample = getDom('tipSample');
 		tipSample.style.backgroundColor = tipBackColor;
 		tipSample.style.borderColor = tipTextColor;
@@ -546,11 +553,7 @@ var $settingsWindow = (function () {
 				getDom('block' + $blocks[i][0]).checked = ($options.hideBlock[$blocks[i][0]] === true);
 			}
 		}
-		if ($options.customBlocks) {
-			getDom('customBlocks').value = $options.customBlocks.join('\n');
-		} else {
-			getDom('customBlocks').value = '';
-		}
+		getDom('customBlocks').value = $options.customBlocks ? $options.customBlocks.join('\n') : '';
 		getDom('settingsString').value = JSON.stringify($options);
 	}
 
