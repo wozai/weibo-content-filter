@@ -1,35 +1,40 @@
-#wbpSettings p {
+.wbpSettings p {
 	line-height: 150%;
 }
-#wbpSettings p + p {
+.wbpSettings p + p {
 	margin-top: 10px;
 }
-#wbpSettings em.W_vline {
+.wbpSettings em.W_vline {
 	margin: 0 8px;
 }
-#wbpSettings table {
+.wbpSettings table {
 	line-height: 30px;
 	margin-top: 8px;
 }
-#wbpTabHeaders a {
+.wbpTabHeaders {
+	float: left;
+	width: 100px;
+	margin-right: 10px;
+}
+.wbpTabHeaders a {
 	display: block;
 	padding: 6px 0;
 	text-align: center;
 	text-decoration: none;
 }
-#wbpTabHeaders a:hover {
+.wbpTabHeaders a:hover {
 	background-color: #C6E8F4;
 }
-#wbpTabHeaders a.current {
+.wbpTabHeaders a.current {
 	background-color: #79C5E9;
 	color: white;
 	cursor: default;
 }
-#wbpSettings .wbpInput {
+.wbpInput {
 	border: 1px solid #D2D5D8; 
 	padding: 0 2px;
 }
-#wbpSettings .wbpInput input {
+.wbpInput input {
 	width: 100%;
 	height: 22px;
 	border: 0;
@@ -37,35 +42,38 @@
 	margin: 0;
 	display: block;
 }
-#wbpSettings > div {
+.wbpSettings > div {
 	margin-top: 15px;
 }
-#wbpSettings textarea {
+.wbpSettings textarea {
 	width: 440px;
 	margin-top: 10px;
 	border: 1px solid #D2D5D8;
 }
-#wbpTabModules input {
+.wbpSettings input[type="checkbox"] {
 	vertical-align: middle; 
 	margin-right: 5px;
 }
-#wbpSettings .wbpKeywordBlock {
+.wbpTabModules tr.wbpRowSpacing td {
+	padding-top: 10px;
+}
+.wbpKeywordBlock {
 	margin-top: 10px;
 	border: 1px solid #D2D5D8;
 	padding: 8px 8px 0;
 }
-#wbpSettings .wbpKeywordBlock em {
+.wbpKeywordBlock em {
 	font-weight: bold;
 	margin-right: 15px;
 }
-#wbpSettings a.W_btn_a + a.W_btn_a {
+.wbpSettings a.W_btn_a + a.W_btn_a {
 	margin-left: 5px;
 }
-#wbpSettings .wbpKeywordList {
+.wbpKeywordList {
 	margin-top: 8px;
 	overflow: hidden;
 }
-#wbpSettings .wbpKeywordList a {
+.wbpKeywordList a {
 	margin: 0 5px 8px 0;
 	padding: 0 4px;
 	border: 1px solid;
@@ -74,46 +82,39 @@
 	line-height: 18px;
 	white-space: nowrap;
 }
-#wbpSettings .wbpKeywordList a:hover {
+.wbpKeywordList a:hover {
 	text-decoration: none;
 }
-#wbpWhiteKeywordList a {
+.wbpWhiteKeywordList a {
 	border-color: #008000;
 	color: #008000;
 }
-#wbpWhiteKeywordList a.regex {
+.wbpWhiteKeywordList a.regex {
 	background-color: #80FF80;
 }
-#wbpWhiteKeywordList a:hover {
+.wbpWhiteKeywordList a:hover {
 	border-color: #008000;
 	background-color: #D0FFD0;
 }
-#wbpBlackKeywordList a, #wbpURLKeywordList a, #wbpSourceKeywordList a {
+.wbpBlackKeywordList a{
 	border-color: #D00000;
 	color: #D00000;
 }
-#wbpBlackKeywordList a.regex, #wbpURLKeywordList a.regex, #wbpSourceKeywordList a.regex {
+.wbpBlackKeywordList a.regex {
 	background-color: #FFB0B0;
 }
-#wbpBlackKeywordList a:hover, #wbpURLKeywordList a:hover, #wbpSourceKeywordList a:hover {
+.wbpBlackKeywordList a:hover {
 	border-color: #FF0000;
 	background-color: #FFD0D0;
 }
-#wbpGrayKeywordList a {
+.wbpGrayKeywordList a {
 	border-color: #808000;
 	color: #808000;
 }
-#wbpGrayKeywordList a.regex {
+.wbpGrayKeywordList a.regex {
 	background-color: #FFFF00;
 }
-#wbpGrayKeywordList a:hover {
+.wbpGrayKeywordList a:hover {
 	border-color: #808000;
 	background-color: #FFFFB0;
-}
-#wbpTabModules tr.wbpRowSpacing td {
-	padding-top: 10px;
-}
-#wbpTabAdvanced input {
-	vertical-align: middle;
-	margin-right: 5px;
 }
