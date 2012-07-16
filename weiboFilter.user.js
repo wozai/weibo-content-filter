@@ -42,7 +42,7 @@ var $blocks = [ // 模块屏蔽设置
 		['Oly361', '.ico_oly361'],
 		['Custom']
 	];
-var $options = {}, $forwardFeeds = {}, $settingsWindow;
+var $options = {}, $forwardFeeds = {};
 
 var _ = function (s) {
 	return document.getElementById(s);
@@ -215,7 +215,7 @@ function filterFeed(node) {
 	keywordLink.href = 'javascript:void(0)';
 	keywordLink.innerHTML = keyword;
 	click(keywordLink, function (event) {
-		showSettingsWindow(event);
+		$settingsWindow.show();
 		event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
 	});
 	if (scope === 1) {
@@ -416,24 +416,17 @@ function reloadSettings(str) {
 	return true;
 }
 
-// 显示设置窗口
-function showSettingsWindow() {
-	if ($settingsWindow) {
-		$settingsWindow.show().setMiddle();
-		return;
-	}
-	// 创建设置窗口
-	$settingsWindow = $window.STK.ui.dialog({isHold: true});
-	$settingsWindow.setTitle('“眼不见心不烦”(v' + $version + ')设置');
-	var content = $window.STK.module.layer('#settings.html#');
-	$settingsWindow.setContent(content.getOuter());
-		
+var $settingsWindow = (function () {
+	var settingsWindow = {}, shown = false;
+	var dialog, content;
+	
 	var getDom = function (node) {
 		return content.getDom(node);
 	}
 	var STKbind = function (node, func, event) {
 		$window.STK.core.evt.addEvent(content.getDom(node), event ? event : 'click', func);
 	}
+	
 	// 从显示列表建立关键词数组
 	var getKeywords = function (id) {
 		if (!getDom(id).hasChildNodes()) {return []; }
@@ -477,7 +470,7 @@ function showSettingsWindow() {
 	}
 
 	// 根据当前设置（可能未保存）更新$options
-	var updateSettings = function () {
+	var exportSettings = function () {
 		var options = {
 			whiteKeywords : getKeywords('whiteKeywordList'),
 			blackKeywords : getKeywords('blackKeywordList'),
@@ -507,8 +500,8 @@ function showSettingsWindow() {
 		return options;
 	}
 
-	// 更新设置窗口内容，updateSettings()的反过程
-	var updateSettingsWindow = function () {
+	// 更新设置窗口内容，exportSettings()的反过程
+	var importSettings = function () {
 		getDom('readerMode').checked = ($options.readerMode === true);
 		getDom('readerModeBackColor').value = $options.readerModeBackColor || 'rgba(100%, 100%, 100%, 0.8)';
 		getDom('filterPaused').checked = ($options.filterPaused === true);
@@ -551,77 +544,99 @@ function showSettingsWindow() {
 		}
 		getDom('settingsString').value = JSON.stringify($options);
 	}
-	
-	// 修改屏蔽提示颜色事件
-	STKbind('tipBackColor', function () {
-		getDom('tipSample').style.backgroundColor = this.value;
-	}, 'blur');
-	STKbind('tipTextColor', function () {
-		getDom('tipSample').style.borderColor = this.value;
-		getDom('tipSample').style.color = this.value;
-	}, 'blur');
-	var events = $window.STK.core.evt.delegatedEvent(content.getInner());
-	// 添加关键词按钮点击事件
-	events.add('add', 'click', function (action) {
-		getDom(action.data.text).value = addKeywords(action.data.list, getDom(action.data.text).value);
-	});
-	// 清空关键词按钮点击事件
-	events.add('clear', 'click', function (action) {
-		getDom(action.data.list).innerHTML = '';
-	});
-	// 删除关键词事件
-	events.add('remove', 'click', function (action) {
-		action.el.parentNode.removeChild(action.el);
-	});
-	// 标签点击事件
-	STKbind('tabHeaders', function (event) {
-		var node = event.target, i, len;
-		if (node && node.tagName === 'A') {
-			node.className = 'current';
-			getDom(node.getAttribute('tab')).style.display = '';
-			for (i = 0, len = this.childNodes.length; i < len; ++i) {
-				if (node !== this.childNodes[i]) {
-					this.childNodes[i].className = '';
-					getDom(this.childNodes[i].getAttribute('tab')).style.display = 'none';
+
+	// 创建设置窗口
+	var createDialog = function () {
+		dialog = $window.STK.ui.dialog({isHold: true});
+		dialog.setTitle('“眼不见心不烦”(v' + $version + ')设置');
+		content = $window.STK.module.layer('#settings.html#');
+		dialog.setContent(content.getOuter());
+		// 修改屏蔽提示颜色事件
+		STKbind('tipBackColor', function () {
+			getDom('tipSample').style.backgroundColor = this.value;
+		}, 'blur');
+		STKbind('tipTextColor', function () {
+			getDom('tipSample').style.borderColor = this.value;
+			getDom('tipSample').style.color = this.value;
+		}, 'blur');
+		var events = $window.STK.core.evt.delegatedEvent(content.getInner());
+		// 添加关键词按钮点击事件
+		events.add('add', 'click', function (action) {
+			getDom(action.data.text).value = addKeywords(action.data.list, getDom(action.data.text).value);
+		});
+		// 清空关键词按钮点击事件
+		events.add('clear', 'click', function (action) {
+			getDom(action.data.list).innerHTML = '';
+		});
+		// 删除关键词事件
+		events.add('remove', 'click', function (action) {
+			action.el.parentNode.removeChild(action.el);
+		});
+		// 标签点击事件
+		STKbind('tabHeaders', function (event) {
+			var node = event.target, i, len;
+			if (node && node.tagName === 'A') {
+				node.className = 'current';
+				getDom(node.getAttribute('tab')).style.display = '';
+				for (i = 0, len = this.childNodes.length; i < len; ++i) {
+					if (node !== this.childNodes[i]) {
+						this.childNodes[i].className = '';
+						getDom(this.childNodes[i].getAttribute('tab')).style.display = 'none';
+					}
 				}
 			}
+		});
+		STKbind('tabHeaderSettings', exportSettings);
+		STKbind('blockAll', function () {
+			var i, len;
+			for (i = 0, len = $blocks.length; i < len; ++i) {
+				getDom('block' + $blocks[i][0]).checked = true;
+			}
+		});
+		STKbind('blockInvert', function () {
+			var i, len, item;
+			for (i = 0, len = $blocks.length; i < len; ++i) {
+				item = getDom('block' + $blocks[i][0]);
+				item.checked = !item.checked;
+			}
+		});
+		// 对话框按钮点击事件
+		STKbind('import', function () {
+			if (reloadSettings(getDom('settingsString').value)) {
+				importSettings();
+				alert('设置导入成功！'); 
+			} else {
+				alert('设置导入失败！\n设置信息格式有问题。');	
+			}
+		});
+		STKbind('checkUpdate', checkUpdate);
+		STKbind('OK', function () {
+			$options = exportSettings();
+			GM_setValue($uid.toString(), JSON.stringify($options));
+			applySettings();
+			dialog.hide();
+		});
+		STKbind('cancel', dialog.hide);
+		$window.STK.custEvent.add(dialog, "hide", function () {
+			shown = false;
+		});
+	}
+
+	// 显示设置窗口
+	settingsWindow.show = function () {
+		if (!dialog) {
+			createDialog();
 		}
-	});
-	STKbind('tabHeaderSettings', updateSettings);
-	STKbind('blockAll', function () {
-		var i, len;
-		for (i = 0, len = $blocks.length; i < len; ++i) {
-			getDom('block' + $blocks[i][0]).checked = true;
-		}
-	});
-	STKbind('blockInvert', function () {
-		var i, len, item;
-		for (i = 0, len = $blocks.length; i < len; ++i) {
-			item = getDom('block' + $blocks[i][0]);
-			item.checked = !item.checked;
-		}
-	});
-	// 对话框按钮点击事件
-	STKbind('import', function () {
-		if (reloadSettings(getDom('settingsString').value)) {
-			updateSettingsWindow();
-			alert('设置导入成功！'); 
-		} else {
-			alert('设置导入失败！\n设置信息格式有问题。');	
-		}
-	});
-	STKbind('checkUpdate', checkUpdate);
-	STKbind('OK', function () {
-		$options = updateSettings();
-		GM_setValue($uid.toString(), JSON.stringify($options));
-		applySettings();
-		$settingsWindow.hide();
-	});
-	STKbind('cancel', $settingsWindow.hide);
-	// 显示窗口时自动更新设置
-	$window.STK.custEvent.add($settingsWindow, "show", updateSettingsWindow);
-	$settingsWindow.show().setMiddle();
-}
+		shown = true;
+		importSettings();
+		dialog.show().setMiddle();
+	}
+	settingsWindow.isShown = function () {
+		return shown;
+	}
+
+	return settingsWindow;
+}());
 
 function showSettingsBtn() {
 	// 设置标签已经置入页面
@@ -632,7 +647,7 @@ function showSettingsBtn() {
 	var showSettingsTab = document.createElement('li');
 	showSettingsTab.innerHTML = '<span><em><a id="wbpShowSettings" href="javascript:void(0)">眼不见心不烦</a></em></span>';
 	groups.childNodes[1].appendChild(showSettingsTab);
-	click(_('wbpShowSettings'), showSettingsWindow);
+	click(_('wbpShowSettings'), $settingsWindow.show);
 	return true;
 }
 
