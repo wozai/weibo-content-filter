@@ -205,19 +205,13 @@ function filterFeed(node) {
 	}
 	// 找到了待隐藏的微博
 	node.childNodes[1].style.display = 'none';
-	var tipBackColor = $options.tipBackColor || '#FFD0D0';
-	var tipTextColor = $options.tipTextColor || '#FF8080';
 	var showFeedLink = document.createElement('a');
 	showFeedLink.href = 'javascript:void(0)';
-	showFeedLink.className = 'notes';
-	showFeedLink.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px; height: auto;';
+	showFeedLink.className = 'wbpTip';
 	var keywordLink = document.createElement('a');
 	keywordLink.href = 'javascript:void(0)';
+	keywordLink.className = 'wbpTipKeyword';
 	keywordLink.innerHTML = keyword;
-	click(keywordLink, function (event) {
-		$settingsWindow.show();
-		event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
-	});
 	if (scope === 1) {
 		showFeedLink.appendChild(document.createTextNode('本条来自'));
 		showFeedLink.appendChild(authorClone);
@@ -227,25 +221,6 @@ function filterFeed(node) {
 	}
 	showFeedLink.appendChild(keywordLink);
 	showFeedLink.appendChild(document.createTextNode('”而被隐藏，点击显示'));
-	click(showFeedLink, function () {
-		this.parentNode.childNodes[2].style.opacity = 1;
-		this.parentNode.childNodes[4].style.opacity = 1;
-		this.parentNode.removeChild(this);
-	});
-	bind(showFeedLink, 'mouseover', function () {
-		this.parentNode.childNodes[2].style.display = '';
-		this.parentNode.childNodes[4].style.display = '';
-		this.parentNode.childNodes[2].style.opacity = 0.5;
-		this.parentNode.childNodes[4].style.opacity = 0.5;
-		this.style.cssText = 'background-color: #D0FFD0; border-color: #40D040; color: #40D040; height: auto;';
-	});
-	bind(showFeedLink, 'mouseout', function () {
-		if (!this.parentNode) {return; }
-		this.parentNode.childNodes[2].style.display = 'none';
-		this.parentNode.childNodes[4].style.display = 'none';
-		this.parentNode.style.cssText = '';
-		this.style.cssText = 'background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; margin-bottom: 0px; height: auto;';
-	});
 	node.insertBefore(showFeedLink, node.firstChild);
 	return true;
 }
@@ -279,6 +254,37 @@ function asyncLoad() {
 		} catch (e) { }
 	}
 	if (($loadingState & 1) && !($loadingState & 4) && __('div.feed_lists dl.feed_list')) {
+		var feedLists = __('div.feed_lists');
+		// 屏蔽提示相关事件的冒泡处理
+		click(feedLists, function (event) {
+			var node = event.target;
+			if (node && node.tagName === 'A') {
+				if (node.className === 'wbpTipKeyword') {
+					$settingsWindow.show();
+					event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
+				} else if (node.className === 'wbpTip') {
+					node.parentNode.childNodes[2].style.opacity = 1;
+					node.parentNode.childNodes[4].style.opacity = 1;
+					node.parentNode.removeChild(node);
+				}
+			}
+		});
+		bind(feedLists, 'mouseover', function (event) {
+			var node = event.target;
+			if (node && node.tagName === 'A' && node.className === 'wbpTip') {
+				node.parentNode.childNodes[2].style.display = '';
+				node.parentNode.childNodes[4].style.display = '';
+				node.parentNode.childNodes[2].style.opacity = 0.5;
+				node.parentNode.childNodes[4].style.opacity = 0.5;
+			}
+		});
+		bind(feedLists, 'mouseout', function (event) {
+			var node = event.target;
+			if (node && node.tagName === 'A' && node.className === 'wbpTip' && node.parentNode) {
+				node.parentNode.childNodes[2].style.display = 'none';
+				node.parentNode.childNodes[4].style.display = 'none';
+			}
+		});
 		applySettings();
 		$loadingState |= 4;
 	}
@@ -389,6 +395,11 @@ function applySettings() {
 			}
 		}
 	}
+	// 屏蔽提示相关CSS
+	var tipBackColor = $options.tipBackColor || '#FFD0D0';
+	var tipTextColor = $options.tipTextColor || '#FF8080';
+	cssText += 'a.wbpTip { background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; }'
+	// 更新CSS
 	blockStyles = _('wbpBlockStyles');
 	if (!blockStyles) {
 		blockStyles = document.createElement('style');
