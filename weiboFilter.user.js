@@ -353,15 +353,13 @@ function readerMode() {
 
 // 检测按键，开关极简阅读模式和屏蔽开关
 function onKeyPress(event) {
-	if (!$loadingState) {return; }
+	if (!$loadingState || $settingsWindow.isShown()) {return; }
 	if (getScope() === 1 && event.keyCode === 119) {
 		$options.readerMode = !$options.readerMode;
 		GM_setValue($uid.toString(), JSON.stringify($options));
 		readerMode();
 	} else if (getScope() && event.keyCode === 120) {
-		$options.filterPaused = !$options.filterPaused;
-		GM_setValue($uid.toString(), JSON.stringify($options));
-		applySettings();
+		$settingsWindow.show();
 	}
 }
 			 
