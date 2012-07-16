@@ -1,3 +1,15 @@
+.wbpTip {
+	border: 1px solid;
+	display: block;
+	line-height: 23px;
+	text-align: center;
+}
+a.wbpTip:hover {
+	background-color: #D0FFD0;
+	border-color: #40D040;
+	color: #40D040;
+	margin-bottom: 10px;
+}
 .wbpSettings p {
 	line-height: 150%;
 }
