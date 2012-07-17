@@ -657,6 +657,25 @@ var $settingsWindow = (function () {
 		events.add('remove', 'click', function (action) {
 			action.el.parentNode.removeChild(action.el);
 		});
+		// 复选框标签点击事件
+		STKbind('inner', function (event) {
+			var node = event.target;
+			// 标签下可能有span等元素
+			if (node.parentNode.tagName === 'LABEL') {
+				node = node.parentNode;
+			}
+			if (node.tagName === 'LABEL') {
+				event.preventDefault();
+				event.stopPropagation();
+				if (node.getAttribute('for')) {
+					// 有for属性则使用之
+					getDom(node.getAttribute('for')).click();
+				} else {
+					// 默认目标在标签之前（同级）
+					node.previousSibling.click();
+				}
+			}
+		});
 		// 标签点击事件
 		STKbind('tabHeaders', function (event) {
 			var node = event.target, i, len;
