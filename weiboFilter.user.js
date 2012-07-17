@@ -3,17 +3,18 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块的屏蔽；修正网速较慢时脚本失效的问题；修正导入设置失败时原设置被清空的问题
+// @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；增加自动检查更新功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块的屏蔽；修正网速较慢时脚本失效的问题；修正导入设置失败时原设置被清空的问题
 // @version			0.9
 // @revision		53
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
-// @match			http://weibo.com/*
-// @match			http://www.weibo.com/*
+// @include			http://weibo.com/*
+// @include			http://www.weibo.com/*
 // @updateURL		https://userscripts.org/scripts/source/114087.meta.js
 // @downloadURL		https://userscripts.org/scripts/source/114087.user.js
 // ==/UserScript==
 
+// 注意：使用@match替换@include将使GM_xmlhttpRequest()失效
 var $revision = ${REV};
 var $uid;
 var $blocks = [ // 模块屏蔽设置
@@ -56,7 +57,7 @@ var $optionData = {
 	filterDupFwd : ['bool'],
 	filterDeleted : ['bool'],
 	filterFeelings : ['bool'],
-	lastCheckUpdate : ['internal', 0],
+	autoUpdate : ['bool', true],
 	customBlocks : ['array'],
 	hideBlock : ['object']
 };
@@ -261,6 +262,9 @@ function asyncLoad() {
 		if (!reloadSettings($options, GM_getValue($uid.toString(), ''))) {
 			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 		}
+		if ($options.autoUpdate) {
+			autoUpdate();
+		}
 		GM_addStyle('${CSS}');
 		$loadingState = 1;
 	}
@@ -330,14 +334,36 @@ function onDOMNodeInsertion(event) {
 	return false;
 }
 
+// 自动检查更新
+function autoUpdate() {
+	// 部分自动更新代码改写自http://loonyone.livejournal.com/
+	// 防止重复检查（同时打开多个窗口时），间隔至少两分钟
+	var DoS_PREVENTION_TIME = 2 * 60 * 1000;
+	var lastAttempt = GM_getValue('lastCheckUpdateAttempt', 0);
+	var now = new Date().getTime();
+
+	if (lastAttempt && (now - lastAttempt) < DoS_PREVENTION_TIME) {return; }
+	GM_setValue('lastCheckUpdateAttempt', now.toString());
+	
+	// 每天检查一次
+	var ONE_DAY = 24 * 60 * 60 * 1000;
+	//var ONE_WEEK = 7 * ONE_DAY;
+	var lastSuccess = GM_getValue('lastCheckUpdateSuccess', 0);
+	if (lastSuccess && (now - lastSuccess) < ONE_DAY) {return; }
+	
+	checkUpdate();
+}
+
 // 检查更新
 function checkUpdate() {
 	GM_xmlhttpRequest({
 		method: 'GET',
 		// 只载入metadata
-		url: 'http://userscripts.org/scripts/source/114087.meta.js',
+		url: 'http://userscripts.org/scripts/source/114087.meta.js?' + new Date().getTime(),
+		headers: {'Cache-Control': 'no-cache'},
 		onload: function (result) {
 			if (!result.responseText.match(/@version\s+(.*)/)) {return; }
+			GM_setValue('lastCheckUpdateSuccess', new Date().getTime().toString());
 			var ver = RegExp.$1;
 			if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= $revision) {
 				alert('脚本已经是最新版。');
@@ -416,7 +442,7 @@ function applySettings() {
 	// 屏蔽提示相关CSS
 	var tipBackColor = $options.tipBackColor;
 	var tipTextColor = $options.tipTextColor;
-	cssText += 'a.wbpTip { background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; }'
+	cssText += 'a.wbpTip { background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; }';
 	// 更新CSS
 	blockStyles = _('wbpBlockStyles');
 	if (!blockStyles) {
