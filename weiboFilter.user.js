@@ -4,7 +4,7 @@
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
 // @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；增加自动检查更新功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块的屏蔽；修正网速较慢时脚本失效的问题；修正导入设置失败时原设置被清空的问题
-// @version			0.90
+// @version			0.9b7
 // @revision		53
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
@@ -78,34 +78,35 @@ var click = function (el, handler) {
 };
 
 function getScope() {
-	return "B_index" === document.body.className ? 1 : "B_my_profile_other" === document.body.className ? 2 : 0;
+	return 'B_index' === document.body.className ? 1 : 'B_my_profile_other' === document.body.className ? 2 : 0;
 }
 
-// Chrome提供的GM_getValue()等有问题（早期版本则不支持），需要使用localStorage重新定义
+// Chrome不支持GM_setValue(), GM_getValue()等，需要使用localStorage重新定义
 // Firefox 2+, Internet Explorer 8+, Safari 4+和Chrome均支持DOM Storage (HTML5)
 if (window.localStorage) {
 	var keyRoot = 'weiboPlus.';
 
-	var GM_deleteValue = function (name) {
+	var deleteValue = function (name) {
 		localStorage.removeItem(keyRoot + name);
 	};
 
-	var GM_getValue = function (name, defval) {
+	var getValue = function (name, defval) {
 		return localStorage.getItem(keyRoot + name) || defval;
 	};
 
-	var GM_setValue = function (name, value) {
+	var setValue = function (name, value) {
 		localStorage.setItem(keyRoot + name, value);
 	};
 }
 
 // 对于Chrome和Opera，通过脚本注入获得unsafeWindow
-var $window = ('chrome' in window || 'opera' in window) ? (function () {
-		var e = document.createElement('p');
-		e.setAttribute('onclick', 'return window;');
-		return e.onclick();
-	}()) : unsafeWindow;
-	
+var $window = (!window.chrome) ? unsafeWindow :
+		(function () {
+			var e = document.createElement('p');
+			e.setAttribute('onclick', 'return window;');
+			return e.onclick();
+		}());
+
 // 搜索指定文本中是否包含列表中的关键词
 function searchKeyword(str, key) {
 	var text = str.toLowerCase(), keywords = $options[key], keyword, i, len = keywords.length;
@@ -132,9 +133,9 @@ function filterSource(source) {
 		source = '未通过审核应用';
 	} else {
 		// 过长的应用名称会被压缩，完整名称存放在title属性中
-		source = source.title ? source.title : source.innerHTML;
+		source = source.title || source.innerHTML;
 	}
-	return searchKeyword(source, 'sourceKeywords') !== ''
+	return searchKeyword(source, 'sourceKeywords') !== '';
 }
 
 function showFeed(node, fwdLink) {
@@ -154,7 +155,7 @@ function filterFeed(node) {
 		content = node.querySelector('dd.content > p[node-type="feed_list_content"]'),
 		forwardContent = node.querySelector('dd.content > dl.comment > dt[node-type="feed_list_forwardContent"]'),
 		forwardLink = node.querySelector('dd.content > dl.comment > dd.info > a.date');
-	if (!content) {return false; }	
+	if (!content) {return false; }
 	if (scope === 2) {text = ''; } // 他人主页没有原作者链接
 	text += content.textContent.replace(/[\r\n\t]/g, '').trim();
 	if (isForward) {
@@ -173,11 +174,11 @@ function filterFeed(node) {
 	// 屏蔽写心情微博
 	if ($options.filterFeelings && node.querySelector('dd.content > div.feelingBoxS')) {
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
-		return true;	
+		return true;
 	}
 	// 屏蔽指定来源
-	if (filterSource(node.querySelector('dd.content > p.info > a[target="_blank"]')) || 
-		(isForward && filterSource(node.querySelector('dd.content > dl.comment > dd.info > a[target="_blank"]')))) {
+	if (filterSource(node.querySelector('dd.content > p.info > a[target="_blank"]')) ||
+			(isForward && filterSource(node.querySelector('dd.content > dl.comment > dd.info > a[target="_blank"]')))) {
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 		return true;
 	}
@@ -251,14 +252,14 @@ function asyncLoad() {
 	// 需要等待页面载入完成时重新载入设置按钮及刷新微博列表
 	// 载入顺序[内容(依赖)]：$options($CONFIG.$uid) -> [设置按钮(STK.ui.dialog); 微博列表(.feed_lists)]
 	if (getScope() === 0) {
-		return $loadingState = null;
+		return ($loadingState = null);
 	}
 	if (!$loadingState) { // 包括0, null和undefined
 		if (!$window.$CONFIG) {
-			return $loadingState = 0;
+			return ($loadingState = 0);
 		}
 		$uid = $window.$CONFIG.uid;
-		if (!reloadSettings($options, GM_getValue($uid.toString(), ''))) {
+		if (!reloadSettings($options, getValue($uid.toString(), ''))) {
 			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 		}
 		if ($options.autoUpdate) {
@@ -319,8 +320,9 @@ function asyncLoad() {
 function onDOMNodeInsertion(event) {
 	if (getScope() === 0) {
 		$loadingState = null;
-		return false; 
-	} else if ($loadingState === null) {
+		return false;
+	}
+	if ($loadingState === null) {
 		// 第一次载入或从其它页面转入作用范围内页面
 		$loadingState = 0;
 		asyncLoad();
@@ -338,18 +340,18 @@ function autoUpdate() {
 	// 部分自动更新代码改写自http://loonyone.livejournal.com/
 	// 防止重复检查（同时打开多个窗口时），间隔至少两分钟
 	var DoS_PREVENTION_TIME = 2 * 60 * 1000;
-	var lastAttempt = GM_getValue('lastCheckUpdateAttempt', 0);
+	var lastAttempt = getValue('lastCheckUpdateAttempt', 0);
 	var now = new Date().getTime();
 
 	if (lastAttempt && (now - lastAttempt) < DoS_PREVENTION_TIME) {return; }
-	GM_setValue('lastCheckUpdateAttempt', now.toString());
-	
+	setValue('lastCheckUpdateAttempt', now.toString());
+
 	// 每天检查一次
 	var ONE_DAY = 24 * 60 * 60 * 1000;
 	//var ONE_WEEK = 7 * ONE_DAY;
-	var lastSuccess = GM_getValue('lastCheckUpdateSuccess', 0);
+	var lastSuccess = getValue('lastCheckUpdateSuccess', 0);
 	if (lastSuccess && (now - lastSuccess) < ONE_DAY) {return; }
-	
+
 	checkUpdate(true);
 }
 
@@ -361,7 +363,7 @@ function checkUpdate(auto) {
 		url: 'http://userscripts.org/scripts/source/114087.meta.js?' + new Date().getTime(),
 		headers: {'Cache-Control': 'no-cache'},
 		onload: function (result) {
-			GM_setValue('lastCheckUpdateSuccess', new Date().getTime().toString());
+			setValue('lastCheckUpdateSuccess', new Date().getTime().toString());
 			if (!result.responseText.match(/@version\s+(\d+\.\d+)/)) {return; }
 			var currentVersion = '${VER}'.split('.'), version = RegExp.$1.split('.'), i;
 			for (i = 0; i < 2; ++i) {
@@ -386,7 +388,7 @@ function checkUpdate(auto) {
 // 极简阅读模式（仅在个人首页生效）
 function readerMode() {
 	var readerModeStyles = _('wbpReaderModeStyles');
-	if (getScope() === 1 && $options.readerMode) {		
+	if (getScope() === 1 && $options.readerMode) {
 		if (!readerModeStyles) {
 			readerModeStyles = document.createElement('style');
 			readerModeStyles.type = 'text/css';
@@ -398,8 +400,8 @@ function readerMode() {
 		} else { // 传统版
 			readerModeStyles.innerHTML = '#plc_main .W_main_r, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #pl_content_top .global_header {top: -35px; } #plc_main .W_main_c { width: 800px; } .W_miniblog { background-position-y: -35px; } #plc_main .custom_content_bg { padding-top: 30px; } .W_main_narrow { padding-top: 17px; } .W_main_narrow_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 628px; }';
 		}
-	} else {
-		if (readerModeStyles) document.head.removeChild(readerModeStyles);
+	} else if (readerModeStyles) {
+		document.head.removeChild(readerModeStyles);
 	}
 }
 
@@ -408,17 +410,17 @@ function onKeyPress(event) {
 	if (!$loadingState || $settingsWindow.isShown()) {return; }
 	if (getScope() === 1 && event.keyCode === 119) {
 		$options.readerMode = !$options.readerMode;
-		GM_setValue($uid.toString(), JSON.stringify($options));
+		setValue($uid.toString(), JSON.stringify($options));
 		readerMode();
 	} else if (getScope() && event.keyCode === 120) {
 		$settingsWindow.show();
 	}
 }
-			 
+
 // 根据当前设置屏蔽/显示所有内容
 function applySettings() {
 	// 处理非动态载入内容
-	var feeds = document.querySelectorAll('.feed_list'), i, len, j, l;
+	var feeds = document.querySelectorAll('.feed_list'), i, len;
 	$forwardFeeds = {};
 	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
 	// 极简阅读模式
@@ -446,7 +448,7 @@ function applySettings() {
 	var tipTextColor = $options.tipTextColor;
 	cssText += 'a.wbpTip { background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; }';
 	// 更新CSS
-	blockStyles = _('wbpBlockStyles');
+	var blockStyles = _('wbpBlockStyles');
 	if (!blockStyles) {
 		blockStyles = document.createElement('style');
 		blockStyles.type = 'text/css';
@@ -472,7 +474,7 @@ function reloadSettings(options, str) {
 		try {
 			parsedOptions = JSON.parse(str.replace(/\n/g, ''));
 			if (typeof parsedOptions !== 'object') {throw 0; }
-		} catch (e) { 
+		} catch (e) {
 			parsedOptions = {};
 			str = ''; // 出错，最后返回false
 		}
@@ -496,14 +498,14 @@ function reloadSettings(options, str) {
 var $settingsWindow = (function () {
 	var settingsWindow = {}, shown = false;
 	var dialog, content;
-	
+
 	var getDom = function (node) {
 		return content.getDom(node);
-	}
-	var STKbind = function (node, func, event) {
-		$window.STK.core.evt.addEvent(content.getDom(node), event ? event : 'click', func);
-	}
-	
+	};
+	var bindSTK = function (node, func, event) {
+		$window.STK.core.evt.addEvent(content.getDom(node), event || 'click', func);
+	};
+
 	// 从显示列表建立关键词数组
 	var getKeywords = function (id) {
 		if (!getDom(id).hasChildNodes()) {return []; }
@@ -512,12 +514,11 @@ var $settingsWindow = (function () {
 			if (keywords[i].tagName === 'A') {list.push(keywords[i].innerHTML); }
 		}
 		return list;
-	}
+	};
 
 	// 将关键词添加到显示列表
 	var addKeywords = function (id, list) {
-		var keywords = list instanceof Array ? list : list.split(' '),
-			i, len, malformed = [];
+		var keywords = list instanceof Array ? list : list.split(' '), i, len, malformed = [];
 		for (i = 0, len = keywords.length; i < len; ++i) {
 			var currentKeywords = ' ' + getKeywords(id).join(' ') + ' ', keyword = keywords[i];
 			if (keyword && currentKeywords.indexOf(' ' + keyword + ' ') === -1) {
@@ -544,7 +545,7 @@ var $settingsWindow = (function () {
 			alert('下列正则表达式无效：\n' + malformed.join('\n'));
 		}
 		return malformed.join(' ');
-	}
+	};
 
 	// 去掉所有内部变量并输出
 	var stringifySettings = function (options) {
@@ -555,32 +556,32 @@ var $settingsWindow = (function () {
 			}
 		}
 		getDom('settingsString').value = JSON.stringify(stripped);
-	}
-	
+	};
+
 	// 根据当前设置（可能未保存）更新$options
 	var exportSettings = function () {
 		var options = {}, option;
 		for (option in $optionData) {
 			switch ($optionData[option][0]) {
-				case 'keyword':
-					options[option] = getKeywords(option + 'List');
-					break;
-				case 'string':
-					options[option] = getDom(option).value;
-					break;
-				case 'bool':
-					options[option] = getDom(option).checked;
-					break;
-				case 'array':
-					options[option] = [];
-					break;
-				case 'object':
-					options[option] = {};
-					break;
-				case 'internal':
-					// 内部变量保持不变
-					options[option] = $options[option];
-					break;
+			case 'keyword':
+				options[option] = getKeywords(option + 'List');
+				break;
+			case 'string':
+				options[option] = getDom(option).value;
+				break;
+			case 'bool':
+				options[option] = getDom(option).checked;
+				break;
+			case 'array':
+				options[option] = [];
+				break;
+			case 'object':
+				options[option] = {};
+				break;
+			case 'internal':
+				// 内部变量保持不变
+				options[option] = $options[option];
+				break;
 			}
 		}
 		var i, len;
@@ -594,24 +595,24 @@ var $settingsWindow = (function () {
 		}
 		stringifySettings(options);
 		return options;
-	}
+	};
 
 	// 更新设置窗口内容，exportSettings()的反过程
 	var importSettings = function (options) {
 		var option;
 		for (option in $optionData) {
 			switch ($optionData[option][0]) {
-				case 'keyword':
-					getDom(option).value = '';
-					getDom(option + 'List').innerHTML = '';
-					addKeywords(option + 'List', options[option]);
-					break;
-				case 'string':
-					getDom(option).value = options[option];
-					break;
-				case 'bool':
-					getDom(option).checked = options[option];
-					break;
+			case 'keyword':
+				getDom(option).value = '';
+				getDom(option + 'List').innerHTML = '';
+				addKeywords(option + 'List', options[option]);
+				break;
+			case 'string':
+				getDom(option).value = options[option];
+				break;
+			case 'bool':
+				getDom(option).checked = options[option];
+				break;
 			}
 		}
 		var tipBackColor = getDom('tipBackColor').value;
@@ -628,7 +629,7 @@ var $settingsWindow = (function () {
 		}
 		getDom('customBlocks').value = options.customBlocks ? options.customBlocks.join('\n') : '';
 		stringifySettings(options);
-	}
+	};
 
 	// 创建设置窗口
 	var createDialog = function () {
@@ -637,10 +638,10 @@ var $settingsWindow = (function () {
 		content = $window.STK.module.layer('${HTML}');
 		dialog.setContent(content.getOuter());
 		// 修改屏蔽提示颜色事件
-		STKbind('tipBackColor', function () {
+		bindSTK('tipBackColor', function () {
 			getDom('tipSample').style.backgroundColor = this.value;
 		}, 'blur');
-		STKbind('tipTextColor', function () {
+		bindSTK('tipTextColor', function () {
 			getDom('tipSample').style.borderColor = this.value;
 			getDom('tipSample').style.color = this.value;
 		}, 'blur');
@@ -658,7 +659,7 @@ var $settingsWindow = (function () {
 			action.el.parentNode.removeChild(action.el);
 		});
 		// 复选框标签点击事件
-		STKbind('inner', function (event) {
+		bindSTK('inner', function (event) {
 			var node = event.target;
 			// 标签下可能有span等元素
 			if (node.parentNode.tagName === 'LABEL') {
@@ -677,7 +678,7 @@ var $settingsWindow = (function () {
 			}
 		});
 		// 标签点击事件
-		STKbind('tabHeaders', function (event) {
+		bindSTK('tabHeaders', function (event) {
 			var node = event.target, i, len;
 			if (node && node.tagName === 'A') {
 				node.className = 'current';
@@ -690,14 +691,14 @@ var $settingsWindow = (function () {
 				}
 			}
 		});
-		STKbind('tabHeaderSettings', exportSettings);
-		STKbind('blockAll', function () {
+		bindSTK('tabHeaderSettings', exportSettings);
+		bindSTK('blockAll', function () {
 			var i, len;
 			for (i = 0, len = $blocks.length; i < len; ++i) {
 				getDom('block' + $blocks[i][0]).checked = true;
 			}
 		});
-		STKbind('blockInvert', function () {
+		bindSTK('blockInvert', function () {
 			var i, len, item;
 			for (i = 0, len = $blocks.length; i < len; ++i) {
 				item = getDom('block' + $blocks[i][0]);
@@ -705,27 +706,27 @@ var $settingsWindow = (function () {
 			}
 		});
 		// 对话框按钮点击事件
-		STKbind('import', function () {
+		bindSTK('import', function () {
 			var options = {};
 			if (reloadSettings(options, getDom('settingsString').value)) {
 				importSettings(options);
-				alert('设置导入成功！'); 
+				alert('设置导入成功！');
 			} else {
-				alert('设置导入失败！\n设置信息格式有问题。');	
+				alert('设置导入失败！\n设置信息格式有问题。');
 			}
 		});
-		STKbind('checkUpdate', checkUpdate);
-		STKbind('OK', function () {
+		bindSTK('checkUpdate', checkUpdate);
+		bindSTK('OK', function () {
 			$options = exportSettings();
-			GM_setValue($uid.toString(), JSON.stringify($options));
+			setValue($uid.toString(), JSON.stringify($options));
 			applySettings();
 			dialog.hide();
 		});
-		STKbind('cancel', dialog.hide);
-		$window.STK.custEvent.add(dialog, "hide", function () {
+		bindSTK('cancel', dialog.hide);
+		$window.STK.custEvent.add(dialog, 'hide', function () {
 			shown = false;
 		});
-	}
+	};
 
 	// 显示设置窗口
 	settingsWindow.show = function () {
@@ -735,10 +736,10 @@ var $settingsWindow = (function () {
 		shown = true;
 		importSettings($options);
 		dialog.show().setMiddle();
-	}
+	};
 	settingsWindow.isShown = function () {
 		return shown;
-	}
+	};
 
 	return settingsWindow;
 }());
@@ -762,4 +763,4 @@ asyncLoad();
 // 处理动态载入内容
 document.addEventListener('DOMNodeInserted', onDOMNodeInsertion, false);
 // 处理按键（极简阅读模式）
-document.addEventListener("keyup", onKeyPress, false);
+document.addEventListener('keyup', onKeyPress, false);
