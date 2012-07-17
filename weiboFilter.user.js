@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块的屏蔽；修正网速较慢时脚本失效的问题
+// @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块的屏蔽；修正网速较慢时脚本失效的问题；修正导入设置失败时原设置被清空的问题
 // @version			0.9
 // @revision		53
 // @author			@富平侯(/salviati)
@@ -50,12 +50,15 @@ var $optionData = {
 	sourceKeywords : ['keyword'],
 	tipBackColor : ['string', '#FFD0D0'],
 	tipTextColor : ['string', '#FF8080'],
-	readerMode : ['boolean'],
+	readerMode : ['bool'],
 	readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
-	filterPaused : ['boolean'],
-	filterDupFwd : ['boolean'],
-	filterDeleted : ['boolean'],
-	filterFeelings : ['boolean']
+	filterPaused : ['bool'],
+	filterDupFwd : ['bool'],
+	filterDeleted : ['bool'],
+	filterFeelings : ['bool'],
+	lastCheckUpdate : ['internal', 0],
+	customBlocks : ['array'],
+	hideBlock : ['object']
 };
 var $options = {}, $forwardFeeds = {};
 
@@ -105,9 +108,9 @@ var $window = ('chrome' in window || 'opera' in window) ? (function () {
 	
 // 搜索指定文本中是否包含列表中的关键词
 function searchKeyword(str, key) {
-	var text = str.toLowerCase(), keywords = $options[key], keyword, i, len;
-	if (str === '' || keywords === undefined) {return ''; }
-	for (i = 0, len = keywords.length; i < len; ++i) {
+	var text = str.toLowerCase(), keywords = $options[key], keyword, i, len = keywords.length;
+	if (str === '' || len === 0) {return ''; }
+	for (i = 0; i < len; ++i) {
 		keyword = keywords[i];
 		if (!keyword) {continue; }
 		if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
@@ -255,7 +258,7 @@ function asyncLoad() {
 			return $loadingState = 0;
 		}
 		$uid = $window.$CONFIG.uid;
-		if (!reloadSettings()) {
+		if (!reloadSettings($options, GM_getValue($uid.toString(), ''))) {
 			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 		}
 		GM_addStyle('${CSS}');
@@ -355,7 +358,7 @@ function checkUpdate() {
 // 极简阅读模式（仅在个人首页生效）
 function readerMode() {
 	var readerModeStyles = _('wbpReaderModeStyles');
-	if (getScope() === 1 && $options.readerMode === true) {		
+	if (getScope() === 1 && $options.readerMode) {		
 		if (!readerModeStyles) {
 			readerModeStyles = document.createElement('style');
 			readerModeStyles.type = 'text/css';
@@ -411,8 +414,8 @@ function applySettings() {
 		}
 	}
 	// 屏蔽提示相关CSS
-	var tipBackColor = $options.tipBackColor || '#FFD0D0';
-	var tipTextColor = $options.tipTextColor || '#FF8080';
+	var tipBackColor = $options.tipBackColor;
+	var tipTextColor = $options.tipTextColor;
 	cssText += 'a.wbpTip { background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; }'
 	// 更新CSS
 	blockStyles = _('wbpBlockStyles');
@@ -425,19 +428,41 @@ function applySettings() {
 	blockStyles.innerHTML = cssText + '\n';
 }
 
-// 载入/导入设置更新$options
-function reloadSettings(str) {
-	$options = {};
-	var options = str || GM_getValue($uid.toString(), '');
-	if (options) {
+// 载入/导入设置更新外部options
+function reloadSettings(options, str) {
+	var parsedOptions = {}, option;
+	// 各类型默认值
+	var optionsDefault = {
+		keyword : [],
+		string : '',
+		bool : false,
+		array : [],
+		object : {},
+		internal : null
+	};
+	if (str) {
 		try {
-			$options = JSON.parse(options.replace(/\n/g, ''));
-			//if (typeof $options !== 'object') {throw 0; }
-		} catch (e) {
-			return false;
+			parsedOptions = JSON.parse(str.replace(/\n/g, ''));
+			if (typeof parsedOptions !== 'object') {throw 0; }
+		} catch (e) { 
+			parsedOptions = {};
+			str = ''; // 出错，最后返回false
 		}
 	}
-	return true;
+	// 填充外部options
+	for (option in $optionData) {
+		if (parsedOptions[option] !== undefined) {
+			// 优先使用成功读取的值
+			options[option] = parsedOptions[option];
+		} else if ($optionData[option][1] !== undefined) {
+			// 使用属性默认值
+			options[option] = $optionData[option][1];
+		} else {
+			// 使用类型默认值
+			options[option] = optionsDefault[$optionData[option][0]];
+		}
+	}
+	return (str !== '');
 }
 
 var $settingsWindow = (function () {
@@ -493,6 +518,17 @@ var $settingsWindow = (function () {
 		return malformed.join(' ');
 	}
 
+	// 去掉所有内部变量并输出
+	var stringifySettings = function (options) {
+		var stripped = {}, option;
+		for (option in $optionData) {
+			if ($optionData[option][0] !== 'internal') {
+				stripped[option] = options[option];
+			}
+		}
+		getDom('settingsString').value = JSON.stringify(stripped);
+	}
+	
 	// 根据当前设置（可能未保存）更新$options
 	var exportSettings = function () {
 		var options = {}, option;
@@ -504,40 +540,49 @@ var $settingsWindow = (function () {
 				case 'string':
 					options[option] = getDom(option).value;
 					break;
-				case 'boolean':
+				case 'bool':
 					options[option] = getDom(option).checked;
+					break;
+				case 'array':
+					options[option] = [];
+					break;
+				case 'object':
+					options[option] = {};
+					break;
+				case 'internal':
+					// 内部变量保持不变
+					options[option] = $options[option];
 					break;
 			}
 		}
-		options.hideBlock = {};
-		var i, len, blocks = getDom('customBlocks').value.split('\n'), block;
+		var i, len;
 		for (i = 0, len = $blocks.length; i < len; ++i) {
 			options.hideBlock[$blocks[i][0]] = getDom('block' + $blocks[i][0]).checked;
 		}
-		options.customBlocks = [];
+		var blocks = getDom('customBlocks').value.split('\n'), block;
 		for (i = 0, len = blocks.length; i < len; ++i) {
 			block = blocks[i].trim();
 			if (block) { options.customBlocks.push(block); }
 		}
-		getDom('settingsString').value = JSON.stringify(options);
+		stringifySettings(options);
 		return options;
 	}
 
 	// 更新设置窗口内容，exportSettings()的反过程
-	var importSettings = function () {
+	var importSettings = function (options) {
 		var option;
 		for (option in $optionData) {
 			switch ($optionData[option][0]) {
 				case 'keyword':
 					getDom(option).value = '';
 					getDom(option + 'List').innerHTML = '';
-					addKeywords(option + 'List', $options[option] || $optionData[option][1] || '');
+					addKeywords(option + 'List', options[option]);
 					break;
 				case 'string':
-					getDom(option).value = $options[option] || $optionData[option][1] || '';
+					getDom(option).value = options[option];
 					break;
-				case 'boolean':
-					getDom(option).checked = $options[option] || $optionData[option][1] || false;
+				case 'bool':
+					getDom(option).checked = options[option];
 					break;
 			}
 		}
@@ -547,14 +592,14 @@ var $settingsWindow = (function () {
 		tipSample.style.backgroundColor = tipBackColor;
 		tipSample.style.borderColor = tipTextColor;
 		tipSample.style.color = tipTextColor;
-		if ($options.hideBlock) {
+		if (options.hideBlock) {
 			var i, len;
 			for (i = 0, len = $blocks.length; i < len; ++i) {
-				getDom('block' + $blocks[i][0]).checked = ($options.hideBlock[$blocks[i][0]] === true);
+				getDom('block' + $blocks[i][0]).checked = (options.hideBlock[$blocks[i][0]] === true);
 			}
 		}
-		getDom('customBlocks').value = $options.customBlocks ? $options.customBlocks.join('\n') : '';
-		getDom('settingsString').value = JSON.stringify($options);
+		getDom('customBlocks').value = options.customBlocks ? options.customBlocks.join('\n') : '';
+		stringifySettings(options);
 	}
 
 	// 创建设置窗口
@@ -614,8 +659,9 @@ var $settingsWindow = (function () {
 		});
 		// 对话框按钮点击事件
 		STKbind('import', function () {
-			if (reloadSettings(getDom('settingsString').value)) {
-				importSettings();
+			var options = {};
+			if (reloadSettings(options, getDom('settingsString').value)) {
+				importSettings(options);
 				alert('设置导入成功！'); 
 			} else {
 				alert('设置导入失败！\n设置信息格式有问题。');	
@@ -640,7 +686,7 @@ var $settingsWindow = (function () {
 			createDialog();
 		}
 		shown = true;
-		importSettings();
+		importSettings($options);
 		dialog.show().setMiddle();
 	}
 	settingsWindow.isShown = function () {
