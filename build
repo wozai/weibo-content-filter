@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CSS=`sed 's/^\s*//;s/\s*$//' settings.css | tr '\n' ' ' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
+CSS=`sed 's/^\s*//;s/\s*$//;s/\s\+{/{/;s/\s*\([:|+|>|,]\)\s*/\1/' settings.css | tr -d '\n' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g;s/;}/}/g"`
 HTML=`sed 's/^\s*//;s/\s*$//' settings.html | tr -d '\n' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
 VER=`sed -n '\|^// @version\s\+\([^\s]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
 REV=`sed -n '\|^// @revision\s\+\([0-9]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
