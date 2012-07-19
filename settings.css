@@ -81,17 +81,24 @@ a.wbpTip:hover {
 .wbpSettings a.W_btn_a + a.W_btn_a {
 	margin-left: 5px;
 }
-.wbpKeywordsList {
-	margin-top: 8px;
+.wbpListWrapper {
+	margin: 8px 0;
+	max-height: 120px;
 	overflow: hidden;
 }
+.wbpListWrapper:hover {
+	overflow-y: auto;
+}
+.wbpKeywordsList {
+	margin-top: -5px;
+	line-height: 18px;
+}
 .wbpKeywordsList a {
-	margin: 0 5px 8px 0;
+	margin: 5px 5px 0 0;
 	padding: 0 4px;
 	border: 1px solid;
-	float: left;
+	display: inline-block;
 	height: 18px;
-	line-height: 18px;
 	white-space: nowrap;
 }
 .wbpKeywordsList a:hover {
