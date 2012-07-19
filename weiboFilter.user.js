@@ -4,7 +4,7 @@
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
 // @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；增加自动检查更新功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块的屏蔽；修正网速较慢时脚本失效的问题；修正导入设置失败时原设置被清空的问题
-// @version			0.90
+// @version			0.9
 // @revision		53
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
@@ -15,6 +15,7 @@
 // ==/UserScript==
 
 // 注意：使用@match替换@include将使GM_xmlhttpRequest()失效
+var $revision = ${REV};
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Topic', '#pl_content_promotetopic, #trustPagelete_zt_hottopic'],
@@ -350,35 +351,32 @@ function autoUpdate() {
 	var lastSuccess = GM_getValue('lastCheckUpdateSuccess', 0);
 	if (lastSuccess && (now - lastSuccess) < ONE_DAY) {return; }
 	
-	checkUpdate(true);
+	checkUpdate();
 }
 
 // 检查更新
-function checkUpdate(auto) {
+function checkUpdate() {
 	GM_xmlhttpRequest({
 		method: 'GET',
 		// 只载入metadata
 		url: 'http://userscripts.org/scripts/source/114087.meta.js?' + new Date().getTime(),
 		headers: {'Cache-Control': 'no-cache'},
 		onload: function (result) {
+			if (!result.responseText.match(/@version\s+(.*)/)) {return; }
 			GM_setValue('lastCheckUpdateSuccess', new Date().getTime().toString());
-			if (!result.responseText.match(/@version\s+(\d+\.\d+)/)) {return; }
-			var currentVersion = '${VER}'.split('.'), version = RegExp.$1.split('.'), i;
-			for (i = 0; i < 2; ++i) {
-				if (Number(version[i]) > Number(currentVersion[i])) {
-					var features = '';
-					if (result.responseText.match(/@features\s+(.*)/)) {
-						features = '- ' + RegExp.$1.split('；').join('\n- ') + '\n\n';
-					}
-					// 显示更新提示
-					if (confirm('“眼不见心不烦”新版本v' + version.join('.') + '可用。\n\n' + features + '如果您希望更新，请点击“确认”打开插件主页。')) {
-						window.open('http://userscripts.org/scripts/show/114087');
-					}
-					return;
-				}
+			var ver = RegExp.$1;
+			if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= $revision) {
+				alert('脚本已经是最新版。');
+				return;
 			}
-			// 自动检查更新且并无新版本时不必提示
-			if (!auto) {alert('“眼不见心不烦”已经是最新版。'); }
+			var features = '';
+			if (result.responseText.match(/@features\s+(.*)/)) {
+				features = '- ' + RegExp.$1.split('；').join('\n- ') + '\n\n';
+			}
+			// 显示更新提示
+			if (confirm('“眼不见心不烦”新版本v' + ver + '可用。\n\n' + features + '如果您希望更新，请点击“确认”打开插件主页。')) {
+				window.open('http://userscripts.org/scripts/show/114087');
+			}
 		}
 	});
 }
@@ -633,7 +631,7 @@ var $settingsWindow = (function () {
 	// 创建设置窗口
 	var createDialog = function () {
 		dialog = $window.STK.ui.dialog({isHold: true});
-		dialog.setTitle('“眼不见心不烦”(v${FULLVER})设置');
+		dialog.setTitle('“眼不见心不烦”(v${VER})设置');
 		content = $window.STK.module.layer('${HTML}');
 		dialog.setContent(content.getOuter());
 		// 修改屏蔽提示颜色事件

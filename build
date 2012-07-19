@@ -1,10 +1,10 @@
 #!/bin/sh
 
-CSS=`sed 's/^\s*//;s/\s*$//;s/\s\+{/{/;s/:\s\+/:/' settings.css | tr -d '\n' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g;s/;}/}/g"`
+CSS=`sed 's/^\s*//;s/\s*$//' settings.css | tr '\n' ' ' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
 HTML=`sed 's/^\s*//;s/\s*$//' settings.html | tr -d '\n' | sed 's/[\/&]/\\\&/g;'"s/'/"'\\\\\\\\'"'/g"`
-VER=`sed -n '\|^// @version\s\+\([0-9]\+\.[0-9]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
-FULLVER=`sed -n '\|^// @version\s\+\([^\s]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
-OUTFILE="weiboFilter-v${FULLVER}.user.js"
+VER=`sed -n '\|^// @version\s\+\([^\s]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
+REV=`sed -n '\|^// @revision\s\+\([0-9]\+\).*$|{s//\1/;p;q;}' weiboFilter.user.js`
+OUTFILE="weiboFilter-v${VER}.user.js"
 while getopts ":no:" optname
 do
 	case "$optname" in
@@ -14,7 +14,7 @@ do
 		":") echo "Missing argument value for option -$OPTARG"; exit 1;;
 	esac
 done
-sed 's/\${CSS}/'"${CSS}"'/;s/\${HTML}/'"${HTML}"'/;s/\${VER}/'"${VER}"'/;s/\${FULLVER}/'"${FULLVER}"'/;s/^\(\/\/ @version\s\+\).*$/\1'"${VER}"'/' weiboFilter.user.js > $OUTFILE
+sed 's/\${CSS}/'"${CSS}"'/;s/\${HTML}/'"${HTML}"'/;s/\${REV}/'"${REV}"'/;s/\${VER}/'"${VER}"'/;s/^\(\/\/ @version\s\+\)\([0-9]\+\)\(\.[0-9]\+\)\+.*$/\1\2\3/' weiboFilter.user.js > $OUTFILE
 [ $NO_COMPRESS ] && exit 0
 head -n 15 weiboFilter.user.js > weiboFilter.user.head.js
 if [ ! -f compiler.jar ]
