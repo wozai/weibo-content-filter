@@ -15,7 +15,6 @@
 // ==/UserScript==
 
 // 注意：使用@match替换@include将使GM_xmlhttpRequest()失效
-var $revision = ${REV};
 var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Topic', '#pl_content_promotetopic, #trustPagelete_zt_hottopic'],
@@ -365,7 +364,7 @@ function checkUpdate() {
 			if (!result.responseText.match(/@version\s+(.*)/)) {return; }
 			GM_setValue('lastCheckUpdateSuccess', new Date().getTime().toString());
 			var ver = RegExp.$1;
-			if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= $revision) {
+			if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= Number('${REV}')) {
 				alert('脚本已经是最新版。');
 				return;
 			}
