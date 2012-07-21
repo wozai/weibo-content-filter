@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；增加自动检查更新功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块、奥运专题勋章的屏蔽；修正网速较慢时脚本失效的问题；修正导入设置失败时原设置被清空的问题
+// @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加浮动设置按钮；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；增加自动检查更新功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块、奥运专题勋章的屏蔽；修正网速较慢时脚本失效的问题；修正导入设置失败时原设置被清空的问题
 // @version			0.9
 // @revision		54
 // @author			@富平侯(/salviati)
@@ -396,7 +396,7 @@ function readerMode() {
 			document.head.appendChild(readerModeStyles);
 		}
 		if (_('Box_left')) { // 体验版
-			readerModeStyles.innerHTML = '#Box_left, #Box_right, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #pl_content_top .global_header {top: -35px; } #Box_center { width: 800px; } .W_miniblog { background-position-y: -35px; } .W_main { padding-top: 17px; width: 845px; } .W_main_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 688px; } #base_scrollToTop { margin-left: 424px; }';
+			readerModeStyles.innerHTML = '#Box_left, #Box_right, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #pl_content_top .global_header {top: -35px; } #Box_center { width: 800px; } .W_miniblog { background-position-y: -35px; } .W_main { padding-top: 17px; width: 845px; } .W_main_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 688px; } #base_scrollToTop, #wbpShowSettingsFloat { margin-left: 424px; }';
 		} else { // 传统版
 			readerModeStyles.innerHTML = '#plc_main .W_main_r, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #pl_content_top .global_header {top: -35px; } #plc_main .W_main_c { width: 800px; } .W_miniblog { background-position-y: -35px; } #plc_main .custom_content_bg { padding-top: 30px; } .W_main_narrow { padding-top: 17px; } .W_main_narrow_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 628px; }';
 		}
@@ -745,16 +745,35 @@ var $settingsWindow = (function () {
 }());
 
 function showSettingsBtn() {
-	// 设置标签已经置入页面
-	if (_('wbpShowSettings')) {return true; }
-	var groups = __('#pl_content_homeFeed .nfTagB, #pl_content_hisFeed .nfTagB');
-	// Firefox的div#pl_content_homeFeed载入时是空的，此时无法置入页面，稍后由onDOMNodeInsertion()处理
-	if (!groups) {return false; }
-	var showSettingsTab = document.createElement('li');
-	showSettingsTab.innerHTML = '<span><em><a id="wbpShowSettings" href="javascript:void(0)">眼不见心不烦</a></em></span>';
-	groups.childNodes[1].appendChild(showSettingsTab);
-	click(_('wbpShowSettings'), $settingsWindow.show);
-	return true;
+	var tab = false, btn = false;
+	if (_('wbpShowSettings')) {
+		tab = true;
+	} else {
+		var groups = __('#pl_content_homeFeed .nfTagB, #pl_content_hisFeed .nfTagB');
+		if (!groups) {return false; }
+		var showSettingsTab = document.createElement('li');
+		showSettingsTab.innerHTML = '<span><em><a id="wbpShowSettings" href="javascript:void(0)">眼不见心不烦</a></em></span>';
+		click(showSettingsTab, $settingsWindow.show);
+		groups.childNodes[1].appendChild(showSettingsTab);
+		tab = true;
+	}
+	if (_('wbpShowSettingsFloat')) {
+		btn = true;
+	} else {
+		var scrollToTop = _('base_scrollToTop');
+		if (!scrollToTop) {return false; }
+		var showSettingsFloat = document.createElement('a');
+		showSettingsFloat.innerHTML = '<span style="padding: 0 0 6px;">★</span>';
+		showSettingsFloat.className = 'W_gotop';
+		showSettingsFloat.href = 'javascript:void(0)';
+		showSettingsFloat.title = '眼不见心不烦';
+		showSettingsFloat.id = 'wbpShowSettingsFloat';
+		showSettingsFloat.style.bottom = '72px';
+		click(showSettingsFloat, $settingsWindow.show);
+		scrollToTop.parentNode.appendChild(showSettingsFloat);
+		btn = true;
+	}
+	return (tab && btn);
 }
 
 // 等待页面载入完成
