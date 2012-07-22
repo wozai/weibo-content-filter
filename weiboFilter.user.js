@@ -347,11 +347,11 @@ function autoUpdate() {
 	if (lastAttempt && (now - lastAttempt) < DoS_PREVENTION_TIME) {return; }
 	setValue('lastCheckUpdateAttempt', now.toString());
 
-	// 每天检查一次
-	var ONE_DAY = 24 * 60 * 60 * 1000;
-	//var ONE_WEEK = 7 * ONE_DAY;
+	// 每周检查一次，避免频繁升级
+	//var ONE_DAY = 24 * 60 * 60 * 1000;
+	var ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
 	var lastSuccess = getValue('lastCheckUpdateSuccess', 0);
-	if (lastSuccess && (now - lastSuccess) < ONE_DAY) {return; }
+	if (lastSuccess && (now - lastSuccess) < ONE_WEEK) {return; }
 
 	checkUpdate(true);
 }
