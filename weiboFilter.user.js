@@ -2,8 +2,8 @@
 // @name			眼不见心不烦（新浪微博）
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
-// @description		在新浪微博（weibo.com）中隐藏包含指定关键词的微博。
-// @features		增加极简阅读模式；增加反版聊功能；设置窗口可以拖动；增加浮动设置按钮；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；增加自动检查更新功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块、奥运专题勋章的屏蔽；修正网速较慢时脚本失效的问题；修正导入设置失败时原设置被清空的问题
+// @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
+// @features		增加极简阅读模式；增加反版聊、反刷屏功能；设置窗口可以拖动；增加浮动设置按钮；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；增加自动检查更新功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块、奥运专题勋章的屏蔽；修正网速较慢时脚本失效的问题；修正导入设置失败时原设置被清空的问题
 // @version			0.9
 // @revision		54
 // @author			@富平侯(/salviati)
@@ -54,14 +54,17 @@ var $optionData = {
 	readerMode : ['bool'],
 	readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
 	filterPaused : ['bool'],
-	filterDupFwd : ['bool'],
 	filterDeleted : ['bool'],
 	filterFeelings : ['bool'],
+	filterDupFwd : ['bool'],
+	maxDupFwd : ['string', 1],
+	filterFlood : ['bool'],
+	maxFlood : ['string', 5],
 	autoUpdate : ['bool', true],
 	customBlocks : ['array'],
 	hideBlock : ['object']
 };
-var $options = {}, $forwardFeeds = {};
+var $options = {}, $forwardFeeds = {}, $floodFeeds = {};
 
 var _ = function (s) {
 	return document.getElementById(s);
@@ -139,23 +142,38 @@ function filterSource(source) {
 	return searchKeyword(source, 'sourceKeywords') !== '';
 }
 
-function showFeed(node, fwdLink) {
-	node.style.display = '';
-	node.childNodes[1].style.display = '';
-	node.childNodes[3].style.display = '';
-	node.childNodes[1].style.opacity = 1;
-	node.childNodes[3].style.opacity = 1;
-	if (!$options.filterPaused && $options.filterDupFwd && fwdLink) {
-		$forwardFeeds[fwdLink.href] = node.getAttribute('mid');
-	}
-}
-
 function filterFeed(node) {
 	if (node.firstChild.tagName === 'A') {node.removeChild(node.firstChild); } // 已被屏蔽过
 	var scope = getScope(), text = '@', isForward = (node.getAttribute('isforward') === '1'),
 		content = node.querySelector('dd.content > p[node-type="feed_list_content"]'),
 		forwardContent = node.querySelector('dd.content > dl.comment > dt[node-type="feed_list_forwardContent"]'),
 		forwardLink = node.querySelector('dd.content > dl.comment > dd.info > a.date');
+	var fmid = isForward ? (forwardLink ? forwardLink.href : null) : null,
+		author = (scope === 1) ? content.childNodes[1] : null,
+		uid = author ? author.getAttribute('usercard') : null;
+	var showFeed = function () {
+		node.style.display = '';
+		node.childNodes[1].style.display = '';
+		node.childNodes[3].style.display = '';
+		node.childNodes[1].style.opacity = 1;
+		node.childNodes[3].style.opacity = 1;
+		if (!$options.filterPaused) {
+			if ($options.filterDupFwd && fmid) {
+				if (!$forwardFeeds[fmid]) {
+					$forwardFeeds[fmid] = 1;
+				} else {
+					++$forwardFeeds[fmid];
+				}
+			}
+			if ($options.filterFlood && uid) {
+				if (!$floodFeeds[uid]) {
+					$floodFeeds[uid] = 1;
+				} else {
+					++$floodFeeds[uid];
+				}
+			}
+		}
+	};
 	if (!content) {return false; }
 	if (scope === 2) {text = ''; } // 他人主页没有原作者链接
 	text += content.textContent.replace(/[\r\n\t]/g, '').trim();
@@ -164,7 +182,7 @@ function filterFeed(node) {
 		text += '//' + forwardContent.textContent.replace(/[\r\n\t]/g, '').trim();
 	}
 	if ($options.filterPaused || searchKeyword(text, 'whiteKeywords')) { // 白名单检查
-		showFeed(node, forwardLink);
+		showFeed();
 		return false;
 	}
 	// 屏蔽已删除微博的转发
@@ -184,16 +202,15 @@ function filterFeed(node) {
 		return true;
 	}
 	// 反版聊（屏蔽重复转发）
-	if ($options.filterDupFwd && isForward) {
-		var mid = $forwardFeeds[forwardLink.href];
-		if (mid) {
-			var lastShown = __('dl.feed_list[mid="' + mid + '"]');
-			if (lastShown && lastShown.style.display !== 'none') {
-				node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
-				return true;
-			}
-		}
+	if ($options.filterDupFwd && fmid && $forwardFeeds[fmid] >= Number($options.maxDupFwd)) {
+		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
+		return true;
 	}
+	// 反刷屏（屏蔽同一用户大量发帖）
+	if ($options.filterFlood && uid && $floodFeeds[uid] >= Number($options.maxFlood)) {
+		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
+		return true;
+	}	
 	// 在微博内容中搜索屏蔽关键词
 	if (searchKeyword(text, 'blackKeywords')) {
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
@@ -210,13 +227,11 @@ function filterFeed(node) {
 	node.style.display = '';
 	var keyword = searchKeyword(text, 'grayKeywords');
 	if (!keyword) {
-		showFeed(node, forwardLink);
+		showFeed();
 		return false;
 	}
 	var authorClone;
 	if (scope === 1) {
-		// 2011年11月15日起，新浪微博提供了屏蔽功能，由于屏蔽按钮的存在，微博发布者链接的位置发生了变化
-		var author = content.childNodes[1];
 		node.childNodes[3].style.display = 'none';
 		// 添加隐藏提示链接
 		authorClone = author.cloneNode(false);
@@ -419,7 +434,7 @@ function onKeyPress(event) {
 function applySettings() {
 	// 处理非动态载入内容
 	var feeds = document.querySelectorAll('.feed_list'), i, len;
-	$forwardFeeds = {};
+	$forwardFeeds = {}; $floodFeeds = {};
 	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
 	// 极简阅读模式
 	readerMode();
