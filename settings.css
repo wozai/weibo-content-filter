@@ -46,6 +46,12 @@ a.wbpTip:hover {
 	border: 1px solid #D2D5D8; 
 	padding: 0 2px;
 }
+.wbpInlineInput {
+	display: inline-block; 
+	width: 30px; 
+	margin: 0 3px; 
+	vertical-align: middle;
+}
 .wbpInput input {
 	width: 100%;
 	height: 22px;
