@@ -95,7 +95,8 @@ if (window.localStorage) {
 	};
 
 	var getValue = function (name, defval) {
-		return localStorage.getItem(keyRoot + name) || defval;
+		var val = localStorage.getItem(keyRoot + name);
+		return val === null ? defval : val;
 	};
 
 	var setValue = function (name, value) {
@@ -275,7 +276,7 @@ function asyncLoad() {
 			return ($loadingState = 0);
 		}
 		$uid = $window.$CONFIG.uid;
-		if (!reloadSettings($options, getValue($uid.toString(), ''))) {
+		if (!reloadSettings($options, getValue($uid.toString()))) {
 			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 		}
 		if ($options.autoUpdate) {
@@ -472,6 +473,7 @@ function applySettings() {
 }
 
 // 载入/导入设置更新外部options
+// 输入的str为undefined（首次使用时）或string（非首次使用和导入设置时）
 function reloadSettings(options, str) {
 	var parsedOptions = {}, option;
 	// 各类型默认值
@@ -489,7 +491,7 @@ function reloadSettings(options, str) {
 			if (typeof parsedOptions !== 'object') {throw 0; }
 		} catch (e) {
 			parsedOptions = {};
-			str = ''; // 出错，最后返回false
+			str = null; // 出错，最后返回false
 		}
 	}
 	// 填充外部options
@@ -505,7 +507,7 @@ function reloadSettings(options, str) {
 			options[option] = optionsDefault[$optionData[option][0]];
 		}
 	}
-	return (str !== '');
+	return (str !== null);
 }
 
 var $settingsWindow = (function () {
