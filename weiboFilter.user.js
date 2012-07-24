@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		增加极简阅读模式；增加反版聊、反刷屏功能；设置窗口可以拖动；增加浮动设置按钮；增加单独的屏蔽来源功能；增加自定义屏蔽版面内容功能；增加自动检查更新功能；可屏蔽已删除微博的转发；可屏蔽写心情微博；增加对微博精选、页底链接模块、奥运专题勋章的屏蔽；修正网速较慢时脚本失效的问题；修正导入设置失败时原设置被清空的问题
-// @version			0.9
-// @revision		54
+// @features		增加对打招呼模块的屏蔽；增加对各种提示气球的屏蔽
+// @version			0.91b1
+// @revision		55
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -34,6 +34,8 @@ var $blocks = [ // 模块屏蔽设置
 		['UserGuide', '#pl_guide_oldUser'],
 		['Promotion', '#pl_rightmod_promotion, #trustPagelet_ugrowth_invite'],
 		['Level', '#pl_content_personInfo p.level, #pl_leftNav_common dd.nameBox p, #pl_content_hisPersonalInfo span.W_level_ico'],
+		['Hello', 'div.wbim_hello'],
+		['Balloon', 'div.layer_tips'],
 		['Member', '#trustPagelet_recom_member'],
 		['MemberIcon', '.ico_member'],
 		['VerifyIcon', '.approve, .approve_co'],
