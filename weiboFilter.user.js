@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		增加对打招呼模块的屏蔽；增加对各种提示气球的屏蔽
+// @features		增加对打招呼模块的屏蔽；增加对各种提示气球的屏蔽；增加来源灰名单
 // @version			0.91b1
 // @revision		55
 // @author			@富平侯(/salviati)
@@ -51,6 +51,7 @@ var $optionData = {
 	grayKeywords : ['keyword'],
 	URLKeywords : ['keyword'],
 	sourceKeywords : ['keyword'],
+	sourceGrayKeywords : ['keyword'],
 	tipBackColor : ['string', '#FFD0D0'],
 	tipTextColor : ['string', '#FF8080'],
 	readerMode : ['bool'],
@@ -135,14 +136,14 @@ function searchKeyword(str, key) {
 	return '';
 }
 
-function filterSource(source) {
+function filterSource(source, keywords) {
 	if (!source) {
 		source = '未通过审核应用';
 	} else {
 		// 过长的应用名称会被压缩，完整名称存放在title属性中
 		source = source.title || source.innerHTML;
 	}
-	return searchKeyword(source, 'sourceKeywords') !== '';
+	return searchKeyword(source, keywords);
 }
 
 function filterFeed(node) {
@@ -150,10 +151,13 @@ function filterFeed(node) {
 	var scope = getScope(), text = '@', isForward = (node.getAttribute('isforward') === '1'),
 		content = node.querySelector('dd.content > p[node-type="feed_list_content"]'),
 		forwardContent = node.querySelector('dd.content > dl.comment > dt[node-type="feed_list_forwardContent"]'),
-		forwardLink = node.querySelector('dd.content > dl.comment > dd.info > a.date');
+		forwardLink = node.querySelector('dd.content > dl.comment > dd.info > a.date'),
+		source = node.querySelector('dd.content > p.info > a[target="_blank"]'),
+		forwardSource = node.querySelector('dd.content > dl.comment > dd.info > a[target="_blank"]');
 	var fmid = isForward ? (forwardLink ? forwardLink.href : null) : null,
 		author = (scope === 1) ? content.childNodes[1] : null,
 		uid = author ? author.getAttribute('usercard') : null;
+		
 	var showFeed = function () {
 		node.style.display = '';
 		node.childNodes[1].style.display = '';
@@ -199,8 +203,8 @@ function filterFeed(node) {
 		return true;
 	}
 	// 屏蔽指定来源
-	if (filterSource(node.querySelector('dd.content > p.info > a[target="_blank"]')) ||
-			(isForward && filterSource(node.querySelector('dd.content > dl.comment > dd.info > a[target="_blank"]')))) {
+	if (filterSource(source, 'sourceKeywords') ||
+			(isForward && filterSource(forwardSource, 'sourceKeywords'))) {
 		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 		return true;
 	}
@@ -230,8 +234,15 @@ function filterFeed(node) {
 	node.style.display = '';
 	var keyword = searchKeyword(text, 'grayKeywords');
 	if (!keyword) {
-		showFeed();
-		return false;
+		// 搜索来源灰名单
+		var sourceKeyword = filterSource(source, 'sourceGrayKeywords');
+		if (!sourceKeyword && isForward) {
+			sourceKeyword = filterSource(forwardSource, 'sourceGrayKeywords');
+		}
+		if (!sourceKeyword) {
+			showFeed();
+			return false;
+		}
 	}
 	var authorClone;
 	if (scope === 1) {
@@ -249,14 +260,15 @@ function filterFeed(node) {
 	var keywordLink = document.createElement('a');
 	keywordLink.href = 'javascript:void(0)';
 	keywordLink.className = 'wbpTipKeyword';
-	keywordLink.innerHTML = keyword;
+	keywordLink.innerHTML = keyword || sourceKeyword;
 	if (scope === 1) {
 		showFeedLink.appendChild(document.createTextNode('本条来自'));
 		showFeedLink.appendChild(authorClone);
-		showFeedLink.appendChild(document.createTextNode('的微博因包含关键词“'));
+		showFeedLink.appendChild(document.createTextNode('的微博因'));
 	} else if (scope === 2) {
-		showFeedLink.appendChild(document.createTextNode('本条微博因包含关键词“'));
+		showFeedLink.appendChild(document.createTextNode('本条微博因'));
 	}
+	showFeedLink.appendChild(document.createTextNode(keyword ? '内容包含“' : '来源名称包含“'));
 	showFeedLink.appendChild(keywordLink);
 	showFeedLink.appendChild(document.createTextNode('”而被隐藏，点击显示'));
 	node.insertBefore(showFeedLink, node.firstChild);
@@ -679,7 +691,7 @@ var $settingsWindow = (function () {
 		bindSTK('inner', function (event) {
 			var node = event.target;
 			// 标签下可能有span等元素
-			if (node.parentNode.tagName === 'LABEL') {
+			if (node.parentNode && node.parentNode.tagName === 'LABEL') {
 				node = node.parentNode;
 			}
 			if (node.tagName === 'LABEL') {
