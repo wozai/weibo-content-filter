@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		增加来源灰名单；可以隐藏浮动设置按钮；增加对奥运专题模块、奥运快讯（弹窗）的屏蔽；增加打招呼模块的屏蔽；增加对各种提示气球的屏蔽；
+// @features		增加来源灰名单；可以隐藏浮动设置按钮；增加对奥运专题模块、奥运快讯（弹窗）的屏蔽；增加打招呼模块的屏蔽；增加对各种提示气球的屏蔽
 // @version			0.91
 // @revision		56
 // @author			@富平侯(/salviati)
@@ -37,15 +37,15 @@ var $blocks = [ // 模块屏蔽设置
 		['Hello', 'div.wbim_hello'],
 		['Balloon', 'div.layer_tips'],
 		['Member', '#trustPagelet_recom_member'],
-		['MemberIcon', '.ico_member'],
-		['VerifyIcon', '.approve, .approve_co'],
-		['DarenIcon', '.ico_club'],
-		['VgirlIcon', '.ico_vlady'],
+		['MemberIcon', '.W_miniblog .ico_member, .W_miniblog .ico_member_dis'],
+		['VerifyIcon', '.W_miniblog .approve, .W_miniblog .approve_co'],
+		['DarenIcon', '.W_miniblog .ico_club'],
+		['VgirlIcon', '.W_miniblog .ico_vlady'],
 		['OlyBoard', '#trustPagelet_yunying_olympic'],
-		['OlyPopup', 'div.oly_win_wrap'], // 不能使用div.oly_win，新浪会经常变更其显示状态
-		['Oly361', '.ico_oly361'],
-		['OlyMedals', '.ico_olympic_gold, .ico_olympic_silver, .ico_olympic_bronze'],
-		['Custom']
+		['OlyPopup', 'div.oly_win'],
+		['Oly361', '.W_miniblog .ico_oly361'],
+		['OlyMedals', '.W_miniblog .ico_olympic_gold, .W_miniblog .ico_olympic_silver, .W_miniblog .ico_olympic_bronze'],
+		['Custom'] // 必须为最后一项
 	];
 var $optionData = {
 	whiteKeywords : ['keyword'],
@@ -448,32 +448,12 @@ function onKeyPress(event) {
 	}
 }
 
-// 根据当前设置屏蔽/显示所有内容
-function applySettings() {
-	// 处理非动态载入内容
-	var feeds = document.querySelectorAll('.feed_list'), i, len;
-	$forwardFeeds = {}; $floodFeeds = {};
-	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
-	// 极简阅读模式
-	readerMode();
-	// 应用浮动按钮设置
-	showSettingsBtn();
-	// 屏蔽版面内容
-	var cssText = '';
-	for (i = 0, len = $blocks.length; i < len; ++i) {
-		if ($options.hideBlock && $options.hideBlock[$blocks[i][0]] === true) {
-			if ($blocks[i][0] === 'RecommendedTopic') {
-				// 推荐话题的display属性在微博输入框获得焦点时被重置，
-				// 因此需要通过设置visibility属性实现隐藏
-				cssText += $blocks[i][1] + ' { visibility: hidden; } ';
-			} else if ($blocks[i][0] === 'Custom') {
-				// 自定义屏蔽
-				if ($options.customBlocks.length) {
-					cssText += $options.customBlocks.join(', ') + ' { display: none; } ';
-				}
-			} else {
-				cssText += $blocks[i][1] + ' { display: none; } ';
-			}
+function hideBlocks() {
+	var cssText = '', i, len = $blocks.length;
+	$blocks[len - 1][1] = $options.customBlocks.join(', '); // 自定义屏蔽
+	for (i = 0; i < len; ++i) {
+		if ($options.hideBlock[$blocks[i][0]] && $blocks[i][1]) {
+			cssText += $blocks[i][1] + ' { display: none !important; }\n';
 		}
 	}
 	// 屏蔽提示相关CSS
@@ -489,6 +469,20 @@ function applySettings() {
 		document.head.appendChild(blockStyles);
 	}
 	blockStyles.innerHTML = cssText + '\n';
+}
+
+// 根据当前设置屏蔽/显示所有内容
+function applySettings() {
+	// 处理非动态载入内容
+	var feeds = document.querySelectorAll('.feed_list'), i, len;
+	$forwardFeeds = {}; $floodFeeds = {};
+	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
+	// 极简阅读模式
+	readerMode();
+	// 应用浮动按钮设置
+	showSettingsBtn();
+	// 屏蔽版面内容
+	hideBlocks();
 }
 
 // 载入/导入设置更新外部options
