@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		增加对打招呼模块的屏蔽；增加对各种提示气球的屏蔽；增加来源灰名单
-// @version			0.91b1
-// @revision		55
+// @features		增加来源灰名单；可以隐藏浮动设置按钮；增加对奥运专题模块、奥运快讯（弹窗）的屏蔽；增加打招呼模块的屏蔽；增加对各种提示气球的屏蔽；
+// @version			0.91
+// @revision		56
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -41,6 +41,8 @@ var $blocks = [ // 模块屏蔽设置
 		['VerifyIcon', '.approve, .approve_co'],
 		['DarenIcon', '.ico_club'],
 		['VgirlIcon', '.ico_vlady'],
+		['OlyBoard', '#trustPagelet_yunying_olympic'],
+		['OlyPopup', 'div.oly_win_wrap'], // 不能使用div.oly_win，新浪会经常变更其显示状态
 		['Oly361', '.ico_oly361'],
 		['OlyMedals', '.ico_olympic_gold, .ico_olympic_silver, .ico_olympic_bronze'],
 		['Custom']
@@ -64,6 +66,7 @@ var $optionData = {
 	filterFlood : ['bool'],
 	maxFlood : ['string', 5],
 	autoUpdate : ['bool', true],
+	floatBtn : ['bool', true],
 	customBlocks : ['array'],
 	hideBlock : ['object']
 };
@@ -453,6 +456,8 @@ function applySettings() {
 	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
 	// 极简阅读模式
 	readerMode();
+	// 应用浮动按钮设置
+	showSettingsBtn();
 	// 屏蔽版面内容
 	var cssText = '';
 	for (i = 0, len = $blocks.length; i < len; ++i) {
@@ -774,21 +779,20 @@ var $settingsWindow = (function () {
 }());
 
 function showSettingsBtn() {
-	var tab = false, btn = false;
-	if (_('wbpShowSettings')) {
-		tab = true;
-	} else {
+	if (!_('wbpShowSettings')) {
 		var groups = __('#pl_content_homeFeed .nfTagB, #pl_content_hisFeed .nfTagB');
 		if (!groups) {return false; }
 		var showSettingsTab = document.createElement('li');
 		showSettingsTab.innerHTML = '<span><em><a id="wbpShowSettings" href="javascript:void(0)">眼不见心不烦</a></em></span>';
 		click(showSettingsTab, $settingsWindow.show);
 		groups.childNodes[1].appendChild(showSettingsTab);
-		tab = true;
 	}
-	if (_('wbpShowSettingsFloat')) {
-		btn = true;
-	} else {
+	var floatBtn = _('wbpShowSettingsFloat');
+	if (floatBtn) {
+		if (!$options.floatBtn) {
+			floatBtn.parentNode.removeChild(floatBtn);
+		}
+	} else if ($options.floatBtn) {
 		var scrollToTop = _('base_scrollToTop');
 		if (!scrollToTop) {return false; }
 		var showSettingsFloat = document.createElement('a');
@@ -800,9 +804,8 @@ function showSettingsBtn() {
 		showSettingsFloat.style.bottom = '72px';
 		click(showSettingsFloat, $settingsWindow.show);
 		scrollToTop.parentNode.appendChild(showSettingsFloat);
-		btn = true;
 	}
-	return (tab && btn);
+	return true;
 }
 
 // 等待页面载入完成
