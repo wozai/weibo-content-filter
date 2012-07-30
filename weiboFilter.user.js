@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		增加来源灰名单；可以隐藏浮动设置按钮；增加对奥运专题模块、奥运快讯（弹窗）的屏蔽；增加打招呼模块的屏蔽；增加对各种提示气球的屏蔽
-// @version			0.91
-// @revision		56
+// @features		加入自定义屏蔽示例；修正在首页点击“首页”时设置按钮消失的问题
+// @version			0.92b2
+// @revision		58
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -15,7 +15,6 @@
 // ==/UserScript==
 
 // 注意：使用@match替换@include将使GM_xmlhttpRequest()失效
-var $uid;
 var $blocks = [ // 模块屏蔽设置
 		['Topic', '#pl_content_promotetopic, #trustPagelete_zt_hottopic'],
 		['InterestUser', '#pl_content_homeInterest, #trustPagelete_recom_interest'],
@@ -37,14 +36,14 @@ var $blocks = [ // 模块屏蔽设置
 		['Hello', 'div.wbim_hello'],
 		['Balloon', 'div.layer_tips'],
 		['Member', '#trustPagelet_recom_member'],
-		['MemberIcon', '.W_miniblog .ico_member, .W_miniblog .ico_member_dis'],
-		['VerifyIcon', '.W_miniblog .approve, .W_miniblog .approve_co'],
-		['DarenIcon', '.W_miniblog .ico_club'],
-		['VgirlIcon', '.W_miniblog .ico_vlady'],
+		['MemberIcon', '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)'],
+		['VerifyIcon', '.approve:not(.wbpShow), .approve_co:not(.wbpShow)'],
+		['DarenIcon', '.ico_club:not(.wbpShow)'],
+		['VgirlIcon', '.ico_vlady:not(.wbpShow)'],
 		['OlyBoard', '#trustPagelet_yunying_olympic'],
 		['OlyPopup', 'div.oly_win'],
-		['Oly361', '.W_miniblog .ico_oly361'],
-		['OlyMedals', '.W_miniblog .ico_olympic_gold, .W_miniblog .ico_olympic_silver, .W_miniblog .ico_olympic_bronze'],
+		['Oly361', '.ico_oly361:not(.wbpShow)'],
+		['OlyMedals', '.ico_olympic_gold:not(.wbpShow), .ico_olympic_silver:not(.wbpShow), .ico_olympic_bronze:not(.wbpShow)'],
 		['Custom'] // 必须为最后一项
 	];
 var $optionData = {
@@ -70,13 +69,17 @@ var $optionData = {
 	customBlocks : ['array'],
 	hideBlock : ['object']
 };
-var $options = {}, $forwardFeeds = {}, $floodFeeds = {};
+var $uid, $options = {}, $forwardFeeds = {}, $floodFeeds = {};
 
 var _ = function (s) {
 	return document.getElementById(s);
 };
 var __ = function (s) {
 	return document.querySelector(s);
+};
+// 删除节点
+var remove = function (el) {
+	el && el.parentNode.removeChild(el);
 };
 // 绑定事件
 var bind = function (el, eventName, handler) {
@@ -150,7 +153,7 @@ function filterSource(source, keywords) {
 }
 
 function filterFeed(node) {
-	if (node.firstChild.tagName === 'A') {node.removeChild(node.firstChild); } // 已被屏蔽过
+	if (node.firstChild.tagName === 'A') { node.removeChild(node.firstChild); } // 已被屏蔽过
 	var scope = getScope(), text = '@', isForward = (node.getAttribute('isforward') === '1'),
 		content = node.querySelector('dd.content > p[node-type="feed_list_content"]'),
 		forwardContent = node.querySelector('dd.content > dl.comment > dt[node-type="feed_list_forwardContent"]'),
@@ -278,91 +281,60 @@ function filterFeed(node) {
 	return true;
 }
 
-var $loadingState = null;
-
-function asyncLoad() {
-	// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
-	// 各版块载入顺序不定，脚本运行时可能页面尚未载入完成，在网速较慢时尤为明显
-	// 需要等待页面载入完成时重新载入设置按钮及刷新微博列表
-	// 载入顺序[内容(依赖)]：$options($CONFIG.$uid) -> [设置按钮(STK.ui.dialog); 微博列表(.feed_lists)]
-	if (getScope() === 0) {
-		return ($loadingState = null);
-	}
-	if (!$loadingState) { // 包括0, null和undefined
-		if (!$window.$CONFIG) {
-			return ($loadingState = 0);
+// 屏蔽提示相关事件的冒泡处理
+function bindTipOnClick(node) {
+	if (!node) { node = __('div.feed_lists'); }
+	click(node, function (event) {
+		var node = event.target;
+		if (node && node.tagName === 'A') {
+			if (node.className === 'wbpTipKeyword') {
+				$settingsWindow.show();
+				event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
+			} else if (node.className === 'wbpTip') {
+				node.parentNode.childNodes[2].style.opacity = 1;
+				node.parentNode.childNodes[4].style.opacity = 1;
+				remove(node);
+			}
 		}
-		$uid = $window.$CONFIG.uid;
-		if (!reloadSettings($options, getValue($uid.toString()))) {
-			alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
+	});
+	bind(node, 'mouseover', function (event) {
+		var node = event.target;
+		if (node && node.tagName === 'A' && node.className === 'wbpTip') {
+			node.parentNode.childNodes[2].style.display = '';
+			node.parentNode.childNodes[4].style.display = '';
+			node.parentNode.childNodes[2].style.opacity = 0.5;
+			node.parentNode.childNodes[4].style.opacity = 0.5;
 		}
-		if ($options.autoUpdate) {
-			autoUpdate();
+	});
+	bind(node, 'mouseout', function (event) {
+		var node = event.target;
+		if (node && node.tagName === 'A' && node.className === 'wbpTip' && node.parentNode) {
+			node.parentNode.childNodes[2].style.display = 'none';
+			node.parentNode.childNodes[4].style.display = 'none';
 		}
-		GM_addStyle('${CSS}');
-		$loadingState = 1;
-	}
-	if (($loadingState & 1) && !($loadingState & 2)) {
-		try {
-			if (typeof $window.STK.ui.dialog === 'function' && showSettingsBtn()) {
-				$loadingState |= 2;
-			}
-		} catch (e) { }
-	}
-	if (($loadingState & 1) && !($loadingState & 4) && __('div.feed_lists dl.feed_list')) {
-		var feedLists = __('div.feed_lists');
-		// 屏蔽提示相关事件的冒泡处理
-		click(feedLists, function (event) {
-			var node = event.target;
-			if (node && node.tagName === 'A') {
-				if (node.className === 'wbpTipKeyword') {
-					$settingsWindow.show();
-					event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
-				} else if (node.className === 'wbpTip') {
-					node.parentNode.childNodes[2].style.opacity = 1;
-					node.parentNode.childNodes[4].style.opacity = 1;
-					node.parentNode.removeChild(node);
-				}
-			}
-		});
-		bind(feedLists, 'mouseover', function (event) {
-			var node = event.target;
-			if (node && node.tagName === 'A' && node.className === 'wbpTip') {
-				node.parentNode.childNodes[2].style.display = '';
-				node.parentNode.childNodes[4].style.display = '';
-				node.parentNode.childNodes[2].style.opacity = 0.5;
-				node.parentNode.childNodes[4].style.opacity = 0.5;
-			}
-		});
-		bind(feedLists, 'mouseout', function (event) {
-			var node = event.target;
-			if (node && node.tagName === 'A' && node.className === 'wbpTip' && node.parentNode) {
-				node.parentNode.childNodes[2].style.display = 'none';
-				node.parentNode.childNodes[4].style.display = 'none';
-			}
-		});
-		applySettings();
-		$loadingState |= 4;
-	}
-	if ($loadingState !== 7) {
-		setTimeout(asyncLoad, 1000);
-	}
-	return $loadingState;
+	});
 }
 
 // 处理动态载入内容
 function onDOMNodeInsertion(event) {
-	if (getScope() === 0) {
-		$loadingState = null;
+	var node = event.target;
+	if (node.tagName === 'IFRAME') { // BigPipe
+		if (getScope() && !$uid) {
+			// 第一次载入或从其它页面转入作用范围内页面
+			loadSettings();
+		}
 		return false;
 	}
-	if ($loadingState === null) {
-		// 第一次载入或从其它页面转入作用范围内页面
-		$loadingState = 0;
-		asyncLoad();
-	}
-	var node = event.target;
-	if (node.tagName === 'DL' && node.classList.contains('feed_list')) {
+	if (getScope() === 0) { return false; }
+	if (node.tagName === 'DIV' && node.getAttribute('node-type') === 'feed_nav') {
+		// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
+		// 需要重新载入设置页面、按钮及刷新微博列表
+		showSettingsBtn();
+	} else if (node.tagName === 'DIV' && node.classList.contains('feed_lists')) {
+ 		// 微博列表作为pagelet被一次性载入
+		bindTipOnClick(node);
+		applySettings();
+	} else if (getScope() && node.tagName === 'DL' && node.classList.contains('feed_list')) {
 		// 处理动态载入的微博
 		return filterFeed(node);
 	}
@@ -440,7 +412,7 @@ function readerMode() {
 
 // 检测按键，开关极简阅读模式
 function onKeyPress(event) {
-	if (!$loadingState || $settingsWindow.isShown()) {return; }
+	if ($settingsWindow.isShown()) {return; }
 	if (getScope() === 1 && event.keyCode === 119) {
 		$options.readerMode = !$options.readerMode;
 		setValue($uid.toString(), JSON.stringify($options));
@@ -684,7 +656,7 @@ var $settingsWindow = (function () {
 		});
 		// 删除关键词事件
 		events.add('remove', 'click', function (action) {
-			action.el.parentNode.removeChild(action.el);
+			remove(action.el);
 		});
 		// 复选框标签点击事件
 		bindSTK('inner', function (event) {
@@ -777,14 +749,15 @@ function showSettingsBtn() {
 		var groups = __('#pl_content_homeFeed .nfTagB, #pl_content_hisFeed .nfTagB');
 		if (!groups) {return false; }
 		var showSettingsTab = document.createElement('li');
-		showSettingsTab.innerHTML = '<span><em><a id="wbpShowSettings" href="javascript:void(0)">眼不见心不烦</a></em></span>';
+		showSettingsTab.id = 'wbpShowSettings';
+		showSettingsTab.innerHTML = '<span><em><a href="javascript:void(0)">眼不见心不烦</a></em></span>';
 		click(showSettingsTab, $settingsWindow.show);
 		groups.childNodes[1].appendChild(showSettingsTab);
 	}
 	var floatBtn = _('wbpShowSettingsFloat');
 	if (floatBtn) {
 		if (!$options.floatBtn) {
-			floatBtn.parentNode.removeChild(floatBtn);
+			remove(floatBtn);
 		}
 	} else if ($options.floatBtn) {
 		var scrollToTop = _('base_scrollToTop');
@@ -802,8 +775,26 @@ function showSettingsBtn() {
 	return true;
 }
 
-// 等待页面载入完成
-asyncLoad();
+// 载入设置（只运行一次）
+function loadSettings() {
+	$uid = $window.$CONFIG.uid;
+	if (!reloadSettings($options, getValue($uid.toString()))) {
+		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
+	}
+	if ($options.autoUpdate) {
+		autoUpdate();
+	}
+	// IFRAME载入不会影响CSS，只添加一次即可
+	GM_addStyle('${CSS}');
+}
+
+// 如果第一次运行时就在作用范围内，则直接应用设置（此时页面已载入完成）；
+// 否则（如“我的评论”）等待切换回首页时再进行设置（由onDOMNodeInsertion处理）
+if (getScope()) {
+	loadSettings();
+	bindTipOnClick();
+	applySettings();
+}
 
 // 处理动态载入内容
 document.addEventListener('DOMNodeInserted', onDOMNodeInsertion, false);
