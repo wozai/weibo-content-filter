@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		加入自定义屏蔽示例；修正在首页点击“首页”时设置按钮消失的问题
+// @features		加入对嵌入式广告的屏蔽；加入对“热评微博”模块（“我的评论”页）的屏蔽；图标屏蔽可以作用于大部分页面；修正在首页点击“首页”时设置按钮消失的问题
 // @version			0.92b2
 // @revision		58
 // @author			@富平侯(/salviati)
@@ -21,7 +21,7 @@ var $blocks = [ // 模块屏蔽设置
 		['InterestApp', '#pl_content_allInOne, #trustPagelete_recom_allinone'],
 		['Notice', '#pl_common_noticeboard, #pl_rightmod_noticeboard'],
 		['HelpFeedback', '#pl_common_help, #pl_common_feedback, #pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle'],
-		['Ads', '#plc_main .W_main_r div[id^="ads_"], div[ad-data], #ads_bottom_1'],
+		['Ads', '#plc_main .W_main_r [id^="ads_"], div[ad-data], #ads_bottom_1'],
 		['Footer', 'div.global_footer'],
 		['PullyList', '#pl_content_pullylist, #pl_content_biztips'],
 		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
@@ -35,6 +35,7 @@ var $blocks = [ // 模块屏蔽设置
 		['Level', '#pl_content_personInfo p.level, #pl_leftNav_common dd.nameBox p, #pl_content_hisPersonalInfo span.W_level_ico'],
 		['Hello', 'div.wbim_hello'],
 		['Balloon', 'div.layer_tips'],
+		['TopComment', '#pl_content_commentTopNav'],
 		['Member', '#trustPagelet_recom_member'],
 		['MemberIcon', '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)'],
 		['VerifyIcon', '.approve:not(.wbpShow), .approve_co:not(.wbpShow)'],
@@ -776,8 +777,12 @@ function showSettingsBtn() {
 
 // 载入设置（只运行一次）
 function loadSettings() {
-	$uid = $window.$CONFIG.uid;
-	if (!$uid || isNaN(Number($uid))) { return false; }
+	if ($window && $window.$CONFIG) {
+		$uid = $window.$CONFIG.uid;
+	} 
+	if (!$uid || isNaN(Number($uid))) {
+		return false;
+	} 
 	if (!reloadSettings($options, getValue($uid.toString()))) {
 		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 	}
@@ -802,6 +807,4 @@ if (loadSettings()) {
 	document.addEventListener('DOMNodeInserted', onDOMNodeInsertion, false);
 	// 处理按键（极简阅读模式）
 	document.addEventListener('keyup', onKeyPress, false);
-} else {
-	console.error('无法载入设置！');
 }
