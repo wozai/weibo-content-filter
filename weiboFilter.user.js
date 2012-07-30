@@ -318,13 +318,6 @@ function bindTipOnClick(node) {
 // 处理动态载入内容
 function onDOMNodeInsertion(event) {
 	var node = event.target;
-	if (node.tagName === 'IFRAME') { // BigPipe
-		if (getScope() && !$uid) {
-			// 第一次载入或从其它页面转入作用范围内页面
-			loadSettings();
-		}
-		return false;
-	}
 	if (getScope() === 0) { return false; }
 	if (node.tagName === 'DIV' && node.getAttribute('node-type') === 'feed_nav') {
 		// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
@@ -333,7 +326,7 @@ function onDOMNodeInsertion(event) {
 	} else if (node.tagName === 'DIV' && node.classList.contains('feed_lists')) {
  		// 微博列表作为pagelet被一次性载入
 		bindTipOnClick(node);
-		applySettings();
+		filterFeeds();
 	} else if (getScope() && node.tagName === 'DL' && node.classList.contains('feed_list')) {
 		// 处理动态载入的微博
 		return filterFeed(node);
@@ -393,7 +386,7 @@ function checkUpdate(auto) {
 // 极简阅读模式（仅在个人首页生效）
 function readerMode() {
 	var readerModeStyles = _('wbpReaderModeStyles');
-	if (getScope() === 1 && $options.readerMode) {
+	if ($options.readerMode) {
 		if (!readerModeStyles) {
 			readerModeStyles = document.createElement('style');
 			readerModeStyles.type = 'text/css';
@@ -401,9 +394,9 @@ function readerMode() {
 			document.head.appendChild(readerModeStyles);
 		}
 		if (_('Box_left')) { // 体验版
-			readerModeStyles.innerHTML = '#Box_left, #Box_right, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #pl_content_top .global_header {top: -35px; } #Box_center { width: 800px; } .W_miniblog { background-position-y: -35px; } .W_main { padding-top: 17px; width: 845px; } .W_main_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 688px; } #base_scrollToTop, #wbpShowSettingsFloat { margin-left: 424px; }';
+			readerModeStyles.innerHTML = '.B_index #Box_left, .B_index #Box_right, .B_index #pl_content_publisherTop, .B_index .global_footer, .B_index #wbim_box { display: none; } .B_index .global_header {top: -35px; } .B_index #Box_center { width: 800px; } .B_index .W_miniblog { background-position-y: -35px; } .B_index .W_main { padding-top: 17px; width: 845px; } .B_index .W_main_bg { background: ' + $options.readerModeBackColor + '; } .B_index .feed_list .repeat .input textarea { width: 688px; } .B_index #base_scrollToTop, .B_index #wbpShowSettingsFloat { margin-left: 424px; }';
 		} else { // 传统版
-			readerModeStyles.innerHTML = '#plc_main .W_main_r, #pl_content_publisherTop, .global_footer, #wbim_box { display: none; } #pl_content_top .global_header {top: -35px; } #plc_main .W_main_c { width: 800px; } .W_miniblog { background-position-y: -35px; } #plc_main .custom_content_bg { padding-top: 30px; } .W_main_narrow { padding-top: 17px; } .W_main_narrow_bg { background: ' + $options.readerModeBackColor + '; } .feed_list .repeat .input textarea { width: 628px; }';
+			readerModeStyles.innerHTML = '.B_index #plc_main .W_main_r, .B_index #pl_content_publisherTop, .B_index .global_footer, .B_index #wbim_box { display: none; } .B_index .global_header {top: -35px; } .B_index #plc_main .W_main_c { width: 800px; } .B_index .W_miniblog { background-position-y: -35px; } .B_index #plc_main .custom_content_bg { padding-top: 30px; } .B_index .W_main_narrow { padding-top: 17px; } .B_index .W_main_narrow_bg { background: ' + $options.readerModeBackColor + '; } .B_index .feed_list .repeat .input textarea { width: 628px; }';
 		}
 	} else if (readerModeStyles) {
 		document.head.removeChild(readerModeStyles);
@@ -443,12 +436,17 @@ function hideBlocks() {
 	blockStyles.innerHTML = cssText + '\n';
 }
 
-// 根据当前设置屏蔽/显示所有内容
-function applySettings() {
+// 根据当前设置屏蔽微博
+function filterFeeds() {
+	if (!getScope()) { return; }
 	// 处理非动态载入内容
 	var feeds = document.querySelectorAll('.feed_list'), i, len;
 	$forwardFeeds = {}; $floodFeeds = {};
 	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
+}
+
+// 根据当前设置修改页面
+function modifyPage() {
 	// 极简阅读模式
 	readerMode();
 	// 应用浮动按钮设置
@@ -719,7 +717,8 @@ var $settingsWindow = (function () {
 		bindSTK('OK', function () {
 			$options = exportSettings();
 			setValue($uid.toString(), JSON.stringify($options));
-			applySettings();
+			filterFeeds();
+			modifyPage();
 			dialog.hide();
 		});
 		bindSTK('cancel', dialog.hide);
@@ -778,25 +777,31 @@ function showSettingsBtn() {
 // 载入设置（只运行一次）
 function loadSettings() {
 	$uid = $window.$CONFIG.uid;
+	if (!$uid || isNaN(Number($uid))) { return false; }
 	if (!reloadSettings($options, getValue($uid.toString()))) {
 		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 	}
 	if ($options.autoUpdate) {
 		autoUpdate();
 	}
-	// IFRAME载入不会影响CSS，只添加一次即可
+	// IFRAME载入不会影响head中的CSS，只添加一次即可
 	GM_addStyle('${CSS}');
+	modifyPage();
+	return true;
 }
 
-// 如果第一次运行时就在作用范围内，则直接应用设置（此时页面已载入完成）；
-// 否则（如“我的评论”）等待切换回首页时再进行设置（由onDOMNodeInsertion处理）
-if (getScope()) {
-	loadSettings();
-	bindTipOnClick();
-	applySettings();
-}
+if (loadSettings()) {
+	// 如果第一次运行时就在作用范围内，则直接屏蔽关键词（此时页面已载入完成）；
+	// 否则（如“我的评论”）等待切换回首页时再进行屏蔽（由onDOMNodeInsertion处理）
+	if (getScope()) {
+		bindTipOnClick();
+		filterFeeds();
+	}
 
-// 处理动态载入内容
-document.addEventListener('DOMNodeInserted', onDOMNodeInsertion, false);
-// 处理按键（极简阅读模式）
-document.addEventListener('keyup', onKeyPress, false);
+	// 处理动态载入内容
+	document.addEventListener('DOMNodeInserted', onDOMNodeInsertion, false);
+	// 处理按键（极简阅读模式）
+	document.addEventListener('keyup', onKeyPress, false);
+} else {
+	console.error('无法载入设置！');
+}
