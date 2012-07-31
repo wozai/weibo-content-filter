@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		加入对嵌入式广告的屏蔽；加入对“热评微博”模块（“我的评论”页）的屏蔽；图标屏蔽可以作用于大部分页面；修正在首页点击“首页”时设置按钮消失的问题
-// @version			0.92b2
-// @revision		58
+// @features		加入对嵌入式广告的屏蔽；加入对“热评微博”模块（“我的评论”页）的屏蔽；图标屏蔽可以作用于大部分页面；修正在首页点击“首页”时设置按钮消失的问题；修正出现推广微博时屏蔽失效的问题
+// @version			0.92b3
+// @revision		59
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -21,7 +21,7 @@ var $blocks = [ // 模块屏蔽设置
 		['InterestApp', '#pl_content_allInOne, #trustPagelete_recom_allinone'],
 		['Notice', '#pl_common_noticeboard, #pl_rightmod_noticeboard'],
 		['HelpFeedback', '#pl_common_help, #pl_common_feedback, #pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle'],
-		['Ads', '#plc_main .W_main_r [id^="ads_"], div[ad-data], #ads_bottom_1'],
+		['Ads', '#plc_main .W_main_r [id^="ads_"], div[ad-data], #ads_bottom_1, dl.feed_list div.olympic_adv_feed'],
 		['Footer', 'div.global_footer'],
 		['PullyList', '#pl_content_pullylist, #pl_content_biztips'],
 		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
@@ -32,7 +32,7 @@ var $blocks = [ // 模块屏蔽设置
 		['Tasks', '#pl_content_tasks'],
 		['UserGuide', '#pl_guide_oldUser'],
 		['Promotion', '#pl_rightmod_promotion, #trustPagelet_ugrowth_invite'],
-		['Level', '#pl_content_personInfo p.level, #pl_leftNav_common dd.nameBox p, #pl_content_hisPersonalInfo span.W_level_ico'],
+		['Level', 'span.W_level_ico'],
 		['Hello', 'div.wbim_hello'],
 		['Balloon', 'div.layer_tips'],
 		['TopComment', '#pl_content_commentTopNav'],
@@ -154,7 +154,10 @@ function filterSource(source, keywords) {
 }
 
 function filterFeed(node) {
-	if (node.firstChild.tagName === 'A') { node.removeChild(node.firstChild); } // 已被屏蔽过
+	if (node.firstChild && node.firstChild.className === 'wbpTip') {
+		// 已被灰名单屏蔽过，移除屏蔽提示
+		node.removeChild(node.firstChild);
+	}
 	var scope = getScope(), text = '@', isForward = (node.getAttribute('isforward') === '1'),
 		content = node.querySelector('dd.content > p[node-type="feed_list_content"]'),
 		forwardContent = node.querySelector('dd.content > dl.comment > dt[node-type="feed_list_forwardContent"]'),
@@ -167,10 +170,6 @@ function filterFeed(node) {
 		
 	var showFeed = function () {
 		node.style.display = '';
-		node.childNodes[1].style.display = '';
-		node.childNodes[3].style.display = '';
-		node.childNodes[1].style.opacity = 1;
-		node.childNodes[3].style.opacity = 1;
 		if (!$options.filterPaused) {
 			if ($options.filterDupFwd && fmid) {
 				if (!$forwardFeeds[fmid]) {
@@ -251,16 +250,14 @@ function filterFeed(node) {
 			return false;
 		}
 	}
+	// 找到了待隐藏的微博
 	var authorClone;
 	if (scope === 1) {
-		node.childNodes[3].style.display = 'none';
 		// 添加隐藏提示链接
 		authorClone = author.cloneNode(false);
 		// 默认的用户链接中多了一个换行符和两个tab
 		authorClone.innerHTML = '@' + author.innerHTML.slice(3);
 	}
-	// 找到了待隐藏的微博
-	node.childNodes[1].style.display = 'none';
 	var showFeedLink = document.createElement('a');
 	showFeedLink.href = 'javascript:void(0)';
 	showFeedLink.className = 'wbpTip';
@@ -292,26 +289,8 @@ function bindTipOnClick(node) {
 				$settingsWindow.show();
 				event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
 			} else if (node.className === 'wbpTip') {
-				node.parentNode.childNodes[2].style.opacity = 1;
-				node.parentNode.childNodes[4].style.opacity = 1;
 				remove(node);
 			}
-		}
-	});
-	bind(node, 'mouseover', function (event) {
-		var node = event.target;
-		if (node && node.tagName === 'A' && node.className === 'wbpTip') {
-			node.parentNode.childNodes[2].style.display = '';
-			node.parentNode.childNodes[4].style.display = '';
-			node.parentNode.childNodes[2].style.opacity = 0.5;
-			node.parentNode.childNodes[4].style.opacity = 0.5;
-		}
-	});
-	bind(node, 'mouseout', function (event) {
-		var node = event.target;
-		if (node && node.tagName === 'A' && node.className === 'wbpTip' && node.parentNode) {
-			node.parentNode.childNodes[2].style.display = 'none';
-			node.parentNode.childNodes[4].style.display = 'none';
 		}
 	});
 }
@@ -425,7 +404,7 @@ function hideBlocks() {
 	// 屏蔽提示相关CSS
 	var tipBackColor = $options.tipBackColor;
 	var tipTextColor = $options.tipTextColor;
-	cssText += 'a.wbpTip { background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; }';
+	cssText += '.wbpTip:not(:hover) { background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; }';
 	// 更新CSS
 	var blockStyles = _('wbpBlockStyles');
 	if (!blockStyles) {
