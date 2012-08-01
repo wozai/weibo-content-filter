@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		加入对嵌入式广告的屏蔽；加入对“热评微博”模块（“我的评论”页）的屏蔽；图标屏蔽可以作用于大部分页面；浮动设置按钮可以自动隐藏；修正在首页点击“首页”时设置按钮消失的问题；修正出现推广微博时屏蔽失效的问题
+// @features		可以将表情作为屏蔽关键词；加入对嵌入式广告的屏蔽；加入对“热评微博”模块（“我的评论”页）的屏蔽；图标屏蔽可以作用于大部分页面；浮动设置按钮可以自动隐藏；修正在首页点击“首页”时设置按钮消失的问题；修正出现推广微博时屏蔽失效的问题
 // @version			0.92
 // @revision		60
 // @author			@富平侯(/salviati)
@@ -153,6 +153,17 @@ function filterSource(source, keywords) {
 	return searchKeyword(source, keywords);
 }
 
+var getFeedText = (function () {
+	var converter = document.createElement('div');
+	return function (html) {
+		// 替换表情，去掉标签
+		converter.innerHTML = html.replace(/<img[^>]+alt="(\[[^\]">]+\])"[^>]*>/g, '$1')
+			.replace(/<\/?[^>]+>/g, '').replace(/[\r\n\t]/g, '').trim();
+		// 利用div（未插入文档）进行HTML反转义
+		return converter.textContent;
+	}
+}());
+
 function filterFeed(node) {
 	if (node.firstChild && node.firstChild.className === 'wbpTip') {
 		// 已被灰名单屏蔽过，移除屏蔽提示
@@ -189,11 +200,12 @@ function filterFeed(node) {
 	};
 	if (!content) {return false; }
 	if (scope === 2) {text = ''; } // 他人主页没有原作者链接
-	text += content.textContent.replace(/[\r\n\t]/g, '').trim();
+	text += getFeedText(content.innerHTML);
 	if (isForward) {
 		// 转发内容
-		text += '//' + forwardContent.textContent.replace(/[\r\n\t]/g, '').trim();
+		text += '////' + getFeedText(forwardContent.innerHTML);
 	}
+	console.log(text);
 	if ($options.filterPaused || searchKeyword(text, 'whiteKeywords')) { // 白名单检查
 		showFeed();
 		return false;
