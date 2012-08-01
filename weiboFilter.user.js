@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		加入对嵌入式广告的屏蔽；加入对“热评微博”模块（“我的评论”页）的屏蔽；图标屏蔽可以作用于大部分页面；修正在首页点击“首页”时设置按钮消失的问题；修正出现推广微博时屏蔽失效的问题
-// @version			0.92b3
-// @revision		59
+// @features		加入对嵌入式广告的屏蔽；加入对“热评微博”模块（“我的评论”页）的屏蔽；图标屏蔽可以作用于大部分页面；浮动设置按钮可以自动隐藏；修正在首页点击“首页”时设置按钮消失的问题；修正出现推广微博时屏蔽失效的问题
+// @version			0.92
+// @revision		60
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -430,7 +430,7 @@ function modifyPage() {
 	// 极简阅读模式
 	readerMode();
 	// 应用浮动按钮设置
-	showSettingsBtn();
+	toggleFloatSettingsBtn();
 	// 屏蔽版面内容
 	hideBlocks();
 }
@@ -733,26 +733,50 @@ function showSettingsBtn() {
 		click(showSettingsTab, $settingsWindow.show);
 		groups.childNodes[1].appendChild(showSettingsTab);
 	}
-	var floatBtn = _('wbpShowSettingsFloat');
-	if (floatBtn) {
-		if (!$options.floatBtn) {
-			remove(floatBtn);
-		}
-	} else if ($options.floatBtn) {
-		var scrollToTop = _('base_scrollToTop');
-		if (!scrollToTop) {return false; }
-		var showSettingsFloat = document.createElement('a');
-		showSettingsFloat.innerHTML = '<span style="padding: 0 0 6px;">★</span>';
-		showSettingsFloat.className = 'W_gotop';
-		showSettingsFloat.href = 'javascript:void(0)';
-		showSettingsFloat.title = '眼不见心不烦';
-		showSettingsFloat.id = 'wbpShowSettingsFloat';
-		showSettingsFloat.style.bottom = '72px';
-		click(showSettingsFloat, $settingsWindow.show);
-		scrollToTop.parentNode.appendChild(showSettingsFloat);
-	}
 	return true;
 }
+
+var toggleFloatSettingsBtn = (function () {
+	var floatBtn = null, lastTime = null, lastTimerID = null;
+	// 仿照STK.comp.content.scrollToTop延时100ms显示/隐藏，防止scroll事件调用过于频繁
+	function scrollDelayTimer() {
+		if ((lastTime != null && (new Date).getTime() - lastTime < 500)) {
+			clearTimeout(lastTimerID);
+			lastTimerID = null;
+		}
+		lastTime = (new Date).getTime();
+		lastTimerID = setTimeout(function () {
+			if (floatBtn) {
+				floatBtn.style.visibility = window.scrollY > 0 ? 'visible' : 'hidden';
+			}
+		}, 100);
+	}
+	
+	return function () {
+		if (!$options.floatBtn && floatBtn) {
+			window.removeEventListener('scroll', scrollTimer, false);
+			remove(floatBtn);
+			floatBtn = null;
+			return true;
+		} else if ($options.floatBtn && !floatBtn) {
+			var scrollToTop = _('base_scrollToTop');
+			if (!scrollToTop) {return false; }
+			floatBtn = document.createElement('a');
+			floatBtn.innerHTML = '<span style="padding: 0 0 6px;">★</span>';
+			floatBtn.className = 'W_gotop';
+			floatBtn.href = 'javascript:void(0)';
+			floatBtn.title = '眼不见心不烦';
+			floatBtn.id = 'wbpfloatBtn';
+			floatBtn.style.bottom = '72px';
+			click(floatBtn, $settingsWindow.show);
+			scrollToTop.parentNode.appendChild(floatBtn);			
+			window.addEventListener('scroll', scrollDelayTimer, false);
+			scrollDelayTimer();
+			return true;
+		}
+		return false;
+	};
+}());
 
 // 载入设置（只运行一次）
 function loadSettings() {
@@ -778,6 +802,7 @@ if (loadSettings()) {
 	// 如果第一次运行时就在作用范围内，则直接屏蔽关键词（此时页面已载入完成）；
 	// 否则（如“我的评论”）等待切换回首页时再进行屏蔽（由onDOMNodeInsertion处理）
 	if (getScope()) {
+		showSettingsBtn();
 		bindTipOnClick();
 		filterFeeds();
 	}
