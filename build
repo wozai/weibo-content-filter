@@ -16,6 +16,7 @@ do
 done
 sed 's/\${CSS}/'"${CSS}"'/;s/\${HTML}/'"${HTML}"'/;s/\${REV}/'"${REV}"'/;s/\${VER}/'"${VER}"'/;s/^\(\/\/ @version\s\+\)\([0-9]\+\)\(\.[0-9]\+\)\+.*$/\1\2\3/' weiboFilter.user.js > $OUTFILE
 [ $NO_COMPRESS ] && exit 0
+sed -i 's/\(console\..*\?);$\)/\/\*\1\*\//' $OUTFILE
 head -n 15 $OUTFILE > weiboFilter.user.head.js
 if [ ! -f compiler.jar ]
 then
