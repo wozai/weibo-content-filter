@@ -59,6 +59,7 @@ var $optionData = {
 	readerMode : ['bool'],
 	readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
 	filterPaused : ['bool'],
+	filterSmiley : ['bool'],
 	filterDeleted : ['bool'],
 	filterFeelings : ['bool'],
 	filterDupFwd : ['bool'],
@@ -155,12 +156,15 @@ function filterSource(source, keywords) {
 
 var getFeedText = (function () {
 	var converter = document.createElement('div');
-	return function (html) {
+	return function (content) {
 		// 替换表情，去掉标签
-		converter.innerHTML = html.replace(/<img[^>]+alt="(\[[^\]">]+\])"[^>]*>/g, '$1')
-			.replace(/<\/?[^>]+>/g, '').replace(/[\r\n\t]/g, '').trim();
-		// 利用div（未插入文档）进行HTML反转义
-		return converter.textContent;
+		if ($options.filterSmiley) {
+			converter.innerHTML = content.innerHTML.replace(/<img[^>]+alt="(\[[^\]">]+\])"[^>]*>/g, '$1')
+				.replace(/<\/?[^>]+>/g, '').replace(/[\r\n\t]/g, '').trim();
+			// 利用div（未插入文档）进行HTML反转义
+			return converter.textContent;
+		}
+		return content.textContent.replace(/[\r\n\t]/g, '').trim();
 	}
 }());
 
@@ -200,10 +204,10 @@ function filterFeed(node) {
 	};
 	if (!content) {return false; }
 	if (scope === 2) {text = ''; } // 他人主页没有原作者链接
-	text += getFeedText(content.innerHTML);
+	text += getFeedText(content);
 	if (isForward) {
 		// 转发内容
-		text += '////' + getFeedText(forwardContent.innerHTML);
+		text += '////' + getFeedText(forwardContent);
 	}
 	console.log(text);
 	if ($options.filterPaused || searchKeyword(text, 'whiteKeywords')) { // 白名单检查
