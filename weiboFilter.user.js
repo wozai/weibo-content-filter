@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		可以将表情作为屏蔽关键词；加入对嵌入式广告的屏蔽；加入对“热评微博”模块（“我的评论”页）的屏蔽；图标屏蔽可以作用于大部分页面；浮动设置按钮可以自动隐藏；修正在首页点击“首页”时设置按钮消失的问题；修正出现推广微博时屏蔽失效的问题
-// @version			0.92
-// @revision		60
+// @features		修正进入他人页面时设置按钮经常不出现的问题
+// @version			0.93b1
+// @revision		61
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -313,9 +313,10 @@ function bindTipOnClick(node) {
 
 // 处理动态载入内容
 function onDOMNodeInsertion(event) {
-	var node = event.target;
 	if (getScope() === 0) { return false; }
-	if (node.tagName === 'DIV' && node.getAttribute('node-type') === 'feed_nav') {
+	var node = event.target;
+	console.log(node);
+	if (node.tagName === 'DIV' && node.getElementsByClassName('nfTagB').length) {
 		// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
 		// 需要重新载入设置页面、按钮及刷新微博列表
 		showSettingsBtn();
