@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		可以清除在发布框中嵌入的默认话题；修正翻页和切换分组时反版聊/刷屏功能的错误；修正进入他人页面时设置按钮经常不出现的问题
-// @version			0.93b1
-// @revision		61
+// @features		可以覆盖“我的首页”及他人主页的模板设置（使用会员专属模板）；可以清除发布框中嵌入的默认话题；修正翻页和切换分组时反版聊/反刷屏功能的错误；修正进入他人页面时设置按钮经常不出现的问题
+// @version			0.93b2
+// @revision		62
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -59,6 +59,9 @@ var $optionData = {
 	readerMode : ['bool'],
 	readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
 	clearHotTopic : ['bool'],
+	overrideMySkin : ['bool'],
+	overrideOtherSkin : ['bool'],
+	skinID : ['string', 'skinvip001'],
 	filterPaused : ['bool'],
 	filterSmiley : ['bool'],
 	filterDeleted : ['bool'],
@@ -429,6 +432,31 @@ function readerMode() {
 	}
 }
 
+// 覆盖当前模板设置
+function overrideSkin() {
+	var formerStyle = _('custom_style') || _('skin_transformers'),
+		skinCSS = _('wbpOverrideSkin');
+	if (!formerStyle) { return; }
+	if (($uid === $window.$CONFIG.oid && $options.overrideMySkin) ||
+		(getScope() === 2 && $options.overrideOtherSkin)) {
+		if (!skinCSS) {
+			skinCSS = document.createElement('link');
+			skinCSS.id = 'wbpOverrideSkin';
+			skinCSS.type = 'text/css';
+			skinCSS.rel = 'stylesheet';
+			skinCSS.charset = 'utf-8';
+			document.head.insertBefore(skinCSS, formerStyle);
+		}
+		skinCSS.href = $window.$CONFIG.cssPath + 'skin/' + $options.skinID
+			+ '/skin' + ($window.$CONFIG.isnarrow ? '_narrow' : '') + ($window.$CONFIG.lang == "zh-tw" ? '_CHT' : '')
+			+ '.css?version=' + $window.$CONFIG.version;
+		formerStyle.disabled = true;
+	} else if (skinCSS) {
+		document.head.removeChild(skinCSS);
+		formerStyle.disabled = false;
+	}
+}
+
 // 检测按键，开关极简阅读模式
 function onKeyPress(event) {
 	if ($settingsWindow.isShown()) {return; }
@@ -499,6 +527,8 @@ function modifyPage() {
 	hideBlocks();
 	// 清除在发布框中嵌入的默认话题
 	clearHotTopic();
+	// 覆盖当前模板设置
+	overrideSkin();
 }
 
 // 载入/导入设置更新外部options
