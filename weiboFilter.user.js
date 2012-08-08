@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		可以清除在发布框中嵌入的默认话题；修正进入他人页面时设置按钮经常不出现的问题
+// @features		可以清除在发布框中嵌入的默认话题；修正翻页和切换分组时反版聊/刷屏功能的错误；修正进入他人页面时设置按钮经常不出现的问题
 // @version			0.93b1
 // @revision		61
 // @author			@富平侯(/salviati)
@@ -175,6 +175,7 @@ function filterFeed(node) {
 		node.removeChild(node.firstChild);
 	}
 	var scope = getScope(), text = '@', isForward = (node.getAttribute('isforward') === '1'),
+		mid = node.getAttribute('mid'),
 		content = node.querySelector('dd.content > p[node-type="feed_list_content"]'),
 		forwardContent = node.querySelector('dd.content > dl.comment > dt[node-type="feed_list_forwardContent"]'),
 		forwardLink = node.querySelector('dd.content > dl.comment > dd.info > a.date'),
@@ -183,22 +184,33 @@ function filterFeed(node) {
 	var fmid = isForward ? (forwardLink ? forwardLink.href : null) : null,
 		author = (scope === 1) ? content.childNodes[1] : null,
 		uid = author ? author.getAttribute('usercard') : null;
-		
+
+	var find = function (array, val) {
+		var l = array.length, i;
+		for (i = 0; i < l; ++i) {
+			if (array[i] === val) {
+				return true;
+			}
+		}
+		return false;
+	}
 	var showFeed = function () {
 		node.style.display = '';
 		if (!$options.filterPaused) {
 			if ($options.filterDupFwd && fmid) {
 				if (!$forwardFeeds[fmid]) {
-					$forwardFeeds[fmid] = 1;
-				} else {
-					++$forwardFeeds[fmid];
+					$forwardFeeds[fmid] = [];
+				}
+				if (!find($forwardFeeds[fmid], mid)) {
+					$forwardFeeds[fmid].push(mid);
 				}
 			}
 			if ($options.filterFlood && uid) {
 				if (!$floodFeeds[uid]) {
-					$floodFeeds[uid] = 1;
-				} else {
-					++$floodFeeds[uid];
+					$floodFeeds[uid] = [];
+				}
+				if (!find($floodFeeds[uid], mid)) {
+					$floodFeeds[uid].push(mid);
 				}
 			}
 		}
@@ -232,14 +244,20 @@ function filterFeed(node) {
 		return true;
 	}
 	// 反版聊（屏蔽重复转发）
-	if ($options.filterDupFwd && fmid && $forwardFeeds[fmid] >= Number($options.maxDupFwd)) {
-		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
-		return true;
+	if ($options.filterDupFwd && fmid && $forwardFeeds[fmid]) {
+		if ($forwardFeeds[fmid].length >= Number($options.maxDupFwd) && !find($forwardFeeds[fmid], mid)) {
+			console.warn('↑↑↑【被反版聊功能屏蔽】↑↑↑');
+			node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
+			return true;
+		}
 	}
 	// 反刷屏（屏蔽同一用户大量发帖）
-	if ($options.filterFlood && uid && $floodFeeds[uid] >= Number($options.maxFlood)) {
-		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
-		return true;
+	if ($options.filterFlood && uid && $floodFeeds[uid]) {
+		if ($floodFeeds[uid] >= Number($options.maxFlood) && !find($floodFeeds[uid], mid)) {
+			console.warn('↑↑↑【被反刷屏功能屏蔽】↑↑↑');
+			node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
+			return true;
+		}
 	}	
 	// 在微博内容中搜索屏蔽关键词
 	if (searchKeyword(text, 'blackKeywords')) {
@@ -254,7 +272,8 @@ function filterFeed(node) {
 			return true;
 		}
 	}
-	node.style.display = '';
+	// 带提示的屏蔽（灰名单）也算作“显示”，计入反刷屏与反版聊记录
+	showFeed();
 	var keyword = searchKeyword(text, 'grayKeywords');
 	if (!keyword) {
 		// 搜索来源灰名单
@@ -263,7 +282,6 @@ function filterFeed(node) {
 			sourceKeyword = filterSource(forwardSource, 'sourceGrayKeywords');
 		}
 		if (!sourceKeyword) {
-			showFeed();
 			return false;
 		}
 	}
@@ -316,10 +334,17 @@ function bindTipOnClick(node) {
 function onDOMNodeInsertion(event) {
 	if (getScope() === 0) { return false; }
 	var node = event.target;
-	console.log(node);
+	// console.log(node);
 	if (node.tagName === 'DL' && node.classList.contains('feed_list')) {
 		// 处理动态载入的微博
 		return filterFeed(node);
+	} else if (node.tagName === 'DIV' && node.classList.contains('W_loading')) {
+		var requestType = node.getAttribute('requesttype');
+		// 仅在翻页和切换分组时需要初始化反刷屏/反版聊记录
+		// 其它情况（新微博：newFeed，同页接续：lazyload）下不需要
+		if (requestType === 'search' || requestType === 'page') {
+			$forwardFeeds = {}; $floodFeeds = {};
+		}
 	} else if (node.tagName === 'DIV' && node.getElementsByClassName('nfTagB').length) {
 		// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
 		// 需要重新载入设置页面、按钮及刷新微博列表
