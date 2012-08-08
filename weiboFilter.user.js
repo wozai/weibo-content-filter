@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		修正进入他人页面时设置按钮经常不出现的问题
+// @features		可以清除在发布框中嵌入的默认话题；修正进入他人页面时设置按钮经常不出现的问题
 // @version			0.93b1
 // @revision		61
 // @author			@富平侯(/salviati)
@@ -58,6 +58,7 @@ var $optionData = {
 	tipTextColor : ['string', '#FF8080'],
 	readerMode : ['bool'],
 	readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
+	clearHotTopic : ['bool'],
 	filterPaused : ['bool'],
 	filterSmiley : ['bool'],
 	filterDeleted : ['bool'],
@@ -316,7 +317,10 @@ function onDOMNodeInsertion(event) {
 	if (getScope() === 0) { return false; }
 	var node = event.target;
 	console.log(node);
-	if (node.tagName === 'DIV' && node.getElementsByClassName('nfTagB').length) {
+	if (node.tagName === 'DL' && node.classList.contains('feed_list')) {
+		// 处理动态载入的微博
+		return filterFeed(node);
+	} else if (node.tagName === 'DIV' && node.getElementsByClassName('nfTagB').length) {
 		// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
 		// 需要重新载入设置页面、按钮及刷新微博列表
 		showSettingsBtn();
@@ -324,9 +328,9 @@ function onDOMNodeInsertion(event) {
  		// 微博列表作为pagelet被一次性载入
 		bindTipOnClick(node);
 		filterFeeds();
-	} else if (getScope() && node.tagName === 'DL' && node.classList.contains('feed_list')) {
-		// 处理动态载入的微博
-		return filterFeed(node);
+	} else if (node.tagName === 'DIV' && node.classList.contains('send_weibo')) {
+		// 清除在发布框中嵌入的默认话题
+		clearHotTopic();
 	}
 	return false;
 }
@@ -442,6 +446,24 @@ function filterFeeds() {
 	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
 }
 
+// 清除在发布框中嵌入的默认话题
+function clearHotTopic() {
+	if ($options.clearHotTopic && getScope() === 1) {
+		var inputBox = document.querySelector('#pl_content_publisherTop .send_weibo .input textarea');
+		if (inputBox && inputBox.classList.contains('topic_color')) {
+			// IFRAME载入方式，hotTopic可能尚未启动，直接清除相关属性即可
+			inputBox.removeAttribute('hottopic');
+			inputBox.removeAttribute('hottopicid');
+			// 在发布框中模拟输入，欺骗STK.common.editor.plugin.hotTopic
+			inputBox.value = 'DUMMY';
+			inputBox.focus();
+			inputBox.value = '';
+			inputBox.blur();
+			inputBox.classList.remove('topic_color');
+		}
+	}
+}
+
 // 根据当前设置修改页面
 function modifyPage() {
 	// 极简阅读模式
@@ -450,6 +472,8 @@ function modifyPage() {
 	toggleFloatSettingsBtn();
 	// 屏蔽版面内容
 	hideBlocks();
+	// 清除在发布框中嵌入的默认话题
+	clearHotTopic();
 }
 
 // 载入/导入设置更新外部options
