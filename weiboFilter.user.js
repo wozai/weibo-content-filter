@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		可以清除发布框中嵌入的默认话题；可以覆盖“我的首页”及他人主页的模板设置（使用会员专属模板）；修正翻页和切换分组时反版聊/反刷屏功能的错误；修正进入他人页面时设置按钮经常不出现的问题
+// @features		可以清除发布框中嵌入的默认话题；增加右边栏白名单模式；可以覆盖“我的首页”及他人主页的模板设置（使用会员专属模板）；修正翻页和切换分组时反版聊/反刷屏功能的错误；修正进入他人页面时设置按钮经常不出现的问题
 // @version			0.93
 // @revision		63
 // @author			@富平侯(/salviati)
@@ -16,32 +16,32 @@
 
 // 注意：使用@match替换@include将使GM_xmlhttpRequest()失效
 var $blocks = [ // 模块屏蔽设置
-		['Topic', '#trustPagelete_zt_hottopic'],
-		['InterestUser', '#trustPagelete_recom_interest'],
-		['InterestApp', '#trustPagelete_recom_allinone'],
-		['Notice', '#pl_rightmod_noticeboard'],
-		['HelpFeedback', '#pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle'],
+		['Topic', '#trustPagelete_zt_hottopic', true],
+		['InterestUser', '#trustPagelete_recom_interest', true],
+		['InterestApp', '#trustPagelete_recom_allinone', true],
+		['Notice', '#pl_rightmod_noticeboard', true],
+		['HelpFeedback', '#pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle', true],
 		['Ads', '#plc_main .W_main_r [id^="ads_"], div[ad-data], dl.feed_list div.olympic_adv_feed'],
 		['Footer', 'div.global_footer'],
 		['PullyList', '#pl_content_biztips'],
 		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
-		['Mood', '#pl_content_mood'],
+		['Mood', '#pl_content_mood', true],
 		['Medal', '#pl_rightmod_medal, .declist'],
 		['Game', '#pl_leftNav_game'],
 		['App', '#pl_leftNav_app'],
 		['Tasks', '#pl_content_tasks'],
 		['UserGuide', '#pl_guide_oldUser'],
-		['Promotion', '#trustPagelet_ugrowth_invite'],
+		['Promotion', '#trustPagelet_ugrowth_invite', true],
 		['Level', 'span.W_level_ico'],
 		['Hello', 'div.wbim_hello'],
 		['Balloon', 'div.layer_tips'],
 		['TopComment', '#pl_content_commentTopNav'],
-		['Member', '#trustPagelet_member_zone'],
+		['Member', '#trustPagelet_recom_member, #trustPagelet_member_zone', true],
 		['MemberIcon', '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)'],
 		['VerifyIcon', '.approve:not(.wbpShow), .approve_co:not(.wbpShow)'],
 		['DarenIcon', '.ico_club:not(.wbpShow)'],
 		['VgirlIcon', '.ico_vlady:not(.wbpShow)'],
-		['OlyBoard', '#trustPagelet_yunying_olympic'],
+		['OlyBoard', '#trustPagelet_yunying_olympic', true],
 		['OlyPopup', 'div.oly_win'],
 		['Oly361', '.ico_oly361:not(.wbpShow)'],
 		['OlyMedals', '.ico_olympic_gold:not(.wbpShow), .ico_olympic_silver:not(.wbpShow), .ico_olympic_bronze:not(.wbpShow)'],
@@ -72,6 +72,7 @@ var $optionData = {
 	maxFlood : ['string', 5],
 	autoUpdate : ['bool', true],
 	floatBtn : ['bool', true],
+	rightModWhitelist : ['bool'],
 	customBlocks : ['array'],
 	hideBlock : ['object']
 };
@@ -470,9 +471,14 @@ function onKeyPress(event) {
 function hideBlocks() {
 	var cssText = '', i, len = $blocks.length;
 	$blocks[len - 1][1] = $options.customBlocks.join(', '); // 自定义屏蔽
+	if ($options.rightModWhitelist) {
+		// 右边栏白名单模式下，默认屏蔽右边栏除导航栏以外的所有模块
+		cssText = 'body.B_index div.W_main_r > div { display: none }\n'
+			+ '#pl_content_setskin, #pl_content_personInfo, #pl_nav_outlookBar { display: block }\n';
+	}
 	for (i = 0; i < len; ++i) {
 		if ($options.hideBlock[$blocks[i][0]] && $blocks[i][1]) {
-			cssText += $blocks[i][1] + ' { display: none !important; }\n';
+			cssText += $blocks[i][1] + ' { display: ' + (($options.rightModWhitelist && $blocks[i][2]) ? 'block' : 'none !important') + ' }\n';
 		}
 	}
 	// 屏蔽提示相关CSS
@@ -766,10 +772,20 @@ var $settingsWindow = (function () {
 			}
 		});
 		bindSTK('tabHeaderSettings', exportSettings);
-		bindSTK('blockAll', function () {
-			var i, len;
+		bindSTK('rightModWhitelist', function () {
+			// 更改白名单模式时，自动反选右边栏相关模块
+			var i, len, item;
 			for (i = 0, len = $blocks.length; i < len; ++i) {
-				getDom('block' + $blocks[i][0]).checked = true;
+				if ($blocks[i][2]) {
+					item = getDom('block' + $blocks[i][0]);
+					item.checked = !item.checked;
+				}
+			}
+		}, 'change');
+		bindSTK('blockAll', function () {
+			var i, len, whitelistMode = getDom('rightModWhitelist').checked;
+			for (i = 0, len = $blocks.length; i < len; ++i) {
+				getDom('block' + $blocks[i][0]).checked = !(whitelistMode && $blocks[i][2]);
 			}
 		});
 		bindSTK('blockInvert', function () {
