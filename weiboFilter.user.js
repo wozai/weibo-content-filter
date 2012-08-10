@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		可以覆盖“我的首页”及他人主页的模板设置（使用会员专属模板）；可以清除发布框中嵌入的默认话题；修正翻页和切换分组时反版聊/反刷屏功能的错误；修正进入他人页面时设置按钮经常不出现的问题
-// @version			0.93b2
-// @revision		62
+// @features		可以清除发布框中嵌入的默认话题；可以覆盖“我的首页”及他人主页的模板设置（使用会员专属模板）；修正翻页和切换分组时反版聊/反刷屏功能的错误；修正进入他人页面时设置按钮经常不出现的问题
+// @version			0.93
+// @revision		63
 // @author			@富平侯(/salviati)
 // @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
 // @include			http://weibo.com/*
@@ -438,7 +438,7 @@ function overrideSkin() {
 		skinCSS = _('wbpOverrideSkin');
 	if (!formerStyle) { return; }
 	if (($uid === $window.$CONFIG.oid && $options.overrideMySkin) ||
-		(getScope() === 2 && $options.overrideOtherSkin)) {
+		($uid !== $window.$CONFIG.oid && $options.overrideOtherSkin)) {
 		if (!skinCSS) {
 			skinCSS = document.createElement('link');
 			skinCSS.id = 'wbpOverrideSkin';
@@ -880,6 +880,7 @@ function loadSettings() {
 		$uid = $window.$CONFIG.uid;
 	} 
 	if (!$uid || isNaN(Number($uid))) {
+		console.warn('不在作用范围内，脚本未运行！');
 		return false;
 	} 
 	if (!reloadSettings($options, getValue($uid.toString()))) {
