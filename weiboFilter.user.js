@@ -3,11 +3,11 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		可以清除发布框中嵌入的默认话题；增加右边栏白名单模式；可以覆盖“我的首页”及他人主页的模板设置（使用会员专属模板）；修正翻页和切换分组时反版聊/反刷屏功能的错误；修正进入他人页面时设置按钮经常不出现的问题
-// @version			0.93
-// @revision		63
-// @author			@富平侯(/salviati)
-// @committer		@牛肉火箭(/sunnylost)；@JoyerHuang_悦(/collger)
+// @features		
+// @version			1.0.0b1
+// @revision		64
+// @author			@富平侯
+// @committers		@牛肉火箭, @JoyerHuang_悦
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // @updateURL		https://userscripts.org/scripts/source/114087.meta.js
@@ -866,7 +866,7 @@ var toggleFloatSettingsBtn = (function () {
 	
 	return function () {
 		if (!$options.floatBtn && floatBtn) {
-			window.removeEventListener('scroll', scrollTimer, false);
+			window.removeEventListener('scroll', scrollDelayTimer, false);
 			remove(floatBtn);
 			floatBtn = null;
 			return true;
@@ -878,7 +878,7 @@ var toggleFloatSettingsBtn = (function () {
 			floatBtn.className = 'W_gotop';
 			floatBtn.href = 'javascript:void(0)';
 			floatBtn.title = '眼不见心不烦';
-			floatBtn.id = 'wbpfloatBtn';
+			floatBtn.id = 'wbpFloatBtn';
 			floatBtn.style.bottom = '72px';
 			click(floatBtn, $settingsWindow.show);
 			scrollToTop.parentNode.appendChild(floatBtn);			
