@@ -41,10 +41,6 @@ var $blocks = [ // 模块屏蔽设置
 		['VerifyIcon', '.approve:not(.wbpShow), .approve_co:not(.wbpShow)'],
 		['DarenIcon', '.ico_club:not(.wbpShow)'],
 		['VgirlIcon', '.ico_vlady:not(.wbpShow)'],
-		['OlyBoard', '#trustPagelet_yunying_olympic', true],
-		['OlyPopup', 'div.oly_win'],
-		['Oly361', '.ico_oly361:not(.wbpShow)'],
-		['OlyMedals', '.ico_olympic_gold:not(.wbpShow), .ico_olympic_silver:not(.wbpShow), .ico_olympic_bronze:not(.wbpShow)'],
 		['Custom'] // 必须为最后一项
 	];
 var $optionData = {
