@@ -43,49 +43,58 @@ var $blocks = [ // 模块屏蔽设置
 		['VgirlIcon', '.ico_vlady:not(.wbpShow)'],
 		['Custom'] // 必须为最后一项
 	];
-var $uid, $options, $forwardFeeds = {}, $floodFeeds = {};
+var $options, $forwardFeeds = {}, $floodFeeds = {};
 
-var _ = function (s) {
-	return document.getElementById(s);
-};
-var __ = function (s) {
-	return document.querySelector(s);
-};
-// 删除节点
-var remove = function (el) {
-	el && el.parentNode.removeChild(el);
-};
-// 绑定事件
-var bind = function (el, eventName, handler) {
-	el && el.addEventListener(eventName, handler, false);
-};
-// click事件快捷方式
-var click = function (el, handler) {
-	bind(el, 'click', handler);
-};
-
-function getScope() {
-	return 'B_index' === document.body.className ? 1 : 'B_my_profile_other' === document.body.className ? 2 : 0;
-}
-
-// Chrome不支持GM_setValue(), GM_getValue()等，需要使用localStorage重新定义
-// Firefox 2+, Internet Explorer 8+, Safari 4+和Chrome均支持DOM Storage (HTML5)
-if (window.localStorage) {
-	var keyRoot = 'weiboPlus.';
-
-	var deleteValue = function (name) {
-		localStorage.removeItem(keyRoot + name);
+// 工具函数
+var $ = (function () {
+	// 按id选择元素（默认操作）
+	var $ = function (id) {
+		return document.getElementById(id);
 	};
-
-	var getValue = function (name, defval) {
-		var val = localStorage.getItem(keyRoot + name);
-		return val === null ? defval : val;
+	// 按CSS选择元素
+	$.select = function (css, root) {
+		if (!root) { root = document; }
+		return root.querySelector(css);
 	};
-
-	var setValue = function (name, value) {
-		localStorage.setItem(keyRoot + name, value);
+	// 对于Chrome和Opera，通过脚本注入获得unsafeWindow
+	$.window = (!window.chrome) ? unsafeWindow :
+			(function () {
+				var e = document.createElement('p');
+				e.setAttribute('onclick', 'return window;');
+				return e.onclick();
+			}());
+	$.config = $.window.$CONFIG;
+	$.uid = $.config && $.config.uid;
+	$.STK = $.window.STK;
+	// Chrome不支持GM_setValue(), GM_getValue()等，需要使用localStorage重新定义
+	// Firefox 2+, Internet Explorer 8+, Safari 4+和Chrome均支持DOM Storage (HTML5)
+	if (!GM_getValue || (GM_getValue.toString && GM_getValue.toString().indexOf("not supported")>-1)) {
+		var CHROME_KEY_ROOT = 'weiboPlus.';
+		$.get = function (name, defval) {
+			var val = localStorage.getItem(CHROME_KEY_ROOT + name);
+			return val === null ? defval : val;
+		};
+		$.set = function (name, value) {
+			localStorage.setItem(CHROME_KEY_ROOT + name, value);
+		};
+	} else {
+		$.get = GM_getValue;
+		$.set = GM_setValue;
+	}
+	// 删除节点
+	$.remove = function (el) {
+		if (el) { el.parentNode.removeChild(el); }
 	};
-}
+	// 绑定click事件
+	$.click = function (el, handler) {
+		if (el) { el.addEventListener('click', handler, false); }
+	};
+	// 返回当前页面的位置
+	$.scope = function () {
+		return 'B_index' === document.body.className ? 1 : 'B_my_profile_other' === document.body.className ? 2 : 0;
+	};
+	return $;
+})();
 
 function Options() {};
 
@@ -134,7 +143,7 @@ Options.prototype = {
 	// 保存设置
 	save : function () {
 		// 自动调用toString()
-		setValue($uid.toString(), JSON.stringify(this));
+		$.set($.uid.toString(), JSON.stringify(this));
 	},
 	// 载入/导入设置，输入的str为undefined（首次使用时）或string（非首次使用和导入设置时）
 	load : function (str) {
@@ -173,14 +182,6 @@ Options.prototype = {
 		return (str !== null);
 	}
 };
-
-// 对于Chrome和Opera，通过脚本注入获得unsafeWindow
-var $window = (!window.chrome) ? unsafeWindow :
-		(function () {
-			var e = document.createElement('p');
-			e.setAttribute('onclick', 'return window;');
-			return e.onclick();
-		}());
 
 // 搜索指定文本中是否包含列表中的关键词
 function searchKeyword(str, key) {
@@ -232,7 +233,7 @@ function filterFeed(node) {
 		// 已被灰名单屏蔽过，移除屏蔽提示
 		node.removeChild(node.firstChild);
 	}
-	var scope = getScope(), text = '@', isForward = (node.getAttribute('isforward') === '1'),
+	var scope = $.scope(), text = '@', isForward = (node.getAttribute('isforward') === '1'),
 		mid = node.getAttribute('mid'),
 		content = node.querySelector('dd.content > p[node-type="feed_list_content"]'),
 		forwardContent = node.querySelector('dd.content > dl.comment > dt[node-type="feed_list_forwardContent"]'),
@@ -374,15 +375,15 @@ function filterFeed(node) {
 
 // 屏蔽提示相关事件的冒泡处理
 function bindTipOnClick(node) {
-	if (!node) { node = __('div.feed_lists'); }
-	click(node, function (event) {
+	if (!node) { node = $.select('div.feed_lists'); }
+	$.click(node, function (event) {
 		var node = event.target;
 		if (node && node.tagName === 'A') {
 			if (node.className === 'wbpTipKeyword') {
 				$settingsDialog.show();
 				event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
 			} else if (node.className === 'wbpTip') {
-				remove(node);
+				$.remove(node);
 			}
 		}
 	});
@@ -390,7 +391,7 @@ function bindTipOnClick(node) {
 
 // 处理动态载入内容
 function onDOMNodeInsertion(event) {
-	if (getScope() === 0) { return false; }
+	if ($.scope() === 0) { return false; }
 	var node = event.target;
 	// console.log(node);
 	if (node.tagName === 'DL' && node.classList.contains('feed_list')) {
@@ -423,16 +424,16 @@ function autoUpdate() {
 	// 部分自动更新代码改写自http://loonyone.livejournal.com/
 	// 防止重复检查（同时打开多个窗口时），间隔至少两分钟
 	var DoS_PREVENTION_TIME = 2 * 60 * 1000;
-	var lastAttempt = getValue('lastCheckUpdateAttempt', 0);
+	var lastAttempt = $.get('lastCheckUpdateAttempt', 0);
 	var now = new Date().getTime();
 
 	if (lastAttempt && (now - lastAttempt) < DoS_PREVENTION_TIME) {return; }
-	setValue('lastCheckUpdateAttempt', now.toString());
+	$.set('lastCheckUpdateAttempt', now.toString());
 
 	// 每周检查一次，避免频繁升级
 	//var ONE_DAY = 24 * 60 * 60 * 1000;
 	var ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
-	var lastSuccess = getValue('lastCheckUpdateSuccess', 0);
+	var lastSuccess = $.get('lastCheckUpdateSuccess', 0);
 	if (lastSuccess && (now - lastSuccess) < ONE_WEEK) {return; }
 
 	checkUpdate(true);
@@ -447,7 +448,7 @@ function checkUpdate(auto) {
 		headers: {'Cache-Control': 'no-cache'},
 		onload: function (result) {
 			if (!result.responseText.match(/@version\s+(.*)/)) {return; }
-			setValue('lastCheckUpdateSuccess', new Date().getTime().toString());
+			$.set('lastCheckUpdateSuccess', new Date().getTime().toString());
 			var ver = RegExp.$1;
 			if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= Number('${REV}')) {
 				// 自动检查更新且并无新版本时不必提示
@@ -469,7 +470,7 @@ function checkUpdate(auto) {
 
 // 极简阅读模式（仅在个人首页生效）
 function readerMode() {
-	var readerModeStyles = _('wbpReaderModeStyles');
+	var readerModeStyles = $('wbpReaderModeStyles');
 	if ($options.readerMode) {
 		if (!readerModeStyles) {
 			readerModeStyles = document.createElement('style');
@@ -477,23 +478,23 @@ function readerMode() {
 			readerModeStyles.id = 'wbpReaderModeStyles';
 			document.head.appendChild(readerModeStyles);
 		}
-		if (_('Box_left')) { // 体验版
+		if (!$.config.isnarrow) { // 体验版
 			readerModeStyles.innerHTML = '.B_index #Box_left, .B_index #Box_right, .B_index #pl_content_publisherTop, .B_index .global_footer, .B_index #wbim_box { display: none; } .B_index .global_header {top: -35px; } .B_index #Box_center { width: 800px; } .B_index .W_miniblog { background-position-y: -35px; } .B_index .W_main { padding-top: 17px; width: 845px; } .B_index .W_main_bg { background: ' + $options.readerModeBackColor + '; } .B_index .feed_list .repeat .input textarea { width: 688px; } .B_index #base_scrollToTop, .B_index #wbpShowSettingsFloat { margin-left: 424px; }';
 		} else { // 传统版
 			readerModeStyles.innerHTML = '.B_index #plc_main .W_main_r, .B_index #pl_content_publisherTop, .B_index .global_footer, .B_index #wbim_box { display: none; } .B_index .global_header {top: -35px; } .B_index #plc_main .W_main_c { width: 800px; } .B_index .W_miniblog { background-position-y: -35px; } .B_index #plc_main .custom_content_bg { padding-top: 30px; } .B_index .W_main_narrow { padding-top: 17px; } .B_index .W_main_narrow_bg { background: ' + $options.readerModeBackColor + '; } .B_index .feed_list .repeat .input textarea { width: 628px; }';
 		}
 	} else if (readerModeStyles) {
-		document.head.removeChild(readerModeStyles);
+		$.remove(readerModeStyles);
 	}
 }
 
 // 覆盖当前模板设置
 function overrideSkin() {
-	var formerStyle = _('custom_style') || _('skin_transformers'),
-		skinCSS = _('wbpOverrideSkin');
+	var formerStyle = $('custom_style') || $('skin_transformers'),
+		skinCSS = $('wbpOverrideSkin');
 	if (!formerStyle) { return; }
-	if (($uid === $window.$CONFIG.oid && $options.overrideMySkin) ||
-		($uid !== $window.$CONFIG.oid && $options.overrideOtherSkin)) {
+	if (($.uid === $.config.oid && $options.overrideMySkin) ||
+		($.uid !== $.config.oid && $options.overrideOtherSkin)) {
 		if (!skinCSS) {
 			skinCSS = document.createElement('link');
 			skinCSS.id = 'wbpOverrideSkin';
@@ -502,12 +503,12 @@ function overrideSkin() {
 			skinCSS.charset = 'utf-8';
 			document.head.insertBefore(skinCSS, formerStyle);
 		}
-		skinCSS.href = $window.$CONFIG.cssPath + 'skin/' + $options.skinID
-			+ '/skin' + ($window.$CONFIG.isnarrow ? '_narrow' : '') + ($window.$CONFIG.lang == "zh-tw" ? '_CHT' : '')
-			+ '.css?version=' + $window.$CONFIG.version;
+		skinCSS.href = $.config.cssPath + 'skin/' + $options.skinID
+			+ '/skin' + ($.config.isnarrow ? '_narrow' : '') + ($.config.lang == "zh-tw" ? '_CHT' : '')
+			+ '.css?version=' + $.config.version;
 		formerStyle.disabled = true;
 	} else if (skinCSS) {
-		document.head.removeChild(skinCSS);
+		$.remove(skinCSS);
 		formerStyle.disabled = false;
 	}
 }
@@ -515,7 +516,7 @@ function overrideSkin() {
 // 检测按键，开关极简阅读模式
 function onKeyPress(event) {
 	if ($settingsDialog.isShown()) {return; }
-	if (getScope() === 1 && event.keyCode === 119) {
+	if ($.scope() === 1 && event.keyCode === 119) {
 		$options.readerMode = !$options.readerMode;
 		$options.save();
 		readerMode();
@@ -540,7 +541,7 @@ function hideBlocks() {
 	var tipTextColor = $options.tipTextColor;
 	cssText += '.wbpTip:not(:hover) { background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; }';
 	// 更新CSS
-	var blockStyles = _('wbpBlockStyles');
+	var blockStyles = $('wbpBlockStyles');
 	if (!blockStyles) {
 		blockStyles = document.createElement('style');
 		blockStyles.type = 'text/css';
@@ -552,7 +553,7 @@ function hideBlocks() {
 
 // 根据当前设置屏蔽微博
 function filterFeeds() {
-	if (!getScope()) { return; }
+	if (!$.scope()) { return; }
 	// 处理非动态载入内容
 	var feeds = document.querySelectorAll('.feed_list'), i, len;
 	$forwardFeeds = {}; $floodFeeds = {};
@@ -561,7 +562,7 @@ function filterFeeds() {
 
 // 清除在发布框中嵌入的默认话题
 function clearHotTopic() {
-	if ($options.clearHotTopic && getScope() === 1) {
+	if ($options.clearHotTopic && $.scope() === 1) {
 		var inputBox = document.querySelector('#pl_content_publisherTop .send_weibo .input textarea');
 		if (inputBox && inputBox.classList.contains('topic_color')) {
 			// IFRAME载入方式，hotTopic可能尚未启动，直接清除相关属性即可
@@ -598,8 +599,8 @@ var $settingsDialog = (function () {
 	var getDom = function (node) {
 		return content.getDom(node);
 	};
-	var bindSTK = function (node, func, event) {
-		$window.STK.core.evt.addEvent(content.getDom(node), event || 'click', func);
+	var bind = function (node, func, event) {
+		$.STK.core.evt.addEvent(content.getDom(node), event || 'click', func);
 	};
 
 	// 从显示列表建立关键词数组
@@ -719,19 +720,19 @@ var $settingsDialog = (function () {
 
 	// 创建设置窗口
 	var createDialog = function () {
-		dialog = $window.STK.ui.dialog({isHold: true});
+		dialog = $.STK.ui.dialog({isHold: true});
 		dialog.setTitle('“眼不见心不烦”(v${VER})设置');
-		content = $window.STK.module.layer('${HTML}');
+		content = $.STK.module.layer('${HTML}');
 		dialog.setContent(content.getOuter());
 		// 修改屏蔽提示颜色事件
-		bindSTK('tipBackColor', function () {
+		bind('tipBackColor', function () {
 			getDom('tipSample').style.backgroundColor = this.value;
 		}, 'blur');
-		bindSTK('tipTextColor', function () {
+		bind('tipTextColor', function () {
 			getDom('tipSample').style.borderColor = this.value;
 			getDom('tipSample').style.color = this.value;
 		}, 'blur');
-		var events = $window.STK.core.evt.delegatedEvent(content.getInner());
+		var events = $.STK.core.evt.delegatedEvent(content.getInner());
 		// 添加关键词按钮点击事件
 		events.add('add', 'click', function (action) {
 			getDom(action.data.text).value = addKeywords(action.data.list, getDom(action.data.text).value);
@@ -742,10 +743,10 @@ var $settingsDialog = (function () {
 		});
 		// 删除关键词事件
 		events.add('remove', 'click', function (action) {
-			remove(action.el);
+			$.remove(action.el);
 		});
 		// 复选框标签点击事件
-		bindSTK('inner', function (event) {
+		bind('inner', function (event) {
 			var node = event.target;
 			// 标签下可能有span等元素
 			if (node.parentNode && node.parentNode.tagName === 'LABEL') {
@@ -764,7 +765,7 @@ var $settingsDialog = (function () {
 			}
 		});
 		// 标签点击事件
-		bindSTK('tabHeaders', function (event) {
+		bind('tabHeaders', function (event) {
 			var node = event.target, i, len;
 			if (node && node.tagName === 'A') {
 				node.className = 'current';
@@ -778,9 +779,9 @@ var $settingsDialog = (function () {
 			}
 		});
 		// 点击“设置导入/导出”标签时更新内容
-		bindSTK('tabHeaderSettings', exportSettings);
+		bind('tabHeaderSettings', exportSettings);
 		// 更改白名单模式时，自动反选右边栏相关模块
-		bindSTK('rightModWhitelist', function () {
+		bind('rightModWhitelist', function () {
 			var i, len, item;
 			for (i = 0, len = $blocks.length; i < len; ++i) {
 				if ($blocks[i][2]) {
@@ -789,13 +790,13 @@ var $settingsDialog = (function () {
 				}
 			}
 		}, 'change');
-		bindSTK('blockAll', function () {
+		bind('blockAll', function () {
 			var i, len, whitelistMode = getDom('rightModWhitelist').checked;
 			for (i = 0, len = $blocks.length; i < len; ++i) {
 				getDom('block' + $blocks[i][0]).checked = !(whitelistMode && $blocks[i][2]);
 			}
 		});
-		bindSTK('blockInvert', function () {
+		bind('blockInvert', function () {
 			var i, len, item;
 			for (i = 0, len = $blocks.length; i < len; ++i) {
 				item = getDom('block' + $blocks[i][0]);
@@ -803,7 +804,7 @@ var $settingsDialog = (function () {
 			}
 		});
 		// 对话框按钮点击事件
-		bindSTK('import', function () {
+		bind('import', function () {
 			var options = new Options();
 			if (options.load(getDom('settingsString').value)) {
 				importSettings(options);
@@ -812,16 +813,16 @@ var $settingsDialog = (function () {
 				alert('设置导入失败！\n设置信息格式有问题。');
 			}
 		});
-		bindSTK('checkUpdate', checkUpdate);
-		bindSTK('OK', function () {
+		bind('checkUpdate', checkUpdate);
+		bind('OK', function () {
 			$options = exportSettings();
 			$options.save();
 			filterFeeds();
 			modifyPage();
 			dialog.hide();
 		});
-		bindSTK('cancel', dialog.hide);
-		$window.STK.custEvent.add(dialog, 'hide', function () {
+		bind('cancel', dialog.hide);
+		$.STK.custEvent.add(dialog, 'hide', function () {
 			shown = false;
 		});
 	};
@@ -843,13 +844,13 @@ var $settingsDialog = (function () {
 }());
 
 function showSettingsBtn() {
-	if (!_('wbpShowSettings')) {
-		var groups = __('#pl_content_homeFeed .nfTagB, #pl_content_hisFeed .nfTagB');
+	if (!$('wbpShowSettings')) {
+		var groups = $.select('#pl_content_homeFeed .nfTagB, #pl_content_hisFeed .nfTagB');
 		if (!groups) {return false; }
 		var showSettingsTab = document.createElement('li');
 		showSettingsTab.id = 'wbpShowSettings';
 		showSettingsTab.innerHTML = '<span><em><a href="javascript:void(0)">眼不见心不烦</a></em></span>';
-		click(showSettingsTab, $settingsDialog.show);
+		$.click(showSettingsTab, $settingsDialog.show);
 		groups.childNodes[1].appendChild(showSettingsTab);
 	}
 	return true;
@@ -874,11 +875,11 @@ var toggleFloatSettingsBtn = (function () {
 	return function () {
 		if (!$options.floatBtn && floatBtn) {
 			window.removeEventListener('scroll', scrollDelayTimer, false);
-			remove(floatBtn);
+			$.remove(floatBtn);
 			floatBtn = null;
 			return true;
 		} else if ($options.floatBtn && !floatBtn) {
-			var scrollToTop = _('base_scrollToTop');
+			var scrollToTop = $('base_scrollToTop');
 			if (!scrollToTop) {return false; }
 			floatBtn = document.createElement('a');
 			floatBtn.innerHTML = '<span style="padding: 0 0 6px;">★</span>';
@@ -887,7 +888,7 @@ var toggleFloatSettingsBtn = (function () {
 			floatBtn.title = '眼不见心不烦';
 			floatBtn.id = 'wbpFloatBtn';
 			floatBtn.style.bottom = '72px';
-			click(floatBtn, $settingsDialog.show);
+			$.click(floatBtn, $settingsDialog.show);
 			scrollToTop.parentNode.appendChild(floatBtn);			
 			window.addEventListener('scroll', scrollDelayTimer, false);
 			scrollDelayTimer();
@@ -899,15 +900,12 @@ var toggleFloatSettingsBtn = (function () {
 
 // 载入设置（只运行一次）
 function loadSettings() {
-	if ($window && $window.$CONFIG) {
-		$uid = $window.$CONFIG.uid;
-	} 
-	if (!$uid || isNaN(Number($uid))) {
+	if (!$.uid || isNaN(Number($.uid))) {
 		console.warn('不在作用范围内，脚本未运行！');
 		return false;
 	}
 	$options = new Options();
-	if (!$options.load(getValue($uid.toString()))) {
+	if (!$options.load($.get($.uid.toString()))) {
 		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 	}
 	if ($options.autoUpdate) {
@@ -922,7 +920,7 @@ function loadSettings() {
 if (loadSettings()) {
 	// 如果第一次运行时就在作用范围内，则直接屏蔽关键词（此时页面已载入完成）；
 	// 否则（如“我的评论”）等待切换回首页时再进行屏蔽（由onDOMNodeInsertion处理）
-	if (getScope()) {
+	if ($.scope()) {
 		showSettingsBtn();
 		bindTipOnClick();
 		filterFeeds();
