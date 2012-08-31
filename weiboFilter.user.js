@@ -43,36 +43,7 @@ var $blocks = [ // 模块屏蔽设置
 		['VgirlIcon', '.ico_vlady:not(.wbpShow)'],
 		['Custom'] // 必须为最后一项
 	];
-var $optionData = {
-	whiteKeywords : ['keyword'],
-	blackKeywords : ['keyword'],
-	grayKeywords : ['keyword'],
-	URLKeywords : ['keyword'],
-	sourceKeywords : ['keyword'],
-	sourceGrayKeywords : ['keyword'],
-	tipBackColor : ['string', '#FFD0D0'],
-	tipTextColor : ['string', '#FF8080'],
-	readerMode : ['bool'],
-	readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
-	clearHotTopic : ['bool'],
-	overrideMySkin : ['bool'],
-	overrideOtherSkin : ['bool'],
-	skinID : ['string', 'skinvip001'],
-	filterPaused : ['bool'],
-	filterSmiley : ['bool'],
-	filterDeleted : ['bool'],
-	filterFeelings : ['bool'],
-	filterDupFwd : ['bool'],
-	maxDupFwd : ['string', 1],
-	filterFlood : ['bool'],
-	maxFlood : ['string', 5],
-	autoUpdate : ['bool', true],
-	floatBtn : ['bool', true],
-	rightModWhitelist : ['bool'],
-	customBlocks : ['array'],
-	hideBlock : ['object']
-};
-var $uid, $options = {}, $forwardFeeds = {}, $floodFeeds = {};
+var $uid, $options, $forwardFeeds = {}, $floodFeeds = {};
 
 var _ = function (s) {
 	return document.getElementById(s);
@@ -115,6 +86,93 @@ if (window.localStorage) {
 		localStorage.setItem(keyRoot + name, value);
 	};
 }
+
+function Options() {};
+
+Options.prototype = {
+	// 选项类型与默认值
+	items : {
+		whiteKeywords : ['keyword'],
+		blackKeywords : ['keyword'],
+		grayKeywords : ['keyword'],
+		URLKeywords : ['keyword'],
+		sourceKeywords : ['keyword'],
+		sourceGrayKeywords : ['keyword'],
+		tipBackColor : ['string', '#FFD0D0'],
+		tipTextColor : ['string', '#FF8080'],
+		readerMode : ['bool'],
+		readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
+		clearHotTopic : ['bool'],
+		overrideMySkin : ['bool'],
+		overrideOtherSkin : ['bool'],
+		skinID : ['string', 'skinvip001'],
+		filterPaused : ['bool'],
+		filterSmiley : ['bool'],
+		filterDeleted : ['bool'],
+		filterFeelings : ['bool'],
+		filterDupFwd : ['bool'],
+		maxDupFwd : ['string', 1],
+		filterFlood : ['bool'],
+		maxFlood : ['string', 5],
+		autoUpdate : ['bool', true],
+		floatBtn : ['bool', true],
+		rightModWhitelist : ['bool'],
+		customBlocks : ['array'],
+		hideBlock : ['object']
+	},
+	// 转换为字符串
+	toString : function (strip) {
+		var stripped = {}, option;
+		for (option in this.items) {
+			// 如果需要，则去掉所有内部变量
+			if (!strip || this.items[option][0] !== 'internal') {
+				stripped[option] = this[option];
+			}
+		}
+		return JSON.stringify(stripped);
+	},
+	// 保存设置
+	save : function () {
+		// 自动调用toString()
+		setValue($uid.toString(), JSON.stringify(this));
+	},
+	// 载入/导入设置，输入的str为undefined（首次使用时）或string（非首次使用和导入设置时）
+	load : function (str) {
+		var parsed = {}, option;
+		// 各类型默认值
+		var typeDefault = {
+			keyword : [],
+			string : '',
+			bool : false,
+			array : [],
+			object : {},
+			internal : null
+		};
+		if (str) {
+			try {
+				parsed = JSON.parse(str.replace(/\n/g, ''));
+				if (typeof parsed !== 'object') {throw 0; }
+			} catch (e) {
+				parsed = {};
+				str = null; // 出错，最后返回false
+			}
+		}
+		// 填充选项
+		for (option in this.items) {
+			if (parsed[option] !== undefined) {
+				// 优先使用成功读取的值
+				this[option] = parsed[option];
+			} else if (this.items[option][1] !== undefined) {
+				// 使用属性默认值
+				this[option] = this.items[option][1];
+			} else {
+				// 使用类型默认值
+				this[option] = typeDefault[this.items[option][0]];
+			}
+		}
+		return (str !== null);
+	}
+};
 
 // 对于Chrome和Opera，通过脚本注入获得unsafeWindow
 var $window = (!window.chrome) ? unsafeWindow :
@@ -321,7 +379,7 @@ function bindTipOnClick(node) {
 		var node = event.target;
 		if (node && node.tagName === 'A') {
 			if (node.className === 'wbpTipKeyword') {
-				$settingsWindow.show();
+				$settingsDialog.show();
 				event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
 			} else if (node.className === 'wbpTip') {
 				remove(node);
@@ -456,10 +514,10 @@ function overrideSkin() {
 
 // 检测按键，开关极简阅读模式
 function onKeyPress(event) {
-	if ($settingsWindow.isShown()) {return; }
+	if ($settingsDialog.isShown()) {return; }
 	if (getScope() === 1 && event.keyCode === 119) {
 		$options.readerMode = !$options.readerMode;
-		setValue($uid.toString(), JSON.stringify($options));
+		$options.save();
 		readerMode();
 	}
 }
@@ -533,46 +591,8 @@ function modifyPage() {
 	overrideSkin();
 }
 
-// 载入/导入设置更新外部options
-// 输入的str为undefined（首次使用时）或string（非首次使用和导入设置时）
-function reloadSettings(options, str) {
-	var parsedOptions = {}, option;
-	// 各类型默认值
-	var optionsDefault = {
-		keyword : [],
-		string : '',
-		bool : false,
-		array : [],
-		object : {},
-		internal : null
-	};
-	if (str) {
-		try {
-			parsedOptions = JSON.parse(str.replace(/\n/g, ''));
-			if (typeof parsedOptions !== 'object') {throw 0; }
-		} catch (e) {
-			parsedOptions = {};
-			str = null; // 出错，最后返回false
-		}
-	}
-	// 填充外部options
-	for (option in $optionData) {
-		if (parsedOptions[option] !== undefined) {
-			// 优先使用成功读取的值
-			options[option] = parsedOptions[option];
-		} else if ($optionData[option][1] !== undefined) {
-			// 使用属性默认值
-			options[option] = $optionData[option][1];
-		} else {
-			// 使用类型默认值
-			options[option] = optionsDefault[$optionData[option][0]];
-		}
-	}
-	return (str !== null);
-}
-
-var $settingsWindow = (function () {
-	var settingsWindow = {}, shown = false;
+var $settingsDialog = (function () {
+	var settingsDialog = {}, shown = false;
 	var dialog, content;
 
 	var getDom = function (node) {
@@ -623,22 +643,11 @@ var $settingsWindow = (function () {
 		return malformed.join(' ');
 	};
 
-	// 去掉所有内部变量并输出
-	var stringifySettings = function (options) {
-		var stripped = {}, option;
-		for (option in $optionData) {
-			if ($optionData[option][0] !== 'internal') {
-				stripped[option] = options[option];
-			}
-		}
-		getDom('settingsString').value = JSON.stringify(stripped);
-	};
-
-	// 根据当前设置（可能未保存）更新$options
+	// 返回当前设置（可能未保存）
 	var exportSettings = function () {
-		var options = {}, option;
-		for (option in $optionData) {
-			switch ($optionData[option][0]) {
+		var options = new Options(), option;
+		for (option in options.items) {
+			switch (options.items[option][0]) {
 			case 'keyword':
 				options[option] = getKeywords(option + 'List');
 				break;
@@ -656,6 +665,7 @@ var $settingsWindow = (function () {
 				break;
 			case 'internal':
 				// 内部变量保持不变
+				// WARNING: 内部变量如果是数组或对象，以下的浅拷贝方式可能导致设置的意外改变
 				options[option] = $options[option];
 				break;
 			}
@@ -669,15 +679,15 @@ var $settingsWindow = (function () {
 			block = blocks[i].trim();
 			if (block) { options.customBlocks.push(block); }
 		}
-		stringifySettings(options);
+		getDom('settingsString').value = options.toString(true);
 		return options;
 	};
 
 	// 更新设置窗口内容，exportSettings()的反过程
 	var importSettings = function (options) {
 		var option;
-		for (option in $optionData) {
-			switch ($optionData[option][0]) {
+		for (option in options.items) {
+			switch (options.items[option][0]) {
 			case 'keyword':
 				getDom(option).value = '';
 				getDom(option + 'List').innerHTML = '';
@@ -691,9 +701,9 @@ var $settingsWindow = (function () {
 				break;
 			}
 		}
-		var tipBackColor = getDom('tipBackColor').value;
-		var tipTextColor = getDom('tipTextColor').value;
-		var tipSample = getDom('tipSample');
+		var tipBackColor = getDom('tipBackColor').value,
+			tipTextColor = getDom('tipTextColor').value,
+			tipSample = getDom('tipSample');
 		tipSample.style.backgroundColor = tipBackColor;
 		tipSample.style.borderColor = tipTextColor;
 		tipSample.style.color = tipTextColor;
@@ -704,7 +714,7 @@ var $settingsWindow = (function () {
 			}
 		}
 		getDom('customBlocks').value = options.customBlocks ? options.customBlocks.join('\n') : '';
-		stringifySettings(options);
+		getDom('settingsString').value = options.toString(true);
 	};
 
 	// 创建设置窗口
@@ -767,9 +777,10 @@ var $settingsWindow = (function () {
 				}
 			}
 		});
+		// 点击“设置导入/导出”标签时更新内容
 		bindSTK('tabHeaderSettings', exportSettings);
+		// 更改白名单模式时，自动反选右边栏相关模块
 		bindSTK('rightModWhitelist', function () {
-			// 更改白名单模式时，自动反选右边栏相关模块
 			var i, len, item;
 			for (i = 0, len = $blocks.length; i < len; ++i) {
 				if ($blocks[i][2]) {
@@ -793,8 +804,8 @@ var $settingsWindow = (function () {
 		});
 		// 对话框按钮点击事件
 		bindSTK('import', function () {
-			var options = {};
-			if (reloadSettings(options, getDom('settingsString').value)) {
+			var options = new Options();
+			if (options.load(getDom('settingsString').value)) {
 				importSettings(options);
 				alert('设置导入成功！');
 			} else {
@@ -804,7 +815,7 @@ var $settingsWindow = (function () {
 		bindSTK('checkUpdate', checkUpdate);
 		bindSTK('OK', function () {
 			$options = exportSettings();
-			setValue($uid.toString(), JSON.stringify($options));
+			$options.save();
 			filterFeeds();
 			modifyPage();
 			dialog.hide();
@@ -816,7 +827,7 @@ var $settingsWindow = (function () {
 	};
 
 	// 显示设置窗口
-	settingsWindow.show = function () {
+	settingsDialog.show = function () {
 		if (!dialog) {
 			createDialog();
 		}
@@ -824,11 +835,11 @@ var $settingsWindow = (function () {
 		importSettings($options);
 		dialog.show().setMiddle();
 	};
-	settingsWindow.isShown = function () {
+	settingsDialog.isShown = function () {
 		return shown;
 	};
 
-	return settingsWindow;
+	return settingsDialog;
 }());
 
 function showSettingsBtn() {
@@ -838,7 +849,7 @@ function showSettingsBtn() {
 		var showSettingsTab = document.createElement('li');
 		showSettingsTab.id = 'wbpShowSettings';
 		showSettingsTab.innerHTML = '<span><em><a href="javascript:void(0)">眼不见心不烦</a></em></span>';
-		click(showSettingsTab, $settingsWindow.show);
+		click(showSettingsTab, $settingsDialog.show);
 		groups.childNodes[1].appendChild(showSettingsTab);
 	}
 	return true;
@@ -876,7 +887,7 @@ var toggleFloatSettingsBtn = (function () {
 			floatBtn.title = '眼不见心不烦';
 			floatBtn.id = 'wbpFloatBtn';
 			floatBtn.style.bottom = '72px';
-			click(floatBtn, $settingsWindow.show);
+			click(floatBtn, $settingsDialog.show);
 			scrollToTop.parentNode.appendChild(floatBtn);			
 			window.addEventListener('scroll', scrollDelayTimer, false);
 			scrollDelayTimer();
@@ -894,8 +905,9 @@ function loadSettings() {
 	if (!$uid || isNaN(Number($uid))) {
 		console.warn('不在作用范围内，脚本未运行！');
 		return false;
-	} 
-	if (!reloadSettings($options, getValue($uid.toString()))) {
+	}
+	$options = new Options();
+	if (!$options.load(getValue($uid.toString()))) {
 		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 	}
 	if ($options.autoUpdate) {
