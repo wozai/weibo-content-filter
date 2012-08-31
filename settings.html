@@ -1,0 +1,324 @@
+<div node-type="outer" class="detail wbpSettings" style="padding: 0 20px 20px">
+<div class="clearfix">
+<div style="float: left">
+新浪微博<span style="color: red">非官方</span>功能增强脚本。
+</div>
+<div style="float: right; display: inline; position: relative">
+<a node-type="checkUpdate" href="javascript:void(0);" title="检查脚本是否有新版本">检查更新</a>
+<em class="W_vline">|</em>
+<a href="http://userscripts.org/scripts/show/114087" title="新版本在此页面发布" target="_blank">插件主页</a>
+<em class="W_vline">|</em>
+<a href="http://code.google.com/p/weibo-content-filter/wiki/FAQ" title="遇到问题请先阅读FAQ" target="_blank">常见问题</a>
+<em class="W_vline">|</em>
+<a href="/salviati" title="欢迎私信、评论或@作者提出脚本建议" target="_blank">联系作者</a>
+</div>
+</div>
+<div class="clearfix">
+<div node-type="tabHeaders" class="wbpTabHeaders">
+<a tab="tabKeywords" href="javascript:void(0);" class="current">关键词</a>
+<a tab="tabLinks" href="javascript:void(0);">链接地址</a>
+<a tab="tabUser" href="javascript:void(0);">用户</a>
+<a tab="tabSource" href="javascript:void(0);">来源</a>
+<a tab="tabModules" href="javascript:void(0);">版面模块</a>
+<a tab="tabAdvanced" href="javascript:void(0);">高级</a>
+<a node-type="tabHeaderSettings" tab="tabSettings" href="javascript:void(0);">设置导入/导出</a>
+</div>
+<div node-type="inner" style="float: right; width: 440px">
+<div node-type="tabKeywords">
+<input type="checkbox" node-type="filterSmiley"><label title="如果选中，[呵呵]等表情也可以作为关键词被屏蔽">允许表情关键词</label>
+<div class="wbpKeywordBlock">
+<em>白名单</em>包含下列关键词的微博不会被屏蔽
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" node-type="whiteKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+</div>
+</td>
+<td style="width: 120px; text-align: right">
+<a href="javascript:void(0);" class="W_btn_a" action-type="add" action-data="list=whiteKeywordsList&text=whiteKeywords"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" action-type="clear" action-data="list=whiteKeywordsList"><span>清空</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="wbpListWrapper">
+<div node-type="whiteKeywordsList" class="wbpKeywordsList wbpWhiteKeywordsList"></div>
+</div>
+</div>
+<div class="wbpKeywordBlock">
+<em>黑名单</em>包含下列关键词的微博将被屏蔽
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" node-type="blackKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+</div>
+</td>
+<td style="width: 120px; text-align: right">
+<a href="javascript:void(0);" class="W_btn_a" action-type="add" action-data="list=blackKeywordsList&text=blackKeywords"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" action-type="clear" action-data="list=blackKeywordsList"><span>清空</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="wbpListWrapper">
+<div node-type="blackKeywordsList" class="wbpKeywordsList wbpBlackKeywordsList"></div>
+</div>
+</div>
+<div class="wbpKeywordBlock">
+<em>灰名单</em>包含下列关键词的微博将被屏蔽<span style="color: red">并提示</span>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" node-type="grayKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+</div>
+</td>
+<td style="width: 120px; text-align: right">
+<a href="javascript:void(0);" class="W_btn_a" action-type="add" action-data="list=grayKeywordsList&text=grayKeywords"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" action-type="clear" action-data="list=grayKeywordsList"><span>清空</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="wbpListWrapper">
+<div node-type="grayKeywordsList" class="wbpKeywordsList wbpGrayKeywordsList"></div>
+</div>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 0px">
+<tbody>
+<tr>
+<td style="width: 110px">屏蔽提示背景颜色：</td>
+<td>
+<div class="wbpInput">
+<input type="text" node-type="tipBackColor" class="input">
+</div>
+</td>
+<td style="width: 15px">
+</td>
+<td style="width: 110px">屏蔽提示文字颜色：</td>
+<td>
+<div class="wbpInput">
+<input type="text" node-type="tipTextColor" class="input">
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td style="width: 40px">示例：</td>
+<td>
+<div node-type="tipSample" class="wbpTip" style="margin-bottom: 10px">
+本条来自<a href="javascript:void(0);">@某人</a>的微博因包含关键词“<a href="javascript:void(0);">XXXX</a>”而被隐藏，点击显示
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div node-type="tabLinks" style="display: none">
+<p>如果一条微博中包含链接且目标地址中包含下列关键词，微博将被屏蔽（无提示）。如将taobao.com设为关键词可屏蔽所有包含淘宝链接的微博。</p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" node-type="URLKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+</div>
+</td>
+<td style="width: 120px; text-align: right">
+<a href="javascript:void(0);" class="W_btn_a" action-type="add" action-data="list=URLKeywordsList&text=URLKeywords"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" action-type="clear" action-data="list=URLKeywordsList"><span>清空</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="wbpListWrapper">
+<div node-type="URLKeywordsList" class="wbpKeywordsList wbpBlackKeywordsList"></div>
+</div>
+</div>
+<div node-type="tabUser" style="display: none">
+<p>新浪微博官方已提供<a href="http://account.weibo.com/set/feed" target="_blank">屏蔽指定用户的功能</a>，而且在所有浏览器和移动客户端上都有效。但是，如果不开通<a href="http://vip.weibo.com/" target="_blank">微博会员</a>，最多只能屏蔽5个用户，而且只能屏蔽已关注的用户，不能屏蔽转发微博原文的发布者。</p>
+<p>您可以使用“眼不见心不烦”的关键词屏蔽功能来免费、无限制地屏蔽用户。将要屏蔽的用户名（<span style="color: red">包括前面的@</span>）设为屏蔽关键词即可。</p>
+</div>
+<div node-type="tabSource" style="display: none">
+<p>新浪微博官方已提供<a href="http://account.weibo.com/set/feedsource" target="_blank">屏蔽指定来源的功能</a>，而且在所有浏览器和移动客户端上都有效。但是，必须开通<a href="http://vip.weibo.com/" target="_blank">微博会员</a>才能使用此功能，而且对转发微博原文的来源无效。</p>
+<p>您可以使用“眼不见心不烦”来免费、无限制地屏蔽来源。如果一条微博的来源（包括转发的原微博的来源）名称中包含指定关键词，微博将被屏蔽。如将“时光机”设为关键词可屏蔽所有来自<a href="http://time.xuapp.com/" target="_blank">时光机</a>或<a href="http://weibo.pp.cc/time/" target="_blank">皮皮时光机</a>等应用的微博。</p>
+<div class="wbpKeywordBlock">
+<em>黑名单</em>来源名称包含下列关键词的微博将被屏蔽
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" node-type="sourceKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+</div>
+</td>
+<td style="width: 120px; text-align: right">
+<a href="javascript:void(0);" class="W_btn_a" action-type="add" action-data="list=sourceKeywordsList&text=sourceKeywords"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" action-type="clear" action-data="list=sourceKeywordsList"><span>清空</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="wbpListWrapper">
+<div node-type="sourceKeywordsList" class="wbpKeywordsList wbpBlackKeywordsList"></div>
+</div>
+</div>
+<div class="wbpKeywordBlock">
+<em>灰名单</em>来源名称包含下列关键词的微博将被屏蔽<span style="color: red">并提示</span>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" node-type="sourceGrayKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+</div>
+</td>
+<td style="width: 120px; text-align: right">
+<a href="javascript:void(0);" class="W_btn_a" action-type="add" action-data="list=sourceGrayKeywordsList&text=sourceGrayKeywords"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_a" action-type="clear" action-data="list=sourceGrayKeywordsList"><span>清空</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="wbpListWrapper">
+<div node-type="sourceGrayKeywordsList" class="wbpKeywordsList wbpGrayKeywordsList"></div>
+</div>
+</div>
+</div>
+<div node-type="tabModules" class="wbpTabModules" style="display: none">
+<p>请选择要屏蔽的版面内容。</p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 24px; margin-top: 15px">
+<tbody>
+<tr>
+<td><input type="checkbox" node-type="blockAds"><label>版面及嵌入广告</label></td>
+<td><input type="checkbox" node-type="blockFooter"><label>页底链接模块</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="blockPullyList"><label>微博看点（发布框下方）</label></td>
+<td><input type="checkbox" node-type="blockRecommendedTopic"><label>推荐微话题（发布框右上）</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="blockUserGuide"><label>微博精选</label></td>
+<td><input type="checkbox" node-type="blockTasks"><label>微博宝典</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="blockMedal"><label>勋章</label></td>
+<td><input type="checkbox" node-type="blockLevel"><label>微博等级</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="blockHello"><label>打招呼（他人主页）</label></td>
+<td><input type="checkbox" node-type="blockBalloon"><label>各种提示气球</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="blockGame"><label>游戏（体验版左边栏）</label></td>
+<td><input type="checkbox" node-type="blockApp"><label>应用（体验版左边栏）</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="blockTopComment"><label>热评微博（“我的评论”页）</label></td>
+</tr>
+<tr class="wbpRowSpacing">
+<td><input type="checkbox" node-type="blockVerifyIcon"><label>个人/机构认证标识</label><a href="http://verified.weibo.com/verify" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="approve wbpShow"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="approve_co wbpShow"></a></td>
+<td><input type="checkbox" node-type="blockDarenIcon"><label>微博达人标识</label><a href="http://club.weibo.com/intro" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="ico_club wbpShow"></a></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="blockMemberIcon"><label>微博会员标识</label><a href="http://vip.weibo.com/" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="ico_member wbpShow"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="ico_member_dis wbpShow"></a></td>
+<td><input type="checkbox" node-type="blockVgirlIcon"><label>微博女郎标识</label><a href="http://vgirl.weibo.com/" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="ico_vlady wbpShow"></a></td>
+</tr>
+<tr class="wbpRowSpacing">
+<td colspan="2"><input type="checkbox" node-type="rightModWhitelist"><label title="新浪微博经常在右边栏增加新的模块，采用白名单模式可以有效屏蔽新出现的模块"><span style="color: red">右边栏白名单模式</span>：选中此项时，“我的首页”右边栏仅显示以下选中的模块</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="blockMood"><label>心情</label></td>
+<td><input type="checkbox" node-type="blockPromotion"><label>微博推广</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="blockMember"><label>会员专区</label></td>
+<td><input type="checkbox" node-type="blockInterestUser"><label>可能感兴趣的人</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="blockTopic"><label>热门话题/关注的话题</label></td>
+<td><input type="checkbox" node-type="blockInterestApp"><label>可能感兴趣的微群/应用/活动</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="blockNotice"><label>公告栏</label></td>
+<td><input type="checkbox" node-type="blockHelpFeedback"><label>玩转微博</label></td>
+</tr>
+</tbody>
+</table>
+<p style="margin-top: 10px"><input type="checkbox" node-type="blockCustom"><label><span style="color: red">自定义屏蔽</span>：输入要屏蔽的版面内容（CSS选择器），每行一个，</label><a href="http://code.google.com/p/weibo-content-filter/wiki/FAQ#如何屏蔽自定义模块？" target="_blank">点此查看示例</a></p>
+<textarea node-type="customBlocks" rows="5" style="margin-top: 5px"></textarea>
+<p style="margin-top: 20px">
+<a href="javascript:void(0);" class="W_btn_a" node-type="blockAll"><span>全选</span></a>
+<a href="javascript:void(0);" class="W_btn_a" node-type="blockInvert"><span>反选</span></a>
+</p>
+</div>
+<div node-type="tabAdvanced" style="display: none">
+<p><input type="checkbox" node-type="readerMode"><label><span style="color: red">极简阅读模式</span>：去掉所有无关模块，可在个人主页按F8切换</label></p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 3px">
+<tbody>
+<tr>
+<td style="width: 60px; padding-left: 18px">背景颜色：</td>
+<td>
+<div class="wbpInput">
+<input type="text" node-type="readerModeBackColor" class="input">
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<p><input type="checkbox" node-type="autoUpdate"><label>每周自动检查更新</label></p>
+<p><input type="checkbox" node-type="floatBtn"><label>浮动设置按钮（“返回顶部”浮动按钮下方）</label></p>
+<p><input type="checkbox" node-type="clearHotTopic"><label title="关闭此选项后需要刷新页面生效">清除微博发布框中的默认话题</label></p>
+<div style="margin-top: 8px">
+覆盖
+<input type="checkbox" node-type="overrideMySkin" style="margin: 0 2px 0 8px"><label>我的首页</label>
+<input type="checkbox" node-type="overrideOtherSkin" style="margin: 0 2px 0 8px"><label style="margin-right: 8px">他人主页</label>
+模板设置为
+<div class="wbpInput wbpInlineInput" style="width: 80px" title="普通模板为“skin+三位数字编号”，如skin012\n会员专属模板为“skinvip+三位数字编号”，如skinvip012\n默认模板为default">
+<input type="text" node-type="skinID" class="input">
+</div>
+（仅自己可见）
+</div>
+<p style="margin-top: 20px">注意：对于所有屏蔽微博的功能，白名单具有最高优先级；如果一条微博包含白名单中的关键词，则<span style="color: red">一定不会</span>被屏蔽。</p>
+<p><input type="checkbox" node-type="filterPaused"><label><span style="color: red">暂停屏蔽</span>：选中时暂时停止屏蔽微博</label></p>
+<p><input type="checkbox" node-type="filterDeleted"><label>屏蔽已删除微博的转发</label></p>
+<p><input type="checkbox" node-type="filterFeelings"><label>屏蔽写心情微博</label></p>
+<div style="margin-top: 8px">
+<input type="checkbox" node-type="filterDupFwd"><label>反版聊：同一条微博的转发最多显示</label>
+<div class="wbpInput wbpInlineInput">
+<input type="text" node-type="maxDupFwd" class="input">
+</div>
+条
+</div>
+<div style="margin-top: 5px">
+<input type="checkbox" node-type="filterFlood"><label>反刷屏：来自同一用户的微博最多显示</label>
+<div class="wbpInput wbpInlineInput">
+<input type="text" node-type="maxFlood" class="input">
+</div>
+条
+</div>
+</div>
+<div node-type="tabSettings" style="display: none">
+<div class="clearfix">
+<div style="float: left; width: 385px">
+<p>当前账号的设置信息在下列文本框中，您可以将其复制到其它位置保存。需要导入设置时，请将设置信息粘贴到文本框中，然后点击“导入”。</p>
+</div>
+<a href="javascript:void(0)" class="W_btn_a" node-type="import" style="float: right; margin-top: 6px"><span>导入</span></a>
+</div>
+<textarea node-type="settingsString" rows="10"></textarea>
+</div>
+</div>
+</div>
+<p class="btn">
+<a href="javascript:void(0);" class="W_btn_b" node-type="OK"><span>确定</span></a>
+<a href="javascript:void(0);" class="W_btn_a" node-type="cancel"><span>取消</span></a>
+</p>
+</div>
