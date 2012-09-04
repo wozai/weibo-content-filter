@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		支持新版微博(V5)
+// @features		支持新版微博(V5)；可以调整阅读模式的宽度
 // @version			1.0.0b1
 // @revision		64
 // @author			@富平侯
@@ -99,6 +99,7 @@ Options.prototype = {
 		tipBackColor : ['string', '#FFD0D0'],
 		tipTextColor : ['string', '#FF8080'],
 		readerMode : ['bool'],
+		readerModeWidth : ['string', 750],
 		readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
 		clearHotTopic : ['bool'],
 		overrideMySkin : ['bool'],
@@ -801,7 +802,17 @@ var $page = (function () {
 				readerModeStyles.id = 'wbpReaderModeStyles';
 				document.head.appendChild(readerModeStyles);
 			}
-			readerModeStyles.innerHTML = '.B_index #Box_left, .B_index #Box_right, .B_index #pl_content_publisherTop, .B_index .global_footer, .B_index #wbim_box { display: none; } .B_index .global_header {top: -35px; } .B_index #Box_center { width: 800px; } .B_index .W_miniblog { background-position-y: -35px; } .B_index .W_main { padding-top: 17px; width: 845px; } .B_index .W_main_bg { background: ' + $options.readerModeBackColor + '; } .B_index .feed_list .repeat .input textarea { width: 688px; } .B_index #base_scrollToTop, .B_index #wbpShowSettingsFloat { margin-left: 424px; }';
+			var width = Number($options.readerModeWidth);
+			readerModeStyles.innerHTML = '.B_index .W_main_l, .B_index .W_main_r, .B_index #pl_content_publisherTop, .B_index .group_read, .B_index .global_footer, .B_index #wbim_box { display: none }\n'
+				+ '.B_index #pl_content_top, .B_index .WB_global_nav { top: -40px }\n'
+				+ '.B_index { background-position-y: -40px }\n'
+				+ '.B_index .W_miniblog { padding-top: 20px; background-position-y: -40px }\n'
+				+ '.B_index .W_main_a { width: ' + (width+30) + 'px }\n'
+				+ '.B_index #Box_center { width: ' + width + 'px }\n'
+				+ '.B_index .W_main { width: ' + width + 'px; background: ' + $options.readerModeBackColor + ' }\n'
+				+ '.B_index .WB_feed .repeat .input textarea { width: ' + (width-162) + 'px }\n'
+				+ '.B_index .WB_screen { margin-left: ' + (width-48) + 'px }\n'
+				+ '.B_index #base_scrollToTop, .B_index #wbpFloatBtn { margin-left: ' + (width/2) + 'px; }\n';
 		} else if (readerModeStyles) {
 			$.remove(readerModeStyles);
 		}
