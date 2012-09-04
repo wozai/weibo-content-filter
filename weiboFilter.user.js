@@ -303,9 +303,9 @@ var $dialog = (function () {
 		}
 		var i, len;
 		for (i = 0, len = $page.modules.length; i < len; ++i) {
-			options.hideMods[$page.modules[i][0]] = getDom('block' + $page.modules[i][0]).checked;
+			options.hideMods[$page.modules[i][0]] = getDom('hide' + $page.modules[i][0]).checked;
 		}
-		var modules = getDom('customBlocks').value.split('\n'), module;
+		var modules = getDom('customMods').value.split('\n'), module;
 		for (i = 0, len = modules.length; i < len; ++i) {
 			module = modules[i].trim();
 			if (module) { options.customMods.push(module); }
@@ -341,10 +341,10 @@ var $dialog = (function () {
 		if (options.hideMods) {
 			var i, len;
 			for (i = 0, len = $page.modules.length; i < len; ++i) {
-				getDom('block' + $page.modules[i][0]).checked = (options.hideMods[$page.modules[i][0]] === true);
+				getDom('hide' + $page.modules[i][0]).checked = (options.hideMods[$page.modules[i][0]] === true);
 			}
 		}
-		getDom('customBlocks').value = options.customMods ? options.customMods.join('\n') : '';
+		getDom('customMods').value = options.customMods ? options.customMods.join('\n') : '';
 		getDom('settingsString').value = options.toString(true);
 	};
 
@@ -415,21 +415,21 @@ var $dialog = (function () {
 			var i, len, item;
 			for (i = 0, len = $page.modules.length; i < len; ++i) {
 				if ($page.modules[i][2]) {
-					item = getDom('block' + $page.modules[i][0]);
+					item = getDom('hide' + $page.modules[i][0]);
 					item.checked = !item.checked;
 				}
 			}
 		}, 'change');
-		bind('blockAll', function () {
+		bind('hideAll', function () {
 			var i, len, whitelistMode = getDom('rightModWhitelist').checked;
 			for (i = 0, len = $page.modules.length; i < len; ++i) {
-				getDom('block' + $page.modules[i][0]).checked = !(whitelistMode && $page.modules[i][2]);
+				getDom('hide' + $page.modules[i][0]).checked = !(whitelistMode && $page.modules[i][2]);
 			}
 		});
-		bind('blockInvert', function () {
+		bind('hideInvert', function () {
 			var i, len, item;
 			for (i = 0, len = $page.modules.length; i < len; ++i) {
-				item = getDom('block' + $page.modules[i][0]);
+				item = getDom('hide' + $page.modules[i][0]);
 				item.checked = !item.checked;
 			}
 		});
@@ -713,27 +713,22 @@ var $filter = (function () {
 // 修改页面
 var $page = (function () {
 	var modules = [ // 模块屏蔽设置
-			['Topic', '#trustPagelete_zt_hottopic', true],
-			['InterestUser', '#trustPagelete_recom_interest', true],
-			['InterestApp', '#trustPagelete_recom_allinone', true],
+			['Ads', '#plc_main [id^="pl_rightmod_ads"], div[ad-data]'],
+			['Stats', 'ul.user_atten > li'],
+			['InterestUser', '#trustPagelet_recom_interestv5', true],
+			['Promotion', '#pl_rightmod_yunying', true],
+			['Topic', '#trustPagelet_zt_hottopicv5', true],
+			['Member', '#trustPagelet_recom_memberv5', true],
+			['AllInOne', '#trustPagelet_recom_allinonev5', true],
 			['Notice', '#pl_rightmod_noticeboard', true],
-			['HelpFeedback', '#pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle', true],
-			['Ads', '#plc_main .W_main_r [id^="ads_"], div[ad-data], dl.feed_list'],
 			['Footer', 'div.global_footer'],
-			['PullyList', '#pl_content_biztips'],
+			['Activity', '#pl_content_biztips'],
 			['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
-			['Mood', '#pl_content_mood', true],
-			['Medal', '#pl_rightmod_medal, .declist'],
-			['Game', '#pl_leftNav_game'],
-			['App', '#pl_leftNav_app'],
-			['Tasks', '#pl_content_tasks'],
-			['UserGuide', '#pl_guide_oldUser'],
-			['Promotion', '#trustPagelet_ugrowth_invite', true],
+			['App', '#pl_leftnav_app'],
 			['Level', 'span.W_level_ico'],
-			['Hello', 'div.wbim_hello'],
-			['Balloon', 'div.layer_tips'],
 			['TopComment', '#pl_content_commentTopNav'],
-			['Member', '#trustPagelet_recom_member, #trustPagelet_member_zone', true],
+			['Medal', '#pl_profile_extraInfo .pf_badge_icon'],
+			['Nofollow', '#pl_profile_unfollow'],
 			['MemberIcon', '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)'],
 			['VerifyIcon', '.approve:not(.wbpShow), .approve_co:not(.wbpShow)'],
 			['DarenIcon', '.ico_club:not(.wbpShow)'],
@@ -842,7 +837,7 @@ var $page = (function () {
 		if ($options.rightModWhitelist) {
 			// 右边栏白名单模式下，默认屏蔽右边栏除导航栏以外的所有模块
 			cssText = 'body.B_index div.W_main_r > div { display: none }\n'
-				+ '#pl_content_setskin, #pl_content_personInfo, #pl_nav_outlookBar { display: block }\n';
+				+ '#pl_content_setskin, #pl_rightmod_myinfo { display: block }\n';
 		}
 		for (i = 0; i < len; ++i) {
 			if ($options.hideMods[modules[i][0]] && modules[i][1]) {
