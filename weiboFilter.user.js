@@ -15,35 +15,8 @@
 // ==/UserScript==
 
 // 注意：使用@match替换@include将使GM_xmlhttpRequest()失效
-var $blocks = [ // 模块屏蔽设置
-		['Topic', '#trustPagelete_zt_hottopic', true],
-		['InterestUser', '#trustPagelete_recom_interest', true],
-		['InterestApp', '#trustPagelete_recom_allinone', true],
-		['Notice', '#pl_rightmod_noticeboard', true],
-		['HelpFeedback', '#pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle', true],
-		['Ads', '#plc_main .W_main_r [id^="ads_"], div[ad-data], dl.feed_list'],
-		['Footer', 'div.global_footer'],
-		['PullyList', '#pl_content_biztips'],
-		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
-		['Mood', '#pl_content_mood', true],
-		['Medal', '#pl_rightmod_medal, .declist'],
-		['Game', '#pl_leftNav_game'],
-		['App', '#pl_leftNav_app'],
-		['Tasks', '#pl_content_tasks'],
-		['UserGuide', '#pl_guide_oldUser'],
-		['Promotion', '#trustPagelet_ugrowth_invite', true],
-		['Level', 'span.W_level_ico'],
-		['Hello', 'div.wbim_hello'],
-		['Balloon', 'div.layer_tips'],
-		['TopComment', '#pl_content_commentTopNav'],
-		['Member', '#trustPagelet_recom_member, #trustPagelet_member_zone', true],
-		['MemberIcon', '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)'],
-		['VerifyIcon', '.approve:not(.wbpShow), .approve_co:not(.wbpShow)'],
-		['DarenIcon', '.ico_club:not(.wbpShow)'],
-		['VgirlIcon', '.ico_vlady:not(.wbpShow)'],
-		['Custom'] // 必须为最后一项
-	];
-var $options;
+
+(function () {
 
 // 工具函数
 var $ = (function () {
@@ -62,7 +35,7 @@ var $ = (function () {
 				var e = document.createElement('p');
 				e.setAttribute('onclick', 'return window;');
 				return e.onclick();
-			}());
+			})();
 	$.config = $.window.$CONFIG;
 	$.uid = $.config && $.config.uid;
 	$.STK = $.window.STK;
@@ -107,6 +80,11 @@ var $ = (function () {
 	return $;
 })();
 
+if (!$.uid || isNaN(Number($.uid))) {
+	console.warn('不在作用范围内，脚本未运行！');
+	return false;
+}
+
 function Options() {};
 
 Options.prototype = {
@@ -137,8 +115,8 @@ Options.prototype = {
 		autoUpdate : ['bool', true],
 		floatBtn : ['bool', true],
 		rightModWhitelist : ['bool'],
-		customBlocks : ['array'],
-		hideBlock : ['object']
+		customMods : ['array'],
+		hideMods : ['object']
 	},
 	// 转换为字符串
 	toString : function (strip) {
@@ -193,6 +171,307 @@ Options.prototype = {
 		return (str !== null);
 	}
 };
+
+var $options = new Options();
+if (!$options.load($.get($.uid.toString()))) {
+	alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
+}
+
+var $update = (function () {
+	// 检查更新
+	var checkUpdate = function (dummy) {
+		GM_xmlhttpRequest({
+			method: 'GET',
+			// 只载入metadata
+			url: 'http://userscripts.org/scripts/source/114087.meta.js?' + new Date().getTime(),
+			headers: {'Cache-Control': 'no-cache'},
+			onload: function (result) {
+				if (!result.responseText.match(/@version\s+(.*)/)) { return; }
+				$.set('lastCheckUpdateSuccess', new Date().getTime().toString());
+				var ver = RegExp.$1;
+				if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= Number('${REV}')) {
+					// 自动检查更新且并无新版本时不必提示
+					if (arguments.length) { alert('“眼不见心不烦”已经是最新版。'); }
+					return;
+				}
+				var features = '';
+				if (result.responseText.match(/@features\s+(.*)/)) {
+					features = '- ' + RegExp.$1.split('；').join('\n- ') + '\n\n';
+				}
+				// 显示更新提示
+				if (confirm('“眼不见心不烦”新版本v' + ver + '可用。\n\n' + features + '如果您希望更新，请点击“确认”打开插件主页。')) {
+					window.open('http://userscripts.org/scripts/show/114087');
+				}
+			}
+		});
+	}
+	// 自动检查更新
+	if ($options.autoUpdate) {
+		// 部分自动更新代码改写自http://loonyone.livejournal.com/
+		// 防止重复检查（同时打开多个窗口时），间隔至少两分钟
+		var DoS_PREVENTION_TIME = 2 * 60 * 1000;
+		var lastAttempt = $.get('lastCheckUpdateAttempt', 0);
+		var now = new Date().getTime();
+		if (lastAttempt && (now - lastAttempt) > DoS_PREVENTION_TIME) {
+			$.set('lastCheckUpdateAttempt', now.toString());
+			// 每周检查一次，避免频繁升级
+			var ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
+			var lastSuccess = $.get('lastCheckUpdateSuccess', 0);
+			if (lastSuccess && (now - lastSuccess) > ONE_WEEK) { checkUpdate(); }
+		}
+	}
+	return checkUpdate;
+})();
+
+var $dialog = (function () {
+	var shown = false, dialog, content;
+
+	var getDom = function (node) {
+		return content.getDom(node);
+	};
+	var bind = function (node, func, event) {
+		$.STK.core.evt.addEvent(content.getDom(node), event || 'click', func);
+	};
+
+	// 从显示列表建立关键词数组
+	var getKeywords = function (id) {
+		if (!getDom(id).hasChildNodes()) {return []; }
+		var keywords = getDom(id).childNodes, list = [], i, len;
+		for (i = 0, len = keywords.length; i < len; ++i) {
+			if (keywords[i].tagName === 'A') {list.push(keywords[i].innerHTML); }
+		}
+		return list;
+	};
+
+	// 将关键词添加到显示列表
+	var addKeywords = function (id, list) {
+		var keywords = list instanceof Array ? list : list.split(' '), i, len, malformed = [];
+		for (i = 0, len = keywords.length; i < len; ++i) {
+			var currentKeywords = ' ' + getKeywords(id).join(' ') + ' ', keyword = keywords[i];
+			if (keyword && currentKeywords.indexOf(' ' + keyword + ' ') === -1) {
+				var keywordLink = document.createElement('a');
+				if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
+					try {
+						// 尝试创建正则表达式，检验正则表达式的有效性
+						// 调用test()是必须的，否则浏览器可能跳过该语句
+						RegExp(keyword.substring(1, keyword.length - 1)).test('');
+					} catch (e) {
+						malformed.push(keyword);
+						continue;
+					}
+					keywordLink.className = 'regex';
+				}
+				keywordLink.title = '删除关键词';
+				keywordLink.setAttribute('action-type', 'remove');
+				keywordLink.href = 'javascript:void(0)';
+				keywordLink.innerHTML = keyword;
+				getDom(id).appendChild(keywordLink);
+			}
+		}
+		if (malformed.length > 0) {
+			alert('下列正则表达式无效：\n' + malformed.join('\n'));
+		}
+		return malformed.join(' ');
+	};
+
+	// 返回当前设置（可能未保存）
+	var exportSettings = function () {
+		var options = new Options(), option;
+		for (option in options.items) {
+			switch (options.items[option][0]) {
+			case 'keyword':
+				options[option] = getKeywords(option + 'List');
+				break;
+			case 'string':
+				options[option] = getDom(option).value;
+				break;
+			case 'bool':
+				options[option] = getDom(option).checked;
+				break;
+			case 'array':
+				options[option] = [];
+				break;
+			case 'object':
+				options[option] = {};
+				break;
+			case 'internal':
+				// 内部变量保持不变
+				// WARNING: 内部变量如果是数组或对象，以下的浅拷贝方式可能导致设置的意外改变
+				options[option] = $options[option];
+				break;
+			}
+		}
+		var i, len;
+		for (i = 0, len = $page.modules.length; i < len; ++i) {
+			options.hideMods[$page.modules[i][0]] = getDom('block' + $page.modules[i][0]).checked;
+		}
+		var modules = getDom('customBlocks').value.split('\n'), module;
+		for (i = 0, len = modules.length; i < len; ++i) {
+			module = modules[i].trim();
+			if (module) { options.customMods.push(module); }
+		}
+		getDom('settingsString').value = options.toString(true);
+		return options;
+	};
+
+	// 更新设置窗口内容，exportSettings()的反过程
+	var importSettings = function (options) {
+		var option;
+		for (option in options.items) {
+			switch (options.items[option][0]) {
+			case 'keyword':
+				getDom(option).value = '';
+				getDom(option + 'List').innerHTML = '';
+				addKeywords(option + 'List', options[option]);
+				break;
+			case 'string':
+				getDom(option).value = options[option];
+				break;
+			case 'bool':
+				getDom(option).checked = options[option];
+				break;
+			}
+		}
+		var tipBackColor = getDom('tipBackColor').value,
+			tipTextColor = getDom('tipTextColor').value,
+			tipSample = getDom('tipSample');
+		tipSample.style.backgroundColor = tipBackColor;
+		tipSample.style.borderColor = tipTextColor;
+		tipSample.style.color = tipTextColor;
+		if (options.hideMods) {
+			var i, len;
+			for (i = 0, len = $page.modules.length; i < len; ++i) {
+				getDom('block' + $page.modules[i][0]).checked = (options.hideMods[$page.modules[i][0]] === true);
+			}
+		}
+		getDom('customBlocks').value = options.customMods ? options.customMods.join('\n') : '';
+		getDom('settingsString').value = options.toString(true);
+	};
+
+	// 创建设置窗口
+	var createDialog = function () {
+		dialog = $.STK.ui.dialog({isHold: true});
+		dialog.setTitle('“眼不见心不烦”(v${VER})设置');
+		content = $.STK.ui.mod.layer('${HTML}');
+		dialog.setContent(content.getOuter());
+		// 修改屏蔽提示颜色事件
+		bind('tipBackColor', function () {
+			getDom('tipSample').style.backgroundColor = this.value;
+		}, 'blur');
+		bind('tipTextColor', function () {
+			getDom('tipSample').style.borderColor = this.value;
+			getDom('tipSample').style.color = this.value;
+		}, 'blur');
+		var events = $.STK.core.evt.delegatedEvent(content.getInner());
+		// 添加关键词按钮点击事件
+		events.add('add', 'click', function (action) {
+			getDom(action.data.text).value = addKeywords(action.data.list, getDom(action.data.text).value);
+		});
+		// 清空关键词按钮点击事件
+		events.add('clear', 'click', function (action) {
+			getDom(action.data.list).innerHTML = '';
+		});
+		// 删除关键词事件
+		events.add('remove', 'click', function (action) {
+			$.remove(action.el);
+		});
+		// 复选框标签点击事件
+		bind('inner', function (event) {
+			var node = event.target;
+			// 标签下可能有span等元素
+			if (node.parentNode && node.parentNode.tagName === 'LABEL') {
+				node = node.parentNode;
+			}
+			if (node.tagName === 'LABEL') {
+				event.preventDefault();
+				event.stopPropagation();
+				if (node.getAttribute('for')) {
+					// 有for属性则使用之
+					getDom(node.getAttribute('for')).click();
+				} else {
+					// 默认目标在标签之前（同级）
+					node.previousSibling.click();
+				}
+			}
+		});
+		// 标签点击事件
+		bind('tabHeaders', function (event) {
+			var node = event.target, i, len;
+			if (node && node.tagName === 'A') {
+				node.className = 'current';
+				getDom(node.getAttribute('tab')).style.display = '';
+				for (i = 0, len = this.childNodes.length; i < len; ++i) {
+					if (node !== this.childNodes[i]) {
+						this.childNodes[i].className = '';
+						getDom(this.childNodes[i].getAttribute('tab')).style.display = 'none';
+					}
+				}
+			}
+		});
+		// 点击“设置导入/导出”标签时更新内容
+		bind('tabHeaderSettings', exportSettings);
+		// 更改白名单模式时，自动反选右边栏相关模块
+		bind('rightModWhitelist', function () {
+			var i, len, item;
+			for (i = 0, len = $page.modules.length; i < len; ++i) {
+				if ($page.modules[i][2]) {
+					item = getDom('block' + $page.modules[i][0]);
+					item.checked = !item.checked;
+				}
+			}
+		}, 'change');
+		bind('blockAll', function () {
+			var i, len, whitelistMode = getDom('rightModWhitelist').checked;
+			for (i = 0, len = $page.modules.length; i < len; ++i) {
+				getDom('block' + $page.modules[i][0]).checked = !(whitelistMode && $page.modules[i][2]);
+			}
+		});
+		bind('blockInvert', function () {
+			var i, len, item;
+			for (i = 0, len = $page.modules.length; i < len; ++i) {
+				item = getDom('block' + $page.modules[i][0]);
+				item.checked = !item.checked;
+			}
+		});
+		// 对话框按钮点击事件
+		bind('import', function () {
+			var options = new Options();
+			if (options.load(getDom('settingsString').value)) {
+				importSettings(options);
+				alert('设置导入成功！');
+			} else {
+				alert('设置导入失败！\n设置信息格式有问题。');
+			}
+		});
+		bind('checkUpdate', $update);
+		bind('OK', function () {
+			$options = exportSettings();
+			$options.save();
+			$filter();
+			$page();
+			dialog.hide();
+		});
+		bind('cancel', dialog.hide);
+		$.STK.custEvent.add(dialog, 'hide', function () {
+			shown = false;
+		});
+	};
+
+	return {
+		// 显示设置窗口
+		show : function () {
+			if (!dialog) {
+				createDialog();
+			}
+			shown = true;
+			importSettings($options);
+			dialog.show().setMiddle();
+		},
+		isShown : function () {
+			return shown;
+		}
+	};
+})();
 
 // 关键词过滤器
 var $filter = (function () {
@@ -385,7 +664,6 @@ var $filter = (function () {
 			for (i = 0, len = feeds.length; i < len; ++i) { apply(feeds[i]); }
 		}
 	};
-
 	// 屏蔽提示相关事件的冒泡处理
 	var bindTipOnClick = function (node) { 
 		if (!node) { return; }
@@ -401,12 +679,17 @@ var $filter = (function () {
 			}
 		});
 	}
-	bindTipOnClick($.select('div.WB_feed'));
+
+	// 如果第一次运行时就在作用范围内，则直接屏蔽关键词（此时页面已载入完成）；
+	// 否则交由后面注册的DOMNodeInserted事件处理
+	if ($.scope()) {
+		bindTipOnClick($.select('div.WB_feed'));
+		applyToAll();
+	}
 	// 处理动态载入的微博
 	document.addEventListener('DOMNodeInserted', function (event) {
 		if ($.scope() === 0) { return false; }
 		var node = event.target;
-		//console.log(node);
 		if (node.tagName === 'DIV' && node.classList.contains('WB_feed_type')) {
 			// 处理动态载入的微博
 			apply(node);
@@ -427,520 +710,224 @@ var $filter = (function () {
 	return applyToAll;
 })();
 
-// 处理动态载入内容
-function onDOMNodeInsertion(event) {
-	if ($.scope() === 0) { return false; }
-	var node = event.target;
-	if (node.tagName === 'DIV' && node.getElementsByClassName('nfTagB').length) {
-		// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
-		// 需要重新载入设置页面、按钮及刷新微博列表
+// 修改页面
+var $page = (function () {
+	var modules = [ // 模块屏蔽设置
+			['Topic', '#trustPagelete_zt_hottopic', true],
+			['InterestUser', '#trustPagelete_recom_interest', true],
+			['InterestApp', '#trustPagelete_recom_allinone', true],
+			['Notice', '#pl_rightmod_noticeboard', true],
+			['HelpFeedback', '#pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle', true],
+			['Ads', '#plc_main .W_main_r [id^="ads_"], div[ad-data], dl.feed_list'],
+			['Footer', 'div.global_footer'],
+			['PullyList', '#pl_content_biztips'],
+			['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
+			['Mood', '#pl_content_mood', true],
+			['Medal', '#pl_rightmod_medal, .declist'],
+			['Game', '#pl_leftNav_game'],
+			['App', '#pl_leftNav_app'],
+			['Tasks', '#pl_content_tasks'],
+			['UserGuide', '#pl_guide_oldUser'],
+			['Promotion', '#trustPagelet_ugrowth_invite', true],
+			['Level', 'span.W_level_ico'],
+			['Hello', 'div.wbim_hello'],
+			['Balloon', 'div.layer_tips'],
+			['TopComment', '#pl_content_commentTopNav'],
+			['Member', '#trustPagelet_recom_member, #trustPagelet_member_zone', true],
+			['MemberIcon', '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)'],
+			['VerifyIcon', '.approve:not(.wbpShow), .approve_co:not(.wbpShow)'],
+			['DarenIcon', '.ico_club:not(.wbpShow)'],
+			['VgirlIcon', '.ico_vlady:not(.wbpShow)'],
+			['Custom'] // 必须为最后一项
+		];
+	// 显示设置链接
+	var showSettingsBtn = function () {
+		if (!$('wbpShowSettings')) {
+			var groups = $.select('ul.sort');
+			if (!groups) { return false; }
+			var tab = document.createElement('li');
+			tab.id = 'wbpShowSettings';
+			tab.className = 'item';
+			tab.innerHTML = '<a href="javascript:void(0)" class="item_link S_func1">眼不见心不烦</a>';
+			$.click(tab, $dialog.show);
+			groups.appendChild(tab);
+		}
+		return true;
+	}
+	// 应用浮动按钮设置
+	var toggleFloatSettingsBtn = (function () {
+		var floatBtn = null, lastTime = null, lastTimerID = null;
+		// 仿照STK.comp.content.scrollToTop延时100ms显示/隐藏，防止scroll事件调用过于频繁
+		function scrollDelayTimer() {
+			if ((lastTime != null && (new Date).getTime() - lastTime < 500)) {
+				clearTimeout(lastTimerID);
+				lastTimerID = null;
+			}
+			lastTime = (new Date).getTime();
+			lastTimerID = setTimeout(function () {
+				if (floatBtn) {
+					floatBtn.style.visibility = window.scrollY > 0 ? 'visible' : 'hidden';
+				}
+			}, 100);
+		}
+		return function () {
+			if (!$options.floatBtn && floatBtn) {
+				window.removeEventListener('scroll', scrollDelayTimer, false);
+				$.remove(floatBtn);
+				floatBtn = null;
+				return true;
+			} else if ($options.floatBtn && !floatBtn) {
+				var scrollToTop = $('base_scrollToTop');
+				if (!scrollToTop) {return false; }
+				floatBtn = document.createElement('a');
+				floatBtn.innerHTML = '<span class="S_line5" style="padding: 4px 0 6px; height: auto">★</span>';
+				floatBtn.className = 'W_gotop S_line3';
+				floatBtn.href = 'javascript:void(0)';
+				floatBtn.title = '眼不见心不烦';
+				floatBtn.id = 'wbpFloatBtn';
+				floatBtn.style.bottom = '75px';
+				floatBtn.style.height = '24px';
+				$.click(floatBtn, $dialog.show);
+				scrollToTop.parentNode.appendChild(floatBtn);			
+				window.addEventListener('scroll', scrollDelayTimer, false);
+				scrollDelayTimer();
+				return true;
+			}
+			return false;
+		};
+	})();
+	// 极简阅读模式（仅在个人首页生效）
+	var toggleReaderMode = function () {
+		var readerModeStyles = $('wbpReaderModeStyles');
+		if ($options.readerMode) {
+			if (!readerModeStyles) {
+				readerModeStyles = document.createElement('style');
+				readerModeStyles.type = 'text/css';
+				readerModeStyles.id = 'wbpReaderModeStyles';
+				document.head.appendChild(readerModeStyles);
+			}
+			readerModeStyles.innerHTML = '.B_index #Box_left, .B_index #Box_right, .B_index #pl_content_publisherTop, .B_index .global_footer, .B_index #wbim_box { display: none; } .B_index .global_header {top: -35px; } .B_index #Box_center { width: 800px; } .B_index .W_miniblog { background-position-y: -35px; } .B_index .W_main { padding-top: 17px; width: 845px; } .B_index .W_main_bg { background: ' + $options.readerModeBackColor + '; } .B_index .feed_list .repeat .input textarea { width: 688px; } .B_index #base_scrollToTop, .B_index #wbpShowSettingsFloat { margin-left: 424px; }';
+		} else if (readerModeStyles) {
+			$.remove(readerModeStyles);
+		}
+	}
+	// 覆盖当前模板设置
+	var overrideSkin = function () {
+		var formerStyle = $('custom_style') || $('skin_transformers'),
+			skinCSS = $('wbpOverrideSkin');
+		if (!formerStyle) { return; }
+		if (($.uid === $.config.oid && $options.overrideMySkin) ||
+			($.uid !== $.config.oid && $options.overrideOtherSkin)) {
+			if (!skinCSS) {
+				skinCSS = document.createElement('link');
+				skinCSS.id = 'wbpOverrideSkin';
+				skinCSS.type = 'text/css';
+				skinCSS.rel = 'stylesheet';
+				skinCSS.charset = 'utf-8';
+				document.head.insertBefore(skinCSS, formerStyle);
+			}
+			skinCSS.href = $.config.cssPath + 'skin/' + $options.skinID
+				+ '/skin' + ($.config.lang == "zh-tw" ? '_CHT' : '')
+				+ '.css?version=' + $.config.version;
+			formerStyle.disabled = true;
+		} else if (skinCSS) {
+			$.remove(skinCSS);
+			formerStyle.disabled = false;
+		}
+	}
+	// 屏蔽模块
+	var hideModules = function () {
+		var cssText = '', i, len = modules.length;
+		modules[len - 1][1] = $options.customMods.join(', '); // 自定义屏蔽
+		if ($options.rightModWhitelist) {
+			// 右边栏白名单模式下，默认屏蔽右边栏除导航栏以外的所有模块
+			cssText = 'body.B_index div.W_main_r > div { display: none }\n'
+				+ '#pl_content_setskin, #pl_content_personInfo, #pl_nav_outlookBar { display: block }\n';
+		}
+		for (i = 0; i < len; ++i) {
+			if ($options.hideMods[modules[i][0]] && modules[i][1]) {
+				cssText += modules[i][1] + ' { display: ' + (($options.rightModWhitelist && modules[i][2]) ? 'block' : 'none !important') + ' }\n';
+			}
+		}
+		// 屏蔽提示相关CSS
+		var tipBackColor = $options.tipBackColor;
+		var tipTextColor = $options.tipTextColor;
+		cssText += '.wbpTip:not(:hover) { background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; }';
+		// 更新CSS
+		var styles = $('wbpModuleStyles');
+		if (!styles) {
+			styles = document.createElement('style');
+			styles.type = 'text/css';
+			styles.id = 'wbpModuleStyles';
+			document.head.appendChild(styles);
+		}
+		styles.innerHTML = cssText + '\n';
+	}
+	// 清除在发布框中嵌入的默认话题
+	var clearHotTopic = function () {
+		if ($options.clearHotTopic && $.scope() === 1) {
+			var inputBox = document.querySelector('#pl_content_publisherTop .send_weibo .input textarea');
+			if (inputBox && inputBox.classList.contains('topic_color')) {
+				// IFRAME载入方式，hotTopic可能尚未启动，直接清除相关属性即可
+				inputBox.removeAttribute('hottopic');
+				inputBox.removeAttribute('hottopicid');
+				// 在发布框中模拟输入，欺骗STK.common.editor.plugin.hotTopic
+				inputBox.value = 'DUMMY';
+				inputBox.focus();
+				inputBox.value = '';
+				inputBox.blur();
+				inputBox.classList.remove('topic_color');
+			}
+		}
+	}
+	// 根据当前设置修改页面
+	var apply = function () {
+		// 极简阅读模式
+		toggleReaderMode();
+		// 设置链接
 		showSettingsBtn();
-	} else if (node.tagName === 'DIV' && node.classList.contains('send_weibo')) {
+		// 浮动设置按钮
+		toggleFloatSettingsBtn();
+		// 屏蔽版面模块
+		hideModules();
 		// 清除在发布框中嵌入的默认话题
 		clearHotTopic();
-	}
-	return true;
-}
-
-// 自动检查更新
-function autoUpdate() {
-	// 部分自动更新代码改写自http://loonyone.livejournal.com/
-	// 防止重复检查（同时打开多个窗口时），间隔至少两分钟
-	var DoS_PREVENTION_TIME = 2 * 60 * 1000;
-	var lastAttempt = $.get('lastCheckUpdateAttempt', 0);
-	var now = new Date().getTime();
-
-	if (lastAttempt && (now - lastAttempt) < DoS_PREVENTION_TIME) {return; }
-	$.set('lastCheckUpdateAttempt', now.toString());
-
-	// 每周检查一次，避免频繁升级
-	//var ONE_DAY = 24 * 60 * 60 * 1000;
-	var ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
-	var lastSuccess = $.get('lastCheckUpdateSuccess', 0);
-	if (lastSuccess && (now - lastSuccess) < ONE_WEEK) {return; }
-
-	checkUpdate(true);
-}
-
-// 检查更新
-function checkUpdate(auto) {
-	GM_xmlhttpRequest({
-		method: 'GET',
-		// 只载入metadata
-		url: 'http://userscripts.org/scripts/source/114087.meta.js?' + new Date().getTime(),
-		headers: {'Cache-Control': 'no-cache'},
-		onload: function (result) {
-			if (!result.responseText.match(/@version\s+(.*)/)) { return; }
-			$.set('lastCheckUpdateSuccess', new Date().getTime().toString());
-			var ver = RegExp.$1;
-			if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= Number('${REV}')) {
-				// 自动检查更新且并无新版本时不必提示
-				// 注意不能使用!auto，因为作为click事件处理程序时auto是一个event对象
-				if (auto !== true) { alert('“眼不见心不烦”已经是最新版。'); }
-				return;
-			}
-			var features = '';
-			if (result.responseText.match(/@features\s+(.*)/)) {
-				features = '- ' + RegExp.$1.split('；').join('\n- ') + '\n\n';
-			}
-			// 显示更新提示
-			if (confirm('“眼不见心不烦”新版本v' + ver + '可用。\n\n' + features + '如果您希望更新，请点击“确认”打开插件主页。')) {
-				window.open('http://userscripts.org/scripts/show/114087');
-			}
-		}
-	});
-}
-
-// 极简阅读模式（仅在个人首页生效）
-function readerMode() {
-	var readerModeStyles = $('wbpReaderModeStyles');
-	if ($options.readerMode) {
-		if (!readerModeStyles) {
-			readerModeStyles = document.createElement('style');
-			readerModeStyles.type = 'text/css';
-			readerModeStyles.id = 'wbpReaderModeStyles';
-			document.head.appendChild(readerModeStyles);
-		}
-		if (!$.config.isnarrow) { // 体验版
-			readerModeStyles.innerHTML = '.B_index #Box_left, .B_index #Box_right, .B_index #pl_content_publisherTop, .B_index .global_footer, .B_index #wbim_box { display: none; } .B_index .global_header {top: -35px; } .B_index #Box_center { width: 800px; } .B_index .W_miniblog { background-position-y: -35px; } .B_index .W_main { padding-top: 17px; width: 845px; } .B_index .W_main_bg { background: ' + $options.readerModeBackColor + '; } .B_index .feed_list .repeat .input textarea { width: 688px; } .B_index #base_scrollToTop, .B_index #wbpShowSettingsFloat { margin-left: 424px; }';
-		} else { // 传统版
-			readerModeStyles.innerHTML = '.B_index #plc_main .W_main_r, .B_index #pl_content_publisherTop, .B_index .global_footer, .B_index #wbim_box { display: none; } .B_index .global_header {top: -35px; } .B_index #plc_main .W_main_c { width: 800px; } .B_index .W_miniblog { background-position-y: -35px; } .B_index #plc_main .custom_content_bg { padding-top: 30px; } .B_index .W_main_narrow { padding-top: 17px; } .B_index .W_main_narrow_bg { background: ' + $options.readerModeBackColor + '; } .B_index .feed_list .repeat .input textarea { width: 628px; }';
-		}
-	} else if (readerModeStyles) {
-		$.remove(readerModeStyles);
-	}
-}
-
-// 覆盖当前模板设置
-function overrideSkin() {
-	var formerStyle = $('custom_style') || $('skin_transformers'),
-		skinCSS = $('wbpOverrideSkin');
-	if (!formerStyle) { return; }
-	if (($.uid === $.config.oid && $options.overrideMySkin) ||
-		($.uid !== $.config.oid && $options.overrideOtherSkin)) {
-		if (!skinCSS) {
-			skinCSS = document.createElement('link');
-			skinCSS.id = 'wbpOverrideSkin';
-			skinCSS.type = 'text/css';
-			skinCSS.rel = 'stylesheet';
-			skinCSS.charset = 'utf-8';
-			document.head.insertBefore(skinCSS, formerStyle);
-		}
-		skinCSS.href = $.config.cssPath + 'skin/' + $options.skinID
-			+ '/skin' + ($.config.isnarrow ? '_narrow' : '') + ($.config.lang == "zh-tw" ? '_CHT' : '')
-			+ '.css?version=' + $.config.version;
-		formerStyle.disabled = true;
-	} else if (skinCSS) {
-		$.remove(skinCSS);
-		formerStyle.disabled = false;
-	}
-}
-
-// 检测按键，开关极简阅读模式
-function onKeyPress(event) {
-	if ($dialog.isShown()) { return; }
-	if ($.scope() === 1 && event.keyCode === 119) {
-		$options.readerMode = !$options.readerMode;
-		$options.save();
-		readerMode();
-	}
-}
-
-function hideBlocks() {
-	var cssText = '', i, len = $blocks.length;
-	$blocks[len - 1][1] = $options.customBlocks.join(', '); // 自定义屏蔽
-	if ($options.rightModWhitelist) {
-		// 右边栏白名单模式下，默认屏蔽右边栏除导航栏以外的所有模块
-		cssText = 'body.B_index div.W_main_r > div { display: none }\n'
-			+ '#pl_content_setskin, #pl_content_personInfo, #pl_nav_outlookBar { display: block }\n';
-	}
-	for (i = 0; i < len; ++i) {
-		if ($options.hideBlock[$blocks[i][0]] && $blocks[i][1]) {
-			cssText += $blocks[i][1] + ' { display: ' + (($options.rightModWhitelist && $blocks[i][2]) ? 'block' : 'none !important') + ' }\n';
-		}
-	}
-	// 屏蔽提示相关CSS
-	var tipBackColor = $options.tipBackColor;
-	var tipTextColor = $options.tipTextColor;
-	cssText += '.wbpTip:not(:hover) { background-color: ' + tipBackColor + '; border-color: ' + tipTextColor + '; color: ' + tipTextColor + '; }';
-	// 更新CSS
-	var blockStyles = $('wbpBlockStyles');
-	if (!blockStyles) {
-		blockStyles = document.createElement('style');
-		blockStyles.type = 'text/css';
-		blockStyles.id = 'wbpBlockStyles';
-		document.head.appendChild(blockStyles);
-	}
-	blockStyles.innerHTML = cssText + '\n';
-}
-
-// 清除在发布框中嵌入的默认话题
-function clearHotTopic() {
-	if ($options.clearHotTopic && $.scope() === 1) {
-		var inputBox = document.querySelector('#pl_content_publisherTop .send_weibo .input textarea');
-		if (inputBox && inputBox.classList.contains('topic_color')) {
-			// IFRAME载入方式，hotTopic可能尚未启动，直接清除相关属性即可
-			inputBox.removeAttribute('hottopic');
-			inputBox.removeAttribute('hottopicid');
-			// 在发布框中模拟输入，欺骗STK.common.editor.plugin.hotTopic
-			inputBox.value = 'DUMMY';
-			inputBox.focus();
-			inputBox.value = '';
-			inputBox.blur();
-			inputBox.classList.remove('topic_color');
-		}
-	}
-}
-
-// 根据当前设置修改页面
-function modifyPage() {
-	// 极简阅读模式
-	readerMode();
-	// 应用浮动按钮设置
-	toggleFloatSettingsBtn();
-	// 屏蔽版面内容
-	hideBlocks();
-	// 清除在发布框中嵌入的默认话题
-	clearHotTopic();
-	// 覆盖当前模板设置
-	overrideSkin();
-}
-
-var $dialog = (function () {
-	var shown = false, dialog, content;
-
-	var getDom = function (node) {
-		return content.getDom(node);
-	};
-	var bind = function (node, func, event) {
-		$.STK.core.evt.addEvent(content.getDom(node), event || 'click', func);
+		// 覆盖当前模板设置
+		overrideSkin();
 	};
 
-	// 从显示列表建立关键词数组
-	var getKeywords = function (id) {
-		if (!getDom(id).hasChildNodes()) {return []; }
-		var keywords = getDom(id).childNodes, list = [], i, len;
-		for (i = 0, len = keywords.length; i < len; ++i) {
-			if (keywords[i].tagName === 'A') {list.push(keywords[i].innerHTML); }
-		}
-		return list;
-	};
-
-	// 将关键词添加到显示列表
-	var addKeywords = function (id, list) {
-		var keywords = list instanceof Array ? list : list.split(' '), i, len, malformed = [];
-		for (i = 0, len = keywords.length; i < len; ++i) {
-			var currentKeywords = ' ' + getKeywords(id).join(' ') + ' ', keyword = keywords[i];
-			if (keyword && currentKeywords.indexOf(' ' + keyword + ' ') === -1) {
-				var keywordLink = document.createElement('a');
-				if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
-					try {
-						// 尝试创建正则表达式，检验正则表达式的有效性
-						// 调用test()是必须的，否则浏览器可能跳过该语句
-						RegExp(keyword.substring(1, keyword.length - 1)).test('');
-					} catch (e) {
-						malformed.push(keyword);
-						continue;
-					}
-					keywordLink.className = 'regex';
-				}
-				keywordLink.title = '删除关键词';
-				keywordLink.setAttribute('action-type', 'remove');
-				keywordLink.href = 'javascript:void(0)';
-				keywordLink.innerHTML = keyword;
-				getDom(id).appendChild(keywordLink);
-			}
-		}
-		if (malformed.length > 0) {
-			alert('下列正则表达式无效：\n' + malformed.join('\n'));
-		}
-		return malformed.join(' ');
-	};
-
-	// 返回当前设置（可能未保存）
-	var exportSettings = function () {
-		var options = new Options(), option;
-		for (option in options.items) {
-			switch (options.items[option][0]) {
-			case 'keyword':
-				options[option] = getKeywords(option + 'List');
-				break;
-			case 'string':
-				options[option] = getDom(option).value;
-				break;
-			case 'bool':
-				options[option] = getDom(option).checked;
-				break;
-			case 'array':
-				options[option] = [];
-				break;
-			case 'object':
-				options[option] = {};
-				break;
-			case 'internal':
-				// 内部变量保持不变
-				// WARNING: 内部变量如果是数组或对象，以下的浅拷贝方式可能导致设置的意外改变
-				options[option] = $options[option];
-				break;
-			}
-		}
-		var i, len;
-		for (i = 0, len = $blocks.length; i < len; ++i) {
-			options.hideBlock[$blocks[i][0]] = getDom('block' + $blocks[i][0]).checked;
-		}
-		var blocks = getDom('customBlocks').value.split('\n'), block;
-		for (i = 0, len = blocks.length; i < len; ++i) {
-			block = blocks[i].trim();
-			if (block) { options.customBlocks.push(block); }
-		}
-		getDom('settingsString').value = options.toString(true);
-		return options;
-	};
-
-	// 更新设置窗口内容，exportSettings()的反过程
-	var importSettings = function (options) {
-		var option;
-		for (option in options.items) {
-			switch (options.items[option][0]) {
-			case 'keyword':
-				getDom(option).value = '';
-				getDom(option + 'List').innerHTML = '';
-				addKeywords(option + 'List', options[option]);
-				break;
-			case 'string':
-				getDom(option).value = options[option];
-				break;
-			case 'bool':
-				getDom(option).checked = options[option];
-				break;
-			}
-		}
-		var tipBackColor = getDom('tipBackColor').value,
-			tipTextColor = getDom('tipTextColor').value,
-			tipSample = getDom('tipSample');
-		tipSample.style.backgroundColor = tipBackColor;
-		tipSample.style.borderColor = tipTextColor;
-		tipSample.style.color = tipTextColor;
-		if (options.hideBlock) {
-			var i, len;
-			for (i = 0, len = $blocks.length; i < len; ++i) {
-				getDom('block' + $blocks[i][0]).checked = (options.hideBlock[$blocks[i][0]] === true);
-			}
-		}
-		getDom('customBlocks').value = options.customBlocks ? options.customBlocks.join('\n') : '';
-		getDom('settingsString').value = options.toString(true);
-	};
-
-	// 创建设置窗口
-	var createDialog = function () {
-		dialog = $.STK.ui.dialog({isHold: true});
-		dialog.setTitle('“眼不见心不烦”(v${VER})设置');
-		content = $.STK.module.layer('${HTML}');
-		dialog.setContent(content.getOuter());
-		// 修改屏蔽提示颜色事件
-		bind('tipBackColor', function () {
-			getDom('tipSample').style.backgroundColor = this.value;
-		}, 'blur');
-		bind('tipTextColor', function () {
-			getDom('tipSample').style.borderColor = this.value;
-			getDom('tipSample').style.color = this.value;
-		}, 'blur');
-		var events = $.STK.core.evt.delegatedEvent(content.getInner());
-		// 添加关键词按钮点击事件
-		events.add('add', 'click', function (action) {
-			getDom(action.data.text).value = addKeywords(action.data.list, getDom(action.data.text).value);
-		});
-		// 清空关键词按钮点击事件
-		events.add('clear', 'click', function (action) {
-			getDom(action.data.list).innerHTML = '';
-		});
-		// 删除关键词事件
-		events.add('remove', 'click', function (action) {
-			$.remove(action.el);
-		});
-		// 复选框标签点击事件
-		bind('inner', function (event) {
-			var node = event.target;
-			// 标签下可能有span等元素
-			if (node.parentNode && node.parentNode.tagName === 'LABEL') {
-				node = node.parentNode;
-			}
-			if (node.tagName === 'LABEL') {
-				event.preventDefault();
-				event.stopPropagation();
-				if (node.getAttribute('for')) {
-					// 有for属性则使用之
-					getDom(node.getAttribute('for')).click();
-				} else {
-					// 默认目标在标签之前（同级）
-					node.previousSibling.click();
-				}
-			}
-		});
-		// 标签点击事件
-		bind('tabHeaders', function (event) {
-			var node = event.target, i, len;
-			if (node && node.tagName === 'A') {
-				node.className = 'current';
-				getDom(node.getAttribute('tab')).style.display = '';
-				for (i = 0, len = this.childNodes.length; i < len; ++i) {
-					if (node !== this.childNodes[i]) {
-						this.childNodes[i].className = '';
-						getDom(this.childNodes[i].getAttribute('tab')).style.display = 'none';
-					}
-				}
-			}
-		});
-		// 点击“设置导入/导出”标签时更新内容
-		bind('tabHeaderSettings', exportSettings);
-		// 更改白名单模式时，自动反选右边栏相关模块
-		bind('rightModWhitelist', function () {
-			var i, len, item;
-			for (i = 0, len = $blocks.length; i < len; ++i) {
-				if ($blocks[i][2]) {
-					item = getDom('block' + $blocks[i][0]);
-					item.checked = !item.checked;
-				}
-			}
-		}, 'change');
-		bind('blockAll', function () {
-			var i, len, whitelistMode = getDom('rightModWhitelist').checked;
-			for (i = 0, len = $blocks.length; i < len; ++i) {
-				getDom('block' + $blocks[i][0]).checked = !(whitelistMode && $blocks[i][2]);
-			}
-		});
-		bind('blockInvert', function () {
-			var i, len, item;
-			for (i = 0, len = $blocks.length; i < len; ++i) {
-				item = getDom('block' + $blocks[i][0]);
-				item.checked = !item.checked;
-			}
-		});
-		// 对话框按钮点击事件
-		bind('import', function () {
-			var options = new Options();
-			if (options.load(getDom('settingsString').value)) {
-				importSettings(options);
-				alert('设置导入成功！');
-			} else {
-				alert('设置导入失败！\n设置信息格式有问题。');
-			}
-		});
-		bind('checkUpdate', checkUpdate);
-		bind('OK', function () {
-			$options = exportSettings();
-			$options.save();
-			$filter();
-			modifyPage();
-			dialog.hide();
-		});
-		bind('cancel', dialog.hide);
-		$.STK.custEvent.add(dialog, 'hide', function () {
-			shown = false;
-		});
-	};
-
-	return {
-		// 显示设置窗口
-		show : function () {
-			if (!dialog) {
-				createDialog();
-			}
-			shown = true;
-			importSettings($options);
-			dialog.show().setMiddle();
-		},
-		isShown : function () {
-			return shown;
-		}
-	};
-}());
-
-function showSettingsBtn() {
-	if (!$('wbpShowSettings')) {
-		var groups = $.select('#pl_content_homeFeed .nfTagB, #pl_content_hisFeed .nfTagB');
-		if (!groups) {return false; }
-		var showSettingsTab = document.createElement('li');
-		showSettingsTab.id = 'wbpShowSettings';
-		showSettingsTab.innerHTML = '<span><em><a href="javascript:void(0)">眼不见心不烦</a></em></span>';
-		$.click(showSettingsTab, $dialog.show);
-		groups.childNodes[1].appendChild(showSettingsTab);
-	}
-	return true;
-}
-
-var toggleFloatSettingsBtn = (function () {
-	var floatBtn = null, lastTime = null, lastTimerID = null;
-	// 仿照STK.comp.content.scrollToTop延时100ms显示/隐藏，防止scroll事件调用过于频繁
-	function scrollDelayTimer() {
-		if ((lastTime != null && (new Date).getTime() - lastTime < 500)) {
-			clearTimeout(lastTimerID);
-			lastTimerID = null;
-		}
-		lastTime = (new Date).getTime();
-		lastTimerID = setTimeout(function () {
-			if (floatBtn) {
-				floatBtn.style.visibility = window.scrollY > 0 ? 'visible' : 'hidden';
-			}
-		}, 100);
-	}
-	
-	return function () {
-		if (!$options.floatBtn && floatBtn) {
-			window.removeEventListener('scroll', scrollDelayTimer, false);
-			$.remove(floatBtn);
-			floatBtn = null;
-			return true;
-		} else if ($options.floatBtn && !floatBtn) {
-			var scrollToTop = $('base_scrollToTop');
-			if (!scrollToTop) {return false; }
-			floatBtn = document.createElement('a');
-			floatBtn.innerHTML = '<span style="padding: 0 0 6px;">★</span>';
-			floatBtn.className = 'W_gotop';
-			floatBtn.href = 'javascript:void(0)';
-			floatBtn.title = '眼不见心不烦';
-			floatBtn.id = 'wbpFloatBtn';
-			floatBtn.style.bottom = '72px';
-			$.click(floatBtn, $dialog.show);
-			scrollToTop.parentNode.appendChild(floatBtn);			
-			window.addEventListener('scroll', scrollDelayTimer, false);
-			scrollDelayTimer();
-			return true;
-		}
-		return false;
-	};
-}());
-
-// 载入设置（只运行一次）
-function loadSettings() {
-	if (!$.uid || isNaN(Number($.uid))) {
-		console.warn('不在作用范围内，脚本未运行！');
-		return false;
-	}
-	$options = new Options();
-	if (!$options.load($.get($.uid.toString()))) {
-		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
-	}
-	if ($options.autoUpdate) {
-		autoUpdate();
-	}
 	// IFRAME载入不会影响head中的CSS，只添加一次即可
 	GM_addStyle('${CSS}');
-	modifyPage();
-	return true;
-}
-
-if (loadSettings()) {
-	// 如果第一次运行时就在作用范围内，则直接屏蔽关键词（此时页面已载入完成）；
-	// 否则（如“我的评论”）等待切换回首页时再进行屏蔽（由onDOMNodeInsertion处理）
-	if ($.scope()) {
-		showSettingsBtn();
-		//bindTipOnClick();
-		$filter();
-	}
-
+	// 如果第一次运行时就在作用范围内，则直接应用页面设置（此时页面已载入完成）；
+	// 否则交由后面注册的DOMNodeInserted事件处理
+	if ($.scope()) { apply(); }
 	// 处理动态载入内容
-	document.addEventListener('DOMNodeInserted', onDOMNodeInsertion, false);
-	// 处理按键（极简阅读模式）
-	document.addEventListener('keyup', onKeyPress, false);
-}
+	document.addEventListener('DOMNodeInserted', function onDOMNodeInsertion(event) {
+		if ($.scope() === 0) { return false; }
+		var node = event.target;
+		//if (node.tagName !== 'SCRIPT') { console.log(node); }
+		if (node.tagName === 'DIV' && node.classList.contains('group_read')) {
+			// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
+			// 需要重新载入设置按钮
+			showSettingsBtn();
+		} else if (node.tagName === 'DIV' && node.classList.contains('send_weibo')) {
+			// 清除在发布框中嵌入的默认话题
+			clearHotTopic();
+		}
+		return true;
+	}, false);
+	// 检测按键，开关极简阅读模式
+	document.addEventListener('keyup', function onKeyPress(event) {
+		if ($dialog.isShown()) { return; }
+		if ($.scope() === 1 && event.keyCode === 119) {
+			$options.readerMode = !$options.readerMode;
+			$options.save();
+			toggleReaderMode();
+		}
+	}, false);
+
+	apply.modules = modules;
+	return apply;
+})();
+
+})();
