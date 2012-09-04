@@ -393,7 +393,7 @@ var $filter = (function () {
 			var node = event.target;
 			if (node && node.tagName === 'A') {
 				if (node.className === 'wbpTipKeyword') {
-					$settingsDialog.show();
+					$dialog.show();
 					event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
 				} else if (node.className === 'wbpTip') {
 					$.remove(node);
@@ -538,7 +538,7 @@ function overrideSkin() {
 
 // 检测按键，开关极简阅读模式
 function onKeyPress(event) {
-	if ($settingsDialog.isShown()) {return; }
+	if ($dialog.isShown()) { return; }
 	if ($.scope() === 1 && event.keyCode === 119) {
 		$options.readerMode = !$options.readerMode;
 		$options.save();
@@ -606,9 +606,8 @@ function modifyPage() {
 	overrideSkin();
 }
 
-var $settingsDialog = (function () {
-	var settingsDialog = {}, shown = false;
-	var dialog, content;
+var $dialog = (function () {
+	var shown = false, dialog, content;
 
 	var getDom = function (node) {
 		return content.getDom(node);
@@ -841,20 +840,20 @@ var $settingsDialog = (function () {
 		});
 	};
 
-	// 显示设置窗口
-	settingsDialog.show = function () {
-		if (!dialog) {
-			createDialog();
+	return {
+		// 显示设置窗口
+		show : function () {
+			if (!dialog) {
+				createDialog();
+			}
+			shown = true;
+			importSettings($options);
+			dialog.show().setMiddle();
+		},
+		isShown : function () {
+			return shown;
 		}
-		shown = true;
-		importSettings($options);
-		dialog.show().setMiddle();
 	};
-	settingsDialog.isShown = function () {
-		return shown;
-	};
-
-	return settingsDialog;
 }());
 
 function showSettingsBtn() {
@@ -864,7 +863,7 @@ function showSettingsBtn() {
 		var showSettingsTab = document.createElement('li');
 		showSettingsTab.id = 'wbpShowSettings';
 		showSettingsTab.innerHTML = '<span><em><a href="javascript:void(0)">眼不见心不烦</a></em></span>';
-		$.click(showSettingsTab, $settingsDialog.show);
+		$.click(showSettingsTab, $dialog.show);
 		groups.childNodes[1].appendChild(showSettingsTab);
 	}
 	return true;
@@ -902,7 +901,7 @@ var toggleFloatSettingsBtn = (function () {
 			floatBtn.title = '眼不见心不烦';
 			floatBtn.id = 'wbpFloatBtn';
 			floatBtn.style.bottom = '72px';
-			$.click(floatBtn, $settingsDialog.show);
+			$.click(floatBtn, $dialog.show);
 			scrollToTop.parentNode.appendChild(floatBtn);			
 			window.addEventListener('scroll', scrollDelayTimer, false);
 			scrollDelayTimer();
