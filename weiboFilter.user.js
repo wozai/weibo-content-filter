@@ -904,9 +904,9 @@ var $page = (function () {
 
 	// IFRAME载入不会影响head中的CSS，只添加一次即可
 	GM_addStyle('${CSS}');
-	// 如果第一次运行时就在作用范围内，则直接应用页面设置（此时页面已载入完成）；
-	// 否则交由后面注册的DOMNodeInserted事件处理
-	if ($.scope()) { apply(); }
+	// 直接应用页面设置（此时页面已载入完成）
+	// 与IFRAME相关的处理在下面注册的DOMNodeInserted事件中完成
+	apply();
 	// 处理动态载入内容
 	document.addEventListener('DOMNodeInserted', function onDOMNodeInsertion(event) {
 		if ($.scope() === 0) { return false; }
