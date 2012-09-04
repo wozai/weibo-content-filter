@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		
+// @features		支持新版微博(V5)
 // @version			1.0.0b1
 // @revision		64
 // @author			@富平侯
@@ -21,7 +21,7 @@ var $blocks = [ // 模块屏蔽设置
 		['InterestApp', '#trustPagelete_recom_allinone', true],
 		['Notice', '#pl_rightmod_noticeboard', true],
 		['HelpFeedback', '#pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle', true],
-		['Ads', '#plc_main .W_main_r [id^="ads_"], div[ad-data], dl.feed_list div.olympic_adv_feed'],
+		['Ads', '#plc_main .W_main_r [id^="ads_"], div[ad-data], dl.feed_list'],
 		['Footer', 'div.global_footer'],
 		['PullyList', '#pl_content_biztips'],
 		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
@@ -43,7 +43,7 @@ var $blocks = [ // 模块屏蔽设置
 		['VgirlIcon', '.ico_vlady:not(.wbpShow)'],
 		['Custom'] // 必须为最后一项
 	];
-var $options, $forwardFeeds = {}, $floodFeeds = {};
+var $options;
 
 // 工具函数
 var $ = (function () {
@@ -81,6 +81,16 @@ var $ = (function () {
 		$.get = GM_getValue;
 		$.set = GM_setValue;
 	}
+	// 在数组中查找元素
+	$.find = function (array, val) {
+		var l = array.length, i;
+		for (i = 0; i < l; ++i) {
+			if (array[i] === val) {
+				return true;
+			}
+		}
+		return false;
+	}
 	// 删除节点
 	$.remove = function (el) {
 		if (el) { el.parentNode.removeChild(el); }
@@ -91,7 +101,8 @@ var $ = (function () {
 	};
 	// 返回当前页面的位置
 	$.scope = function () {
-		return 'B_index' === document.body.className ? 1 : 'B_my_profile_other' === document.body.className ? 2 : 0;
+		return document.body.classList.contains('B_index') ? 1 : 
+			document.body.classList.contains('B_profile') ? 2 : 0;
 	};
 	return $;
 })();
@@ -183,240 +194,252 @@ Options.prototype = {
 	}
 };
 
-// 搜索指定文本中是否包含列表中的关键词
-function searchKeyword(str, key) {
-	var text = str.toLowerCase(), keywords = $options[key], keyword, i, len = keywords.length;
-	if (str === '' || len === 0) {return ''; }
-	for (i = 0; i < len; ++i) {
-		keyword = keywords[i];
-		if (!keyword) {continue; }
-		if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
-			try {
-				// 尝试匹配正则表达式
-				if (RegExp(keyword.substring(1, keyword.length - 1)).test(str)) {return keyword; }
-			} catch (e) {
-				continue;
+// 关键词过滤器
+var $filter = (function () {
+	var forwardFeeds = {}, floodFeeds = {};
+	// 搜索指定文本中是否包含列表中的关键词
+	var search = function  (str, key) {
+		var text = str.toLowerCase(), keywords = $options[key], keyword, i, len = keywords.length;
+		if (str === '' || len === 0) { return ''; }
+		for (i = 0; i < len; ++i) {
+			keyword = keywords[i];
+			if (!keyword) { continue; }
+			if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
+				try {
+					// 尝试匹配正则表达式
+					if (RegExp(keyword.substring(1, keyword.length - 1)).test(str)) {return keyword; }
+				} catch (e) {
+					continue;
+				}
+			} else if (text.indexOf(keyword.toLowerCase()) > -1) {
+				return keyword;
 			}
-		} else if (text.indexOf(keyword.toLowerCase()) > -1) {
-			return keyword;
 		}
-	}
-	return '';
-}
-
-function filterSource(source, keywords) {
-	if (!source) {
-		source = '未通过审核应用';
-	} else {
-		// 过长的应用名称会被压缩，完整名称存放在title属性中
-		source = source.title || source.innerHTML;
-	}
-	return searchKeyword(source, keywords);
-}
-
-var getFeedText = (function () {
+		return '';
+	};
+	// 获取微博正文
 	var converter = document.createElement('div');
-	return function (content) {
+	var getText = function (content) {
 		// 替换表情，去掉标签
 		if ($options.filterSmiley) {
 			converter.innerHTML = content.innerHTML.replace(/<img[^>]+alt="(\[[^\]">]+\])"[^>]*>/g, '$1')
 				.replace(/<\/?[^>]+>/g, '').replace(/[\r\n\t]/g, '').trim();
-			// 利用div（未插入文档）进行HTML反转义
+			// 利用未插入文档的div进行HTML反转义
 			return converter.textContent;
 		}
 		return content.textContent.replace(/[\r\n\t]/g, '').trim();
+	};
+	// 过滤微博来源
+	var searchSource = function (source, keywords) {
+		if (!source) {
+			source = '未通过审核应用';
+		} else {
+			// 过长的应用名称会被压缩，完整名称存放在title属性中
+			source = source.title || source.innerHTML;
+		}
+		return search(source, keywords);
 	}
-}());
+	// 过滤单条微博
+	var apply = function (feed) {
+		if (feed.firstChild && feed.firstChild.className === 'wbpTip') {
+			// 已被灰名单屏蔽过，移除屏蔽提示
+			feed.removeChild(feed.firstChild);
+		}
+		var mid = feed.getAttribute('mid');
+		if (!mid) { return false; } // 动态没有mid
+		var scope = $.scope(), isForward = (feed.getAttribute('isforward') === '1'),
+			content = feed.querySelector('.WB_detail > .WB_text'),
+			forwardContent = feed.querySelector('.WB_media_expand .WB_text'),
+			forwardLink = feed.querySelector('.WB_media_expand .WB_func .WB_time'),
+			source = feed.querySelector('.WB_detail > .WB_func a[target="_blank"]'),
+			forwardSource = feed.querySelector('.WB_media_expand > .WB_func a[target="_blank"]');
+			fauthor = feed.querySelector('.WB_media_expand .WB_info > a.WB_name');
+		var fmid = isForward ? (forwardLink ? forwardLink.href : null) : null,
+			author = (scope === 1) ? feed.querySelector('.WB_detail > .WB_info > a.WB_name') : null,
+			uid = author ? author.getAttribute('usercard') : null;
 
-function filterFeed(node) {
-	if (node.firstChild && node.firstChild.className === 'wbpTip') {
-		// 已被灰名单屏蔽过，移除屏蔽提示
-		node.removeChild(node.firstChild);
-	}
-	var scope = $.scope(), text = '@', isForward = (node.getAttribute('isforward') === '1'),
-		mid = node.getAttribute('mid'),
-		content = node.querySelector('dd.content > p[node-type="feed_list_content"]'),
-		forwardContent = node.querySelector('dd.content > dl.comment > dt[node-type="feed_list_forwardContent"]'),
-		forwardLink = node.querySelector('dd.content > dl.comment > dd.info > a.date'),
-		source = node.querySelector('dd.content > p.info > a[target="_blank"]'),
-		forwardSource = node.querySelector('dd.content > dl.comment > dd.info > a[target="_blank"]');
-	var fmid = isForward ? (forwardLink ? forwardLink.href : null) : null,
-		author = (scope === 1) ? content.childNodes[1] : null,
-		uid = author ? author.getAttribute('usercard') : null;
+		if (!content) { return false; }
+		var text = (scope === 1) ? '@' + author.getAttribute('nick-name') + ': ' : ''; 
+		text += getText(content);
+		if (isForward && fauthor && forwardContent) {
+			// 转发内容
+			text += '////@' + fauthor.getAttribute('nick-name') + ': ' + getText(forwardContent);
+		}
+		console.log(text);
 
-	var find = function (array, val) {
-		var l = array.length, i;
-		for (i = 0; i < l; ++i) {
-			if (array[i] === val) {
+		if ($options.filterPaused || search(text, 'whiteKeywords')) {
+			// 白名单条件
+		} else if ((function () { // 黑名单条件
+			// 屏蔽已删除微博的转发
+			if ($options.filterDeleted && isForward && feed.querySelector('.WB_media_expand > .WB_deltxt')) {
+				console.warn('↑↑↑【已删除微博的转发被屏蔽】↑↑↑');
+				return true;
+			}
+			// 屏蔽写心情微博
+			if ($options.filterFeelings && feed.querySelector('dd.content > div.feelingBoxS')) {
+				console.warn('↑↑↑【写心情微博被屏蔽】↑↑↑');
+				return true;
+			}
+			// 屏蔽指定来源
+			if (searchSource(source, 'sourceKeywords') ||
+					(isForward && searchSource(forwardSource, 'sourceKeywords'))) {
+				console.warn('↑↑↑【被来源黑名单屏蔽】↑↑↑');
+				return true;
+			}
+			// 反版聊（屏蔽重复转发）
+			if ($options.filterDupFwd && fmid && forwardFeeds[fmid]) {
+				if (forwardFeeds[fmid].length >= Number($options.maxDupFwd) && !$.find(forwardFeeds[fmid], mid)) {
+					console.warn('↑↑↑【被反版聊功能屏蔽】↑↑↑');
+					return true;
+				}
+			}
+			// 反刷屏（屏蔽同一用户大量发帖）
+			if ($options.filterFlood && uid && floodFeeds[uid]) {
+				if (floodFeeds[uid] >= Number($options.maxFlood) && !$.find(floodFeeds[uid], mid)) {
+					console.warn('↑↑↑【被反刷屏功能屏蔽】↑↑↑');
+					return true;
+				}
+			}
+			// 在微博内容中搜索屏蔽关键词
+			if (search(text, 'blackKeywords')) {
+				console.warn('↑↑↑【被关键词黑名单屏蔽】↑↑↑');
+				return true;
+			}
+			// 搜索t.cn短链接
+			var links = feed.getElementsByTagName('A'), i, len;
+			for (i = 0, len = links.length; i < len; ++i) {
+				if (links[i].href.substring(0, 12) === 'http://t.cn/' && search(links[i].title, 'URLKeywords')) {
+					console.warn('↑↑↑【被链接黑名单屏蔽】↑↑↑');
+					return true;
+				}
+			}
+			return false;
+		})()) {
+			feed.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
+			return true;
+		} else { // 灰名单条件
+			// 搜索来源灰名单
+			var sourceKeyword = searchSource(source, 'sourceGrayKeywords'), 
+				keyword = search(text, 'grayKeywords');
+			if (!sourceKeyword && isForward) {
+				sourceKeyword = searchSource(forwardSource, 'sourceGrayKeywords');
+			}			
+			if (keyword || sourceKeyword) {
+				// 找到了待隐藏的微博
+				var authorClone;
+				if (scope === 1) {
+					// 添加隐藏提示链接
+					authorClone = author.cloneNode(false);
+					authorClone.innerHTML = '@' + author.getAttribute('nick-name');
+					authorClone.className = '';
+				}
+				var showFeedLink = document.createElement('a');
+				showFeedLink.href = 'javascript:void(0)';
+				showFeedLink.className = 'wbpTip';
+				var keywordLink = document.createElement('a');
+				keywordLink.href = 'javascript:void(0)';
+				keywordLink.className = 'wbpTipKeyword';
+				keywordLink.innerHTML = keyword || sourceKeyword;
+				if (scope === 1) {
+					showFeedLink.appendChild(document.createTextNode('本条来自'));
+					showFeedLink.appendChild(authorClone);
+					showFeedLink.appendChild(document.createTextNode('的微博因'));
+				} else if (scope === 2) {
+					showFeedLink.appendChild(document.createTextNode('本条微博因'));
+				}
+				showFeedLink.appendChild(document.createTextNode(keyword ? '内容包含“' : '来源名称包含“'));
+				showFeedLink.appendChild(keywordLink);
+				showFeedLink.appendChild(document.createTextNode('”而被隐藏，点击显示'));
+				feed.insertBefore(showFeedLink, feed.firstChild);
 				return true;
 			}
 		}
-		return false;
-	}
-	var showFeed = function () {
-		node.style.display = '';
+		// 显示微博并记录
+		feed.style.display = '';
 		if (!$options.filterPaused) {
 			if ($options.filterDupFwd && fmid) {
-				if (!$forwardFeeds[fmid]) {
-					$forwardFeeds[fmid] = [];
+				if (!forwardFeeds[fmid]) {
+					forwardFeeds[fmid] = [];
 				}
-				if (!find($forwardFeeds[fmid], mid)) {
-					$forwardFeeds[fmid].push(mid);
+				if (!$.find(forwardFeeds[fmid], mid)) {
+					forwardFeeds[fmid].push(mid);
 				}
 			}
 			if ($options.filterFlood && uid) {
-				if (!$floodFeeds[uid]) {
-					$floodFeeds[uid] = [];
+				if (!floodFeeds[uid]) {
+					floodFeeds[uid] = [];
 				}
-				if (!find($floodFeeds[uid], mid)) {
-					$floodFeeds[uid].push(mid);
+				if (!$.find(floodFeeds[uid], mid)) {
+					floodFeeds[uid].push(mid);
 				}
 			}
 		}
-	};
-	if (!content) {return false; }
-	if (scope === 2) {text = ''; } // 他人主页没有原作者链接
-	text += getFeedText(content);
-	if (isForward) {
-		// 转发内容
-		text += '////' + getFeedText(forwardContent);
-	}
-	console.log(text);
-	if ($options.filterPaused || searchKeyword(text, 'whiteKeywords')) { // 白名单检查
-		showFeed();
 		return false;
 	}
-	// 屏蔽已删除微博的转发
-	if ($options.filterDeleted && isForward && forwardContent.childNodes[1].tagName === 'EM') { // 已删除微博的转发，原文中没有原作者链接
-		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
-		return true;
-	}
-	// 屏蔽写心情微博
-	if ($options.filterFeelings && node.querySelector('dd.content > div.feelingBoxS')) {
-		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
-		return true;
-	}
-	// 屏蔽指定来源
-	if (filterSource(source, 'sourceKeywords') ||
-			(isForward && filterSource(forwardSource, 'sourceKeywords'))) {
-		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
-		return true;
-	}
-	// 反版聊（屏蔽重复转发）
-	if ($options.filterDupFwd && fmid && $forwardFeeds[fmid]) {
-		if ($forwardFeeds[fmid].length >= Number($options.maxDupFwd) && !find($forwardFeeds[fmid], mid)) {
-			console.warn('↑↑↑【被反版聊功能屏蔽】↑↑↑');
-			node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
-			return true;
+	// 过滤所有微博
+	var applyToAll = function () {
+		// 过滤所有微博
+		if ($.scope()) {
+			var feeds = document.querySelectorAll('.WB_feed_type'), i, len;
+			forwardFeeds = {}; floodFeeds = {};
+			for (i = 0, len = feeds.length; i < len; ++i) { apply(feeds[i]); }
 		}
-	}
-	// 反刷屏（屏蔽同一用户大量发帖）
-	if ($options.filterFlood && uid && $floodFeeds[uid]) {
-		if ($floodFeeds[uid] >= Number($options.maxFlood) && !find($floodFeeds[uid], mid)) {
-			console.warn('↑↑↑【被反刷屏功能屏蔽】↑↑↑');
-			node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
-			return true;
-		}
-	}	
-	// 在微博内容中搜索屏蔽关键词
-	if (searchKeyword(text, 'blackKeywords')) {
-		node.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
-		return true;
-	}
-	// 搜索t.cn短链接
-	var links = node.getElementsByTagName('A'), i, len;
-	for (i = 0, len = links.length; i < len; ++i) {
-		if (links[i].href.substring(0, 12) === 'http://t.cn/' && searchKeyword(links[i].title, 'URLKeywords')) {
-			node.style.display = 'none';
-			return true;
-		}
-	}
-	// 带提示的屏蔽（灰名单）也算作“显示”，计入反刷屏与反版聊记录
-	showFeed();
-	var keyword = searchKeyword(text, 'grayKeywords');
-	if (!keyword) {
-		// 搜索来源灰名单
-		var sourceKeyword = filterSource(source, 'sourceGrayKeywords');
-		if (!sourceKeyword && isForward) {
-			sourceKeyword = filterSource(forwardSource, 'sourceGrayKeywords');
-		}
-		if (!sourceKeyword) {
-			return false;
-		}
-	}
-	// 找到了待隐藏的微博
-	var authorClone;
-	if (scope === 1) {
-		// 添加隐藏提示链接
-		authorClone = author.cloneNode(false);
-		// 默认的用户链接中多了一个换行符和两个tab
-		authorClone.innerHTML = '@' + author.innerHTML.slice(3);
-	}
-	var showFeedLink = document.createElement('a');
-	showFeedLink.href = 'javascript:void(0)';
-	showFeedLink.className = 'wbpTip';
-	var keywordLink = document.createElement('a');
-	keywordLink.href = 'javascript:void(0)';
-	keywordLink.className = 'wbpTipKeyword';
-	keywordLink.innerHTML = keyword || sourceKeyword;
-	if (scope === 1) {
-		showFeedLink.appendChild(document.createTextNode('本条来自'));
-		showFeedLink.appendChild(authorClone);
-		showFeedLink.appendChild(document.createTextNode('的微博因'));
-	} else if (scope === 2) {
-		showFeedLink.appendChild(document.createTextNode('本条微博因'));
-	}
-	showFeedLink.appendChild(document.createTextNode(keyword ? '内容包含“' : '来源名称包含“'));
-	showFeedLink.appendChild(keywordLink);
-	showFeedLink.appendChild(document.createTextNode('”而被隐藏，点击显示'));
-	node.insertBefore(showFeedLink, node.firstChild);
-	return true;
-}
+	};
 
-// 屏蔽提示相关事件的冒泡处理
-function bindTipOnClick(node) {
-	if (!node) { node = $.select('div.feed_lists'); }
-	$.click(node, function (event) {
-		var node = event.target;
-		if (node && node.tagName === 'A') {
-			if (node.className === 'wbpTipKeyword') {
-				$settingsDialog.show();
-				event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
-			} else if (node.className === 'wbpTip') {
-				$.remove(node);
+	// 屏蔽提示相关事件的冒泡处理
+	var bindTipOnClick = function (node) { 
+		if (!node) { return; }
+		$.click(node, function (event) {
+			var node = event.target;
+			if (node && node.tagName === 'A') {
+				if (node.className === 'wbpTipKeyword') {
+					$settingsDialog.show();
+					event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
+				} else if (node.className === 'wbpTip') {
+					$.remove(node);
+				}
 			}
+		});
+	}
+	bindTipOnClick($.select('div.WB_feed'));
+	// 处理动态载入的微博
+	document.addEventListener('DOMNodeInserted', function (event) {
+		if ($.scope() === 0) { return false; }
+		var node = event.target;
+		//console.log(node);
+		if (node.tagName === 'DIV' && node.classList.contains('WB_feed_type')) {
+			// 处理动态载入的微博
+			apply(node);
+		} else if (node.tagName === 'DIV' && node.classList.contains('W_loading')) {
+			var requestType = node.getAttribute('requesttype');
+			// 仅在搜索和翻页时需要初始化反刷屏/反版聊记录
+			// 其它情况（新微博：newFeed，同页接续：lazyload）下不需要
+			if (requestType === 'search' || requestType === 'page') {
+				forwardFeeds = {}; floodFeeds = {};
+			}
+		} else if (node.tagName === 'DIV' && node.classList.contains('WB_feed')) {
+			// 微博列表作为pagelet被一次性载入
+			bindTipOnClick(node);
+			applyToAll();
 		}
-	});
-}
+	}, false);
+
+	return applyToAll;
+})();
 
 // 处理动态载入内容
 function onDOMNodeInsertion(event) {
 	if ($.scope() === 0) { return false; }
 	var node = event.target;
-	// console.log(node);
-	if (node.tagName === 'DL' && node.classList.contains('feed_list')) {
-		// 处理动态载入的微博
-		return filterFeed(node);
-	} else if (node.tagName === 'DIV' && node.classList.contains('W_loading')) {
-		var requestType = node.getAttribute('requesttype');
-		// 仅在翻页和切换分组时需要初始化反刷屏/反版聊记录
-		// 其它情况（新微博：newFeed，同页接续：lazyload）下不需要
-		if (requestType === 'search' || requestType === 'page') {
-			$forwardFeeds = {}; $floodFeeds = {};
-		}
-	} else if (node.tagName === 'DIV' && node.getElementsByClassName('nfTagB').length) {
+	if (node.tagName === 'DIV' && node.getElementsByClassName('nfTagB').length) {
 		// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
 		// 需要重新载入设置页面、按钮及刷新微博列表
 		showSettingsBtn();
-	} else if (node.tagName === 'DIV' && node.classList.contains('feed_lists')) {
- 		// 微博列表作为pagelet被一次性载入
-		bindTipOnClick(node);
-		filterFeeds();
 	} else if (node.tagName === 'DIV' && node.classList.contains('send_weibo')) {
 		// 清除在发布框中嵌入的默认话题
 		clearHotTopic();
 	}
-	return false;
+	return true;
 }
 
 // 自动检查更新
@@ -447,13 +470,13 @@ function checkUpdate(auto) {
 		url: 'http://userscripts.org/scripts/source/114087.meta.js?' + new Date().getTime(),
 		headers: {'Cache-Control': 'no-cache'},
 		onload: function (result) {
-			if (!result.responseText.match(/@version\s+(.*)/)) {return; }
+			if (!result.responseText.match(/@version\s+(.*)/)) { return; }
 			$.set('lastCheckUpdateSuccess', new Date().getTime().toString());
 			var ver = RegExp.$1;
 			if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= Number('${REV}')) {
 				// 自动检查更新且并无新版本时不必提示
 				// 注意不能使用!auto，因为作为click事件处理程序时auto是一个event对象
-				if (auto !== true) {alert('“眼不见心不烦”已经是最新版。'); }
+				if (auto !== true) { alert('“眼不见心不烦”已经是最新版。'); }
 				return;
 			}
 			var features = '';
@@ -549,15 +572,6 @@ function hideBlocks() {
 		document.head.appendChild(blockStyles);
 	}
 	blockStyles.innerHTML = cssText + '\n';
-}
-
-// 根据当前设置屏蔽微博
-function filterFeeds() {
-	if (!$.scope()) { return; }
-	// 处理非动态载入内容
-	var feeds = document.querySelectorAll('.feed_list'), i, len;
-	$forwardFeeds = {}; $floodFeeds = {};
-	for (i = 0, len = feeds.length; i < len; ++i) {filterFeed(feeds[i]); }
 }
 
 // 清除在发布框中嵌入的默认话题
@@ -817,7 +831,7 @@ var $settingsDialog = (function () {
 		bind('OK', function () {
 			$options = exportSettings();
 			$options.save();
-			filterFeeds();
+			$filter();
 			modifyPage();
 			dialog.hide();
 		});
@@ -922,8 +936,8 @@ if (loadSettings()) {
 	// 否则（如“我的评论”）等待切换回首页时再进行屏蔽（由onDOMNodeInsertion处理）
 	if ($.scope()) {
 		showSettingsBtn();
-		bindTipOnClick();
-		filterFeeds();
+		//bindTipOnClick();
+		$filter();
 	}
 
 	// 处理动态载入内容
