@@ -90,7 +90,11 @@
 	font-weight: bold;
 	margin-right: 15px;
 }
-.wbpSettings a.W_btn_a + a.W_btn_a {
+.wbpToolBtns {
+	width: 105px;
+	text-align: right;
+}
+.wbpToolBtns a + a {
 	margin-left: 5px;
 }
 .wbpListWrapper {
