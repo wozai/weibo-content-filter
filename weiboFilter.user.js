@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		支持新版微博(V5)；增加始终显示所有分组的功能；增加自定义样式功能；可以调整阅读模式的宽度
+// @features		支持新版微博(V5)；增加屏蔽用户的功能；增加始终显示所有分组的功能；增加自定义样式功能；可以调整阅读模式的宽度
 // @version			1.0b2
 // @revision		65
 // @author			@富平侯
@@ -96,6 +96,7 @@ Options.prototype = {
 		URLKeywords : ['keyword'],
 		sourceKeywords : ['keyword'],
 		sourceGrayKeywords : ['keyword'],
+		userBlacklist : ['array'],
 		tipBackColor : ['string', '#FFD0D0'],
 		tipTextColor : ['string', '#FF8080'],
 		readerMode : ['bool'],
@@ -228,27 +229,26 @@ var $update = (function () {
 
 var $dialog = (function () {
 	var shown = false, dialog, content;
-
 	var getDom = function (node) {
 		return content.getDom(node);
 	};
 	var bind = function (node, func, event) {
 		$.STK.core.evt.addEvent(content.getDom(node), event || 'click', func);
 	};
-
 	// 从显示列表建立关键词数组
-	var getKeywords = function (id) {
-		if (!getDom(id).hasChildNodes()) {return []; }
+	var getKeywords = function (id, attr) {
+		if (!getDom(id).hasChildNodes()) { return []; }
 		var keywords = getDom(id).childNodes, list = [], i, len;
 		for (i = 0, len = keywords.length; i < len; ++i) {
-			if (keywords[i].tagName === 'A') {list.push(keywords[i].innerHTML); }
+			if (keywords[i].tagName === 'A') {
+				list.push(attr ? keywords[i].getAttribute(attr) : keywords[i].innerHTML);
+			}
 		}
 		return list;
 	};
-
 	// 将关键词添加到显示列表
 	var addKeywords = function (id, list) {
-		var keywords = list instanceof Array ? list : list.split(' '), i, len, malformed = [];
+		var keywords = list instanceof Array ? list : getDom(list).value.split(' '), i, len, malformed = [];
 		for (i = 0, len = keywords.length; i < len; ++i) {
 			var currentKeywords = ' ' + getKeywords(id).join(' ') + ' ', keyword = keywords[i];
 			if (keyword && currentKeywords.indexOf(' ' + keyword + ' ') === -1) {
@@ -271,12 +271,60 @@ var $dialog = (function () {
 				getDom(id).appendChild(keywordLink);
 			}
 		}
-		if (malformed.length > 0) {
-			alert('下列正则表达式无效：\n' + malformed.join('\n'));
+		if (!(list instanceof Array)) {
+			// 在文本框中显示无效的正则表达式并闪烁提示
+			getDom(list).value = malformed.join(' ');
+			if (malformed.length) {
+				$.STK.common.extra.shine(getDom(list));
+			}
 		}
-		return malformed.join(' ');
 	};
-
+	// 将用户添加到屏蔽用户列表
+	var addUsers = function (id, list) {
+		var useIDs = list instanceof Array, div = getDom(id);
+		// 整个列表只载入一次
+		if (useIDs && div.innerHTML) { return; }
+		var users = useIDs ? list : getDom(list).value.split(' '), i, len, 
+			unprocessed = users.length, unfound = [];
+		var searcher = $.STK.common.trans.relation.getTrans('userCard', { onComplete : 
+			function (result, data) {
+				var link = document.createElement('a'), img;
+				if (result.code === '100000') { // 成功
+					img = result.data.match(/<img[^>]+>/)[0];
+					if (!useIDs) { data.id = img.match(/uid="([^"]+)"/)[1]; }
+					// 防止重复添加
+					if (!$.find(getKeywords(id, 'uid'), data.id)) {
+						link.innerHTML = '<img ' + img.match(/src="[^"]+"/)[0] + ' /><br />' + img.match(/title="([^"]+)"/)[1];
+					}
+				} else if (useIDs) {
+					// 载入设置时，即使出现错误（如用户被删除），仍然添加链接
+					link.innerHTML = '错误';
+				} else {
+					unfound.push(data.name);
+				}
+				if (--unprocessed === 0) {
+					// 全部处理完成，在文本框中显示未被添加的用户并闪烁提示
+					getDom(list).value = unfound.join(' ');
+					if (unfound.length) {
+						$.STK.common.extra.shine(getDom(list));
+					}
+				}
+				if (link.innerHTML) {
+					link.setAttribute('uid', data.id);
+					link.setAttribute('action-type', 'remove');
+					div.appendChild(link);
+				}
+			} });
+		for (i = 0, len = users.length; i < len; ++i) {
+			var request = { type : 1 };
+			if (useIDs) {
+				request.id = users[i];
+			} else {
+				request.name = users[i];
+			}
+			searcher.request(request);
+		}
+	};
 	// 返回当前设置（可能未保存）
 	var exportSettings = function () {
 		var options = new Options(), option;
@@ -304,6 +352,7 @@ var $dialog = (function () {
 				break;
 			}
 		}
+		options.userBlacklist = getKeywords('userBlacklist', 'uid');
 		var i, len;
 		for (i = 0, len = $page.modules.length; i < len; ++i) {
 			options.hideMods[$page.modules[i][0]] = getDom('hide' + $page.modules[i][0]).checked;
@@ -311,7 +360,6 @@ var $dialog = (function () {
 		getDom('settingsString').value = options.toString(true);
 		return options;
 	};
-
 	// 更新设置窗口内容，exportSettings()的反过程
 	var importSettings = function (options) {
 		var option;
@@ -330,6 +378,7 @@ var $dialog = (function () {
 				break;
 			}
 		}
+		getDom('userBlacklist').innerHTML = '';
 		var tipBackColor = getDom('tipBackColor').value,
 			tipTextColor = getDom('tipTextColor').value,
 			tipSample = getDom('tipSample');
@@ -344,7 +393,6 @@ var $dialog = (function () {
 		}
 		getDom('settingsString').value = options.toString(true);
 	};
-
 	// 创建设置窗口
 	var createDialog = function () {
 		dialog = $.STK.ui.dialog({isHold: true});
@@ -362,7 +410,7 @@ var $dialog = (function () {
 		var events = $.STK.core.evt.delegatedEvent(content.getInner());
 		// 添加关键词按钮点击事件
 		events.add('add', 'click', function (action) {
-			getDom(action.data.text).value = addKeywords(action.data.list, getDom(action.data.text).value);
+			addKeywords(action.data.list, action.data.text);
 		});
 		// 清空关键词按钮点击事件
 		events.add('clear', 'click', function (action) {
@@ -371,6 +419,10 @@ var $dialog = (function () {
 		// 删除关键词事件
 		events.add('remove', 'click', function (action) {
 			$.remove(action.el);
+		});
+		// 添加用户按钮点击事件
+		events.add('addUser', 'click', function (action) {
+			addUsers(action.data.list, action.data.text);
 		});
 		// 复选框标签点击事件
 		bind('inner', function (event) {
@@ -407,6 +459,8 @@ var $dialog = (function () {
 		});
 		// 点击“设置导入/导出”标签时更新内容
 		bind('tabHeaderSettings', exportSettings);
+		// 点击“用户”标签时载入用户黑名单
+		bind('tabHeaderUser', function () { addUsers('userBlacklist', $options.userBlacklist); });
 		// 更改白名单模式时，自动反选右边栏相关模块
 		bind('rightModWhitelist', function () {
 			var i, len, item;
@@ -453,21 +507,23 @@ var $dialog = (function () {
 			shown = false;
 		});
 	};
-
-	return {
-		// 显示设置窗口
-		show : function () {
-			if (!dialog) {
-				createDialog();
-			}
-			shown = true;
-			importSettings($options);
-			dialog.show().setMiddle();
-		},
-		isShown : function () {
-			return shown;
+	// 显示设置窗口
+	var show = function () {
+		if (!dialog) {
+			createDialog();
 		}
+		shown = true;
+		importSettings($options);
+		if (getDom('tabHeaderUser').classList.contains('current')) {
+			addUsers('userBlacklist', $options.userBlacklist);
+		}
+		dialog.show().setMiddle();
 	};
+	show.shown = function () {
+		return shown;
+	};
+
+	return show;
 })();
 
 // 关键词过滤器
@@ -549,6 +605,12 @@ var $filter = (function () {
 			// 屏蔽已删除微博的转发
 			if ($options.filterDeleted && isForward && feed.querySelector('.WB_media_expand > .WB_deltxt')) {
 				console.warn('↑↑↑【已删除微博的转发被屏蔽】↑↑↑');
+				return true;
+			}
+			// 用户黑名单
+			if ((scope === 1 && author && $.find($options.userBlacklist, author.getAttribute('usercard').match(/id=(\d+)/)[1]))
+				|| (isForward && fauthor && $.find($options.userBlacklist, fauthor.getAttribute('usercard').match(/id=(\d+)/)[1]))) {
+				console.warn('↑↑↑【被用户黑名单屏蔽】↑↑↑');
 				return true;
 			}
 			// 屏蔽写心情微博
@@ -668,7 +730,7 @@ var $filter = (function () {
 			var node = event.target;
 			if (node && node.tagName === 'A') {
 				if (node.className === 'wbpTipKeyword') {
-					$dialog.show();
+					$dialog();
 					event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
 				} else if (node.className === 'wbpTip') {
 					$.remove(node);
@@ -740,7 +802,7 @@ var $page = (function () {
 			tab.id = 'wbpShowSettings';
 			tab.className = 'item';
 			tab.innerHTML = '<a href="javascript:void(0)" class="item_link S_func1">眼不见心不烦</a>';
-			$.click(tab, $dialog.show);
+			$.click(tab, $dialog);
 			groups.appendChild(tab);
 		}
 		return true;
@@ -778,8 +840,8 @@ var $page = (function () {
 				floatBtn.id = 'wbpFloatBtn';
 				floatBtn.style.bottom = '75px';
 				floatBtn.style.height = '24px';
-				$.click(floatBtn, $dialog.show);
-				scrollToTop.parentNode.appendChild(floatBtn);			
+				$.click(floatBtn, $dialog);
+				scrollToTop.parentNode.appendChild(floatBtn);
 				window.addEventListener('scroll', scrollDelayTimer, false);
 				scrollDelayTimer();
 				return true;
@@ -897,6 +959,46 @@ var $page = (function () {
 		}
 		styles.innerHTML = cssText + '\n';
 	};
+	// 在用户信息气泡上添加屏蔽链接
+	var modifyNamecard = function (node) {
+		// 获得关注链接
+		var userData = node.querySelector('ul.userdata a'),
+			toolbar = node.querySelector('.links > p');
+		if (!userData || !toolbar) { return false; }
+		// “关注”、“粉丝”和“微博”链接中一定使用数字id
+		var uid = userData.pathname.split('/')[1];
+		if (uid === $.uid) { return false; }
+		// 创建分隔符（如果需要）
+		if (toolbar.childElementCount) {
+			var vline = document.createElement('span');
+			vline.className = 'W_vline';
+			vline.innerHTML = '|';
+			toolbar.appendChild(vline);
+		}
+		// 创建操作链接
+		var link = document.createElement('a');
+		link.href = 'javascript:void(0)';
+		link.innerHTML = $.find($options.userBlacklist, uid) ? '解除屏蔽' : '屏蔽';
+		$.click(link, function () {
+			// 切换屏蔽状态
+			var l = $options.userBlacklist.length, i;
+			for (i = 0; i < l; ++i) {
+				if ($options.userBlacklist[i] === uid) {
+					$options.userBlacklist.splice(i, 1);
+					break;
+				}
+			}
+			if (i === l) { $options.userBlacklist.push(uid); }
+			$options.save();
+			$filter();
+			// 回溯到顶层，关闭信息气球
+			while (node.className !== 'W_layer') {
+				node = node.parentNode;
+			}
+			node.style.display = 'none';
+		});
+		toolbar.appendChild(link);
+	};
 	// 根据当前设置修改页面
 	var apply = function () {
 		// 极简阅读模式
@@ -922,22 +1024,23 @@ var $page = (function () {
 	apply();
 	// 处理动态载入内容
 	document.addEventListener('DOMNodeInserted', function onDOMNodeInsertion(event) {
-		if ($.scope() === 0) { return false; }
-		var node = event.target;
+		var scope = $.scope(), node = event.target;
 		//if (node.tagName !== 'SCRIPT') { console.log(node); }
-		if (node.tagName === 'DIV' && node.classList.contains('group_read')) {
+		if (scope && node.tagName === 'DIV' && node.classList.contains('group_read')) {
 			// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
 			// 需要重新载入设置按钮
 			showSettingsBtn();
-		} else if (node.tagName === 'DIV' && node.classList.contains('send_weibo')) {
+		} else if (scope === 1 && node.tagName === 'DIV' && node.classList.contains('send_weibo')) {
 			// 清除在发布框中嵌入的默认话题
 			clearHotTopic();
+		} else if (node.tagName === 'DIV' && node.classList.contains('name_card')) {
+			// 用户信息气球
+			modifyNamecard(node);
 		}
-		return true;
 	}, false);
 	// 检测按键，开关极简阅读模式
 	document.addEventListener('keyup', function onKeyPress(event) {
-		if ($dialog.isShown()) { return; }
+		if ($dialog.shown()) { return; }
 		if ($.scope() === 1 && event.keyCode === 119) {
 			$options.readerMode = !$options.readerMode;
 			$options.save();

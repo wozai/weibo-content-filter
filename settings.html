@@ -17,7 +17,7 @@
 <div node-type="tabHeaders" class="wbpTabHeaders">
 <a tab="tabKeywords" href="javascript:void(0);" class="current">关键词</a>
 <a tab="tabLinks" href="javascript:void(0);">链接地址</a>
-<a tab="tabUser" href="javascript:void(0);">用户</a>
+<a node-type="tabHeaderUser" tab="tabUser" href="javascript:void(0);">用户</a>
 <a tab="tabSource" href="javascript:void(0);">来源</a>
 <a tab="tabAdvanced" href="javascript:void(0);">高级</a>
 <a tab="tabModules" href="javascript:void(0);">版面模块</a>
@@ -145,12 +145,28 @@
 </div>
 </div>
 <div node-type="tabUser" style="display: none">
-<p>新浪微博官方已提供<a href="http://account.weibo.com/set/feed" target="_blank">屏蔽指定用户的功能</a>，而且在所有浏览器和移动客户端上都有效。但是，如果不开通<a href="http://vip.weibo.com/" target="_blank">微博会员</a>，最多只能屏蔽5个用户，而且只能屏蔽已关注的用户，不能屏蔽转发微博原文的发布者。</p>
-<p>您可以使用“眼不见心不烦”的关键词屏蔽功能来免费、无限制地屏蔽用户。将要屏蔽的用户名（<span style="color: red">包括前面的@</span>）设为屏蔽关键词即可。</p>
+<p>如果一条微博的发布者或转发原文的作者为下列用户之一，微博将被屏蔽。除了在此处添加屏蔽用户，您还可以将鼠标悬停在用户链接上，在弹出的信息气球上点击“屏蔽”。</p>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td>
+<div class="wbpInput">
+<input type="text" node-type="userBlacklistNew" class="input" placeholder="多个用户名用空格隔开；不要加上前面的@；不区分大小写">
+</div>
+</td>
+<td class="wbpToolBtns">
+<a href="javascript:void(0);" class="W_btn_b" action-type="addUser" action-data="list=userBlacklist&text=userBlacklistNew"><span>添加</span></a>
+<a href="javascript:void(0);" class="W_btn_b" action-type="clear" action-data="list=userBlacklist"><span>清空</span></a>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="wbpListWrapper" style="max-height: 230px">
+<div node-type="userBlacklist" class="wbpUserList wbpBlackKeywordsList"></div>
+</div>
 </div>
 <div node-type="tabSource" style="display: none">
-<p>新浪微博官方已提供<a href="http://account.weibo.com/set/feedsource" target="_blank">屏蔽指定来源的功能</a>，而且在所有浏览器和移动客户端上都有效。但是，必须开通<a href="http://vip.weibo.com/" target="_blank">微博会员</a>才能使用此功能，而且对转发微博原文的来源无效。</p>
-<p>您可以使用“眼不见心不烦”来免费、无限制地屏蔽来源。如果一条微博的来源（包括转发的原微博的来源）名称中包含指定关键词，微博将被屏蔽。如将“时光机”设为关键词可屏蔽所有来自<a href="http://time.xuapp.com/" target="_blank">时光机</a>或<a href="http://weibo.pp.cc/time/" target="_blank">皮皮时光机</a>等应用的微博。</p>
+<p>如果一条微博的来源（包括转发原文的来源）名称中包含指定关键词，微博将被屏蔽。如将“时光机”设为关键词可屏蔽所有来自<a href="http://time.xuapp.com/" target="_blank">时光机</a>或<a href="http://weibo.pp.cc/time/" target="_blank">皮皮时光机</a>等应用的微博。</p>
 <div class="wbpKeywordBlock">
 <em>黑名单</em>来源名称包含下列关键词的微博将被屏蔽
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
