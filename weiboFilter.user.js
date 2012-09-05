@@ -4,8 +4,8 @@
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
 // @features		支持新版微博(V5)；可以调整阅读模式的宽度
-// @version			1.0.0b1
-// @revision		64
+// @version			1.0b2
+// @revision		65
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
 // @include			http://weibo.com/*

@@ -19,9 +19,10 @@
 <a tab="tabLinks" href="javascript:void(0);">链接地址</a>
 <a tab="tabUser" href="javascript:void(0);">用户</a>
 <a tab="tabSource" href="javascript:void(0);">来源</a>
-<a tab="tabModules" href="javascript:void(0);">版面模块</a>
 <a tab="tabAdvanced" href="javascript:void(0);">高级</a>
-<a node-type="tabHeaderSettings" tab="tabSettings" href="javascript:void(0);">设置导入/导出</a>
+<a tab="tabModules" href="javascript:void(0);">版面模块</a>
+<a tab="tabModify" href="javascript:void(0);">改造版面</a>
+<a node-type="tabHeaderSettings" tab="tabSettings" href="javascript:void(0);">设置</a>
 </div>
 <div node-type="inner" style="float: right; width: 440px">
 <div node-type="tabKeywords">
@@ -193,6 +194,26 @@
 </div>
 </div>
 </div>
+<div node-type="tabAdvanced" style="display: none">
+<p>注意：对于所有屏蔽微博的功能，白名单具有最高优先级；如果一条微博包含白名单中的关键词，则<span style="color: red">一定不会</span>被屏蔽。</p>
+<p><input type="checkbox" node-type="filterPaused"><label><span style="color: red">暂停屏蔽</span>：选中时暂时停止屏蔽微博</label></p>
+<p><input type="checkbox" node-type="filterDeleted"><label>屏蔽已删除微博的转发</label></p>
+<p><input type="checkbox" node-type="filterFeelings"><label>屏蔽写心情微博</label></p>
+<div style="margin-top: 8px">
+<input type="checkbox" node-type="filterDupFwd"><label>反版聊：同一条微博的转发最多显示</label>
+<div class="wbpInput wbpInlineInput">
+<input type="text" node-type="maxDupFwd" class="input">
+</div>
+条
+</div>
+<div style="margin-top: 5px">
+<input type="checkbox" node-type="filterFlood"><label>反刷屏：来自同一用户的微博最多显示</label>
+<div class="wbpInput wbpInlineInput">
+<input type="text" node-type="maxFlood" class="input">
+</div>
+条
+</div>
+</div>
 <div node-type="tabModules" class="wbpTabModules" style="display: none">
 <p>请选择要屏蔽的版面内容。</p>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="line-height: 24px; margin-top: 15px">
@@ -249,7 +270,7 @@
 <a href="javascript:void(0);" class="W_btn_b" node-type="hideInvert" style="margin-left: 5px"><span>反选</span></a>
 </p>
 </div>
-<div node-type="tabAdvanced" style="display: none">
+<div node-type="tabModify" style="display: none">
 <p><input type="checkbox" node-type="readerMode"><label><span style="color: red">极简阅读模式</span>：去掉所有无关模块，可在个人主页按F8切换</label></p>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 3px">
 <tbody>
@@ -269,9 +290,7 @@
 </tr>
 </tbody>
 </table>
-<p><input type="checkbox" node-type="autoUpdate"><label>每周自动检查更新</label></p>
-<p><input type="checkbox" node-type="floatBtn"><label>浮动设置按钮（“返回顶部”浮动按钮下方）</label></p>
-<p><input type="checkbox" node-type="clearHotTopic"><label title="关闭此选项后需要刷新页面生效">清除微博发布框中的默认话题</label></p>
+<p style="margin-top: 8px"><input type="checkbox" node-type="clearHotTopic"><label title="关闭此选项后需要刷新页面生效">清除微博发布框中的默认话题</label></p>
 <div style="margin-top: 8px">
 覆盖
 <input type="checkbox" node-type="overrideMySkin" style="margin: 0 2px 0 8px"><label>我的首页</label>
@@ -282,27 +301,11 @@
 </div>
 （仅自己可见）
 </div>
-<p style="margin-top: 20px">注意：对于所有屏蔽微博的功能，白名单具有最高优先级；如果一条微博包含白名单中的关键词，则<span style="color: red">一定不会</span>被屏蔽。</p>
-<p><input type="checkbox" node-type="filterPaused"><label><span style="color: red">暂停屏蔽</span>：选中时暂时停止屏蔽微博</label></p>
-<p><input type="checkbox" node-type="filterDeleted"><label>屏蔽已删除微博的转发</label></p>
-<p><input type="checkbox" node-type="filterFeelings"><label>屏蔽写心情微博</label></p>
-<div style="margin-top: 8px">
-<input type="checkbox" node-type="filterDupFwd"><label>反版聊：同一条微博的转发最多显示</label>
-<div class="wbpInput wbpInlineInput">
-<input type="text" node-type="maxDupFwd" class="input">
-</div>
-条
-</div>
-<div style="margin-top: 5px">
-<input type="checkbox" node-type="filterFlood"><label>反刷屏：来自同一用户的微博最多显示</label>
-<div class="wbpInput wbpInlineInput">
-<input type="text" node-type="maxFlood" class="input">
-</div>
-条
-</div>
 </div>
 <div node-type="tabSettings" style="display: none">
-<div class="clearfix">
+<p><input type="checkbox" node-type="autoUpdate"><label>每周自动检查更新</label></p>
+<p><input type="checkbox" node-type="floatBtn"><label>浮动设置按钮（“返回顶部”浮动按钮下方）</label></p>
+<div class="clearfix" style="margin-top: 8px">
 <div style="float: left; width: 385px">
 <p>当前账号的设置信息在下列文本框中，您可以将其复制到其它位置保存。需要导入设置时，请将设置信息粘贴到文本框中，然后点击“导入”。</p>
 </div>
