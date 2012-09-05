@@ -263,14 +263,14 @@
 </tr>
 </tbody>
 </table>
-<p style="margin-top: 10px"><input type="checkbox" node-type="hideCustom"><label><span style="color: red">自定义屏蔽</span>：输入要屏蔽的版面内容（CSS选择器），每行一个，</label><a href="http://code.google.com/p/weibo-content-filter/wiki/FAQ#如何屏蔽自定义模块？" target="_blank">点此查看示例</a></p>
-<textarea node-type="customMods" rows="5" style="margin-top: 5px"></textarea>
 <p style="margin-top: 15px">
 <a href="javascript:void(0);" class="W_btn_b" node-type="hideAll"><span>全选</span></a>
 <a href="javascript:void(0);" class="W_btn_b" node-type="hideInvert" style="margin-left: 5px"><span>反选</span></a>
 </p>
 </div>
 <div node-type="tabModify" style="display: none">
+<p><input type="checkbox" node-type="clearHotTopic"><label title="关闭此选项后需要刷新页面生效">清除微博发布框中的默认话题</label></p>
+<p><input type="checkbox" node-type="showAllGroups"><label>始终显示所有分组</label></p>
 <p><input type="checkbox" node-type="readerMode"><label><span style="color: red">极简阅读模式</span>：去掉所有无关模块，可在个人主页按F8切换</label></p>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 3px">
 <tbody>
@@ -290,7 +290,6 @@
 </tr>
 </tbody>
 </table>
-<p style="margin-top: 8px"><input type="checkbox" node-type="clearHotTopic"><label title="关闭此选项后需要刷新页面生效">清除微博发布框中的默认话题</label></p>
 <div style="margin-top: 8px">
 覆盖
 <input type="checkbox" node-type="overrideMySkin" style="margin: 0 2px 0 8px"><label>我的首页</label>
@@ -301,6 +300,8 @@
 </div>
 （仅自己可见）
 </div>
+<p style="margin-top: 10px"><input type="checkbox" node-type="useCustomStyles"><label><span style="color: red">自定义样式</span>（CSS）：可用于屏蔽模块、改造版面，</label><a href="http://code.google.com/p/weibo-content-filter/wiki/FAQ#如何屏蔽自定义模块？" target="_blank">点此查看示例</a></p>
+<textarea node-type="customStyles" rows="6" style="margin-top: 5px"></textarea>
 </div>
 <div node-type="tabSettings" style="display: none">
 <p><input type="checkbox" node-type="autoUpdate"><label>每周自动检查更新</label></p>

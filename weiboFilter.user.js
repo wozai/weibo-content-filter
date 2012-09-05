@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		支持新版微博(V5)；可以调整阅读模式的宽度
+// @features		支持新版微博(V5)；增加始终显示所有分组的功能；增加自定义样式功能；可以调整阅读模式的宽度
 // @version			1.0b2
 // @revision		65
 // @author			@富平侯
@@ -102,6 +102,7 @@ Options.prototype = {
 		readerModeWidth : ['string', 750],
 		readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
 		clearHotTopic : ['bool'],
+		showAllGroups : ['bool'],
 		overrideMySkin : ['bool'],
 		overrideOtherSkin : ['bool'],
 		skinID : ['string', 'skinvip001'],
@@ -116,7 +117,8 @@ Options.prototype = {
 		autoUpdate : ['bool', true],
 		floatBtn : ['bool', true],
 		rightModWhitelist : ['bool'],
-		customMods : ['array'],
+		useCustomStyles : ['bool', true],
+		customStyles : ['string'],
 		hideMods : ['object']
 	},
 	// 转换为字符串
@@ -306,11 +308,6 @@ var $dialog = (function () {
 		for (i = 0, len = $page.modules.length; i < len; ++i) {
 			options.hideMods[$page.modules[i][0]] = getDom('hide' + $page.modules[i][0]).checked;
 		}
-		var modules = getDom('customMods').value.split('\n'), module;
-		for (i = 0, len = modules.length; i < len; ++i) {
-			module = modules[i].trim();
-			if (module) { options.customMods.push(module); }
-		}
 		getDom('settingsString').value = options.toString(true);
 		return options;
 	};
@@ -345,7 +342,6 @@ var $dialog = (function () {
 				getDom('hide' + $page.modules[i][0]).checked = (options.hideMods[$page.modules[i][0]] === true);
 			}
 		}
-		getDom('customMods').value = options.customMods ? options.customMods.join('\n') : '';
 		getDom('settingsString').value = options.toString(true);
 	};
 
@@ -733,8 +729,7 @@ var $page = (function () {
 			['MemberIcon', '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)'],
 			['VerifyIcon', '.approve:not(.wbpShow), .approve_co:not(.wbpShow)'],
 			['DarenIcon', '.ico_club:not(.wbpShow)'],
-			['VgirlIcon', '.ico_vlady:not(.wbpShow)'],
-			['Custom'] // 必须为最后一项
+			['VgirlIcon', '.ico_vlady:not(.wbpShow)']
 		];
 	// 显示设置链接
 	var showSettingsBtn = function () {
@@ -749,7 +744,7 @@ var $page = (function () {
 			groups.appendChild(tab);
 		}
 		return true;
-	}
+	};
 	// 应用浮动按钮设置
 	var toggleFloatSettingsBtn = (function () {
 		var floatBtn = null, lastTime = null, lastTimerID = null;
@@ -816,7 +811,7 @@ var $page = (function () {
 		} else if (readerModeStyles) {
 			$.remove(readerModeStyles);
 		}
-	}
+	};
 	// 覆盖当前模板设置
 	var overrideSkin = function () {
 		var formerStyle = $('custom_style') || $('skin_transformers'),
@@ -840,11 +835,10 @@ var $page = (function () {
 			$.remove(skinCSS);
 			formerStyle.disabled = false;
 		}
-	}
+	};
 	// 屏蔽模块
 	var hideModules = function () {
 		var cssText = '', i, len = modules.length;
-		modules[len - 1][1] = $options.customMods.join(', '); // 自定义屏蔽
 		if ($options.rightModWhitelist) {
 			// 右边栏白名单模式下，默认屏蔽右边栏除导航栏以外的所有模块
 			cssText = 'body.B_index div.W_main_r > div { display: none }\n'
@@ -868,7 +862,7 @@ var $page = (function () {
 			document.head.appendChild(styles);
 		}
 		styles.innerHTML = cssText + '\n';
-	}
+	};
 	// 清除在发布框中嵌入的默认话题
 	var clearHotTopic = function () {
 		if ($options.clearHotTopic && $.scope() === 1) {
@@ -885,7 +879,24 @@ var $page = (function () {
 				inputBox.classList.remove('topic_color');
 			}
 		}
-	}
+	};
+	// 自定义样式
+	var customStyles = function () {
+		var cssText = '', styles = $('wbpCustomStyles');
+		if (!styles) {
+			styles = document.createElement('style');
+			styles.type = 'text/css';
+			styles.id = 'wbpCustomStyles';
+			document.head.appendChild(styles);
+		}
+		if ($options.showAllGroups) {
+			cssText += '#pl_leftnav_group div[node-type="moreList"] { display: block !important } #pl_leftnav_group .levmore { display: none }\n';
+		}
+		if ($options.useCustomStyles) {
+			cssText += $options.customStyles;
+		}
+		styles.innerHTML = cssText + '\n';
+	};
 	// 根据当前设置修改页面
 	var apply = function () {
 		// 极简阅读模式
@@ -900,6 +911,8 @@ var $page = (function () {
 		clearHotTopic();
 		// 覆盖当前模板设置
 		overrideSkin();
+		// 应用自定义CSS
+		customStyles();
 	};
 
 	// IFRAME载入不会影响head中的CSS，只添加一次即可
