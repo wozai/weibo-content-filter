@@ -287,7 +287,11 @@
 <div node-type="tabModify" style="display: none">
 <p><input type="checkbox" node-type="clearHotTopic"><label title="关闭此选项后需要刷新页面生效">清除微博发布框中的默认话题</label></p>
 <p><input type="checkbox" node-type="showAllGroups"><label>始终显示所有分组</label></p>
-<p><input type="checkbox" node-type="readerMode"><label><span style="color: red">极简阅读模式</span>：去掉所有无关模块，可在个人主页按F8切换</label></p>
+<div style="margin-top: 15px">
+在
+<input type="checkbox" node-type="readerModeIndex" style="margin: 0 2px 0 8px"><label>我的首页</label>
+<input type="checkbox" node-type="readerModeProfile" style="margin: 0 2px 0 8px"><label style="margin-right: 8px">用户主页</label>
+启用极简阅读模式
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 3px">
 <tbody>
 <tr>
@@ -306,10 +310,11 @@
 </tr>
 </tbody>
 </table>
-<div style="margin-top: 8px">
+</div>
+<div style="margin-top: 10px">
 覆盖
 <input type="checkbox" node-type="overrideMySkin" style="margin: 0 2px 0 8px"><label>我的首页</label>
-<input type="checkbox" node-type="overrideOtherSkin" style="margin: 0 2px 0 8px"><label style="margin-right: 8px">他人主页</label>
+<input type="checkbox" node-type="overrideOtherSkin" style="margin: 0 2px 0 8px"><label style="margin-right: 8px">用户主页</label>
 模板设置为
 <div class="wbpInput wbpInlineInput" style="width: 80px" title="普通模板为“skin+三位数字编号”，如skin012\n会员专属模板为“skinvip+三位数字编号”，如skinvip012\n默认模板为default">
 <input type="text" node-type="skinID" class="input">
