@@ -2,8 +2,8 @@
 // @name			眼不见心不烦（新浪微博）
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
-// @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		支持新版微博(V5)；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；增加始终显示所有分组的功能；增加自定义样式功能；可以调整阅读模式的宽度
+// @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
+// @features		支持新版微博(V5)；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
 // @version			1.0b2
 // @revision		65
 // @author			@富平侯
@@ -118,7 +118,6 @@ Options.prototype = {
 		maxFlood : ['string', 5],
 		autoUpdate : ['bool', true],
 		floatBtn : ['bool', true],
-		rightModWhitelist : ['bool'],
 		useCustomStyles : ['bool', true],
 		customStyles : ['string'],
 		hideMods : ['object']
@@ -462,20 +461,10 @@ var $dialog = (function () {
 		bind('tabHeaderSettings', exportSettings);
 		// 点击“用户”标签时载入用户黑名单
 		bind('tabHeaderUser', function () { addUsers('userBlacklist', $options.userBlacklist); });
-		// 更改白名单模式时，自动反选右边栏相关模块
-		bind('rightModWhitelist', function () {
-			var i, len, item;
-			for (i = 0, len = $page.modules.length; i < len; ++i) {
-				if ($page.modules[i][2]) {
-					item = getDom('hide' + $page.modules[i][0]);
-					item.checked = !item.checked;
-				}
-			}
-		}, 'change');
 		bind('hideAll', function () {
-			var i, len, whitelistMode = getDom('rightModWhitelist').checked;
+			var i, len;
 			for (i = 0, len = $page.modules.length; i < len; ++i) {
-				getDom('hide' + $page.modules[i][0]).checked = !(whitelistMode && $page.modules[i][2]);
+				getDom('hide' + $page.modules[i][0]).checked = true;
 			}
 		});
 		bind('hideInvert', function () {
@@ -774,13 +763,14 @@ var $filter = (function () {
 var $page = (function () {
 	var modules = [ // 模块屏蔽设置
 			['Ads', '#plc_main [id^="pl_rightmod_ads"], div[ad-data]'],
+			['RightSidebar', 'body:not(.S_profile) .W_main { width: 750px } .W_main_a { width: 600px } body:not(.S_profile) .W_gotop { margin-left: 375px } #Box_right'],
 			['Stats', '.B_index ul.user_atten > li, .B_profile ul.user_atten'],
-			['InterestUser', '#trustPagelet_recom_interestv5', true],
-			['Promotion', '#pl_rightmod_yunying', true],
-			['Topic', '#trustPagelet_zt_hottopicv5', true],
-			['Member', '#trustPagelet_recom_memberv5', true],
-			['AllInOne', '#trustPagelet_recom_allinonev5', true],
-			['Notice', '#pl_rightmod_noticeboard', true],
+			['InterestUser', '#trustPagelet_recom_interestv5'],
+			['Promotion', '#pl_rightmod_yunying'],
+			['Topic', '#trustPagelet_zt_hottopicv5'],
+			['Member', '#trustPagelet_recom_memberv5'],
+			['AllInOne', '#trustPagelet_recom_allinonev5'],
+			['Notice', '#pl_rightmod_noticeboard'],
 			['Footer', 'div.global_footer'],
 			['Activity', '#pl_content_biztips'],
 			['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
@@ -874,21 +864,21 @@ var $page = (function () {
 					+ '.B_index #pl_content_top, .B_index .WB_global_nav { top: -40px }\n'
 					+ '.B_index { background-position-y: -40px }\n'
 					+ '.B_index .W_miniblog { padding-top: 20px; background-position-y: -40px }\n'
-					+ '.B_index .W_main { width: ' + width + 'px; background: ' + $options.readerModeBackColor + ' }\n'
-					+ '.B_index .W_main_a { width: auto }\n'
+					+ '.B_index .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n'
+					+ '.B_index .W_main_a { width: auto !important }\n'
 					+ '.B_index #Box_center, .B_index .WB_feed .repeat .input textarea { width: 100% }\n'
 					+ '.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n'
-					+ '.B_index .W_gotop { margin-left: ' + (width/2) + 'px }\n';
+					+ '.B_index .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 			}
 			if ($options.readerModeProfile) {
 				readerModeStyles.innerHTML += '.B_profile #plc_profile_header, .B_profile #pl_profile_nav, .B_profile .group_read, .B_profile .W_main_2r, .B_profile .group_read, .B_profile .global_footer { display: none }\n'
 					+ '.B_profile #pl_content_top, .B_profile .WB_global_nav { top: -40px }\n'
 					+ '.B_profile { background-position-y: -40px }\n'
 					+ '.B_profile .W_miniblog { padding-top: 20px; background-position-y: -40px }\n'
-					+ '.B_profile .W_main { width: ' + width + 'px; background: ' + $options.readerModeBackColor + ' }\n'
+					+ '.B_profile .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n'
 					+ '.B_profile .W_main_c { padding-top: 0; width: 100% }\n'
 					+ '.B_profile .WB_feed .repeat .input textarea { width: 100% }\n'
-					+ '.B_profile .W_gotop { margin-left: ' + (width/2) + 'px }\n';
+					+ '.B_profile .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 			}
 		} else if (readerModeStyles) {
 			$.remove(readerModeStyles);
@@ -921,14 +911,9 @@ var $page = (function () {
 	// 屏蔽模块
 	var hideModules = function () {
 		var cssText = '', i, len = modules.length;
-		if ($options.rightModWhitelist) {
-			// 右边栏白名单模式下，默认屏蔽右边栏除导航栏以外的所有模块
-			cssText = 'body.B_index div.W_main_r > div { display: none }\n'
-				+ '#pl_content_setskin, #pl_rightmod_myinfo { display: block }\n';
-		}
 		for (i = 0; i < len; ++i) {
 			if ($options.hideMods[modules[i][0]] && modules[i][1]) {
-				cssText += modules[i][1] + ' { display: ' + (($options.rightModWhitelist && modules[i][2]) ? 'block' : 'none !important') + ' }\n';
+				cssText += modules[i][1] + ' { display: none !important }\n';
 			}
 		}
 		// 屏蔽提示相关CSS
