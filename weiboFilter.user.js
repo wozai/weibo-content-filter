@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		支持新版微博(V5)；增加屏蔽用户的功能；增加始终显示所有分组的功能；增加自定义样式功能；可以调整阅读模式的宽度
+// @features		支持新版微博(V5)；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；增加始终显示所有分组的功能；增加自定义样式功能；可以调整阅读模式的宽度
 // @version			1.0b2
 // @revision		65
 // @author			@富平侯
@@ -99,7 +99,8 @@ Options.prototype = {
 		userBlacklist : ['array'],
 		tipBackColor : ['string', '#FFD0D0'],
 		tipTextColor : ['string', '#FF8080'],
-		readerMode : ['bool'],
+		readerModeIndex : ['bool'],
+		readerModeProfile : ['bool'],
 		readerModeWidth : ['string', 750],
 		readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
 		clearHotTopic : ['bool'],
@@ -852,7 +853,7 @@ var $page = (function () {
 	// 极简阅读模式（仅在个人首页生效）
 	var toggleReaderMode = function () {
 		var readerModeStyles = $('wbpReaderModeStyles');
-		if ($options.readerMode) {
+		if ($options.readerModeIndex || $options.readerModeProfile) {
 			if (!readerModeStyles) {
 				readerModeStyles = document.createElement('style');
 				readerModeStyles.type = 'text/css';
@@ -860,16 +861,29 @@ var $page = (function () {
 				document.head.appendChild(readerModeStyles);
 			}
 			var width = Number($options.readerModeWidth);
-			readerModeStyles.innerHTML = '.B_index .W_main_l, .B_index .W_main_r, .B_index #pl_content_publisherTop, .B_index .group_read, .B_index .global_footer, .B_index #wbim_box { display: none }\n'
-				+ '.B_index #pl_content_top, .B_index .WB_global_nav { top: -40px }\n'
-				+ '.B_index { background-position-y: -40px }\n'
-				+ '.B_index .W_miniblog { padding-top: 20px; background-position-y: -40px }\n'
-				+ '.B_index .W_main_a { width: ' + (width+30) + 'px }\n'
-				+ '.B_index #Box_center { width: ' + width + 'px }\n'
-				+ '.B_index .W_main { width: ' + width + 'px; background: ' + $options.readerModeBackColor + ' }\n'
-				+ '.B_index .WB_feed .repeat .input textarea { width: ' + (width-162) + 'px }\n'
-				+ '.B_index .WB_screen { margin-left: ' + (width-48) + 'px }\n'
-				+ '.B_index #base_scrollToTop, .B_index #wbpFloatBtn { margin-left: ' + (width/2) + 'px; }\n';
+			readerModeStyles.innerHTML = '';
+			if ($options.readerModeIndex) {
+				readerModeStyles.innerHTML += '.B_index .W_main_l, .B_index .W_main_r, .B_index #Box_center > div:not(#pl_content_homeFeed), .B_index .group_read, .B_index .global_footer { display: none }\n'
+					+ '.B_index #pl_content_top, .B_index .WB_global_nav { top: -40px }\n'
+					+ '.B_index { background-position-y: -40px }\n'
+					+ '.B_index .W_miniblog { padding-top: 20px; background-position-y: -40px }\n'
+					+ '.B_index .W_main { width: ' + width + 'px; background: ' + $options.readerModeBackColor + ' }\n'
+					+ '.B_index .W_main_a { width: auto }\n'
+					+ '.B_index #Box_center { width: 100% }\n'
+					+ '.B_index .WB_feed .repeat .input textarea { width: ' + (width-162) + 'px }\n'
+					+ '.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n'
+					+ '.B_index .W_gotop { margin-left: ' + (width/2) + 'px }\n';
+			}
+			if ($options.readerModeProfile) {
+				readerModeStyles.innerHTML += '.B_profile #plc_profile_header, .B_profile #pl_profile_nav, .B_profile .group_read, .B_profile .W_main_2r, .B_profile .group_read, .B_profile .global_footer { display: none }\n'
+					+ '.B_profile #pl_content_top, .B_profile .WB_global_nav { top: -40px }\n'
+					+ '.B_profile { background-position-y: -40px }\n'
+					+ '.B_profile .W_miniblog { padding-top: 20px; background-position-y: -40px }\n'
+					+ '.B_profile .W_main { width: ' + width + 'px; background: ' + $options.readerModeBackColor + ' }\n'
+					+ '.B_profile .W_main_c { padding-top: 0; width: 100% }\n'
+					+ '.B_profile .WB_feed .repeat .input textarea { width: ' + (width-92) + 'px }\n'
+					+ '.B_profile .W_gotop { margin-left: ' + (width/2) + 'px }\n';
+			}
 		} else if (readerModeStyles) {
 			$.remove(readerModeStyles);
 		}
@@ -1041,8 +1055,13 @@ var $page = (function () {
 	// 检测按键，开关极简阅读模式
 	document.addEventListener('keyup', function onKeyPress(event) {
 		if ($dialog.shown()) { return; }
-		if ($.scope() === 1 && event.keyCode === 119) {
-			$options.readerMode = !$options.readerMode;
+		var scope = $.scope();
+		if (scope && event.keyCode === 119) {
+			if (scope === 1) {
+				$options.readerModeIndex = !$options.readerModeIndex;
+			} else {
+				$options.readerModeProfile = !$options.readerModeProfile;
+			}
 			$options.save();
 			toggleReaderMode();
 		}
