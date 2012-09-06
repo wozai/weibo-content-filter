@@ -615,7 +615,7 @@ var $filter = (function () {
 				return true;
 			}
 			// 屏蔽写心情微博
-			if ($options.filterFeelings && feed.querySelector('dd.content > div.feelingBoxS')) {
+			if ($options.filterFeelings && feed.querySelector('div.feelingBoxS')) {
 				console.warn('↑↑↑【写心情微博被屏蔽】↑↑↑');
 				return true;
 			}
@@ -774,7 +774,7 @@ var $filter = (function () {
 var $page = (function () {
 	var modules = [ // 模块屏蔽设置
 			['Ads', '#plc_main [id^="pl_rightmod_ads"], div[ad-data]'],
-			['Stats', 'ul.user_atten > li'],
+			['Stats', '.B_index ul.user_atten > li, .B_profile ul.user_atten'],
 			['InterestUser', '#trustPagelet_recom_interestv5', true],
 			['Promotion', '#pl_rightmod_yunying', true],
 			['Topic', '#trustPagelet_zt_hottopicv5', true],
@@ -789,6 +789,13 @@ var $page = (function () {
 			['TopComment', '#pl_content_commentTopNav'],
 			['Medal', '#pl_profile_extraInfo .pf_badge_icon'],
 			['Nofollow', '#pl_profile_unfollow'],
+			['MyRightSidebar', '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .W_main_2r'],
+			['MyRelation', '#pl_profile_moduleMyRelation'],
+			['Relation', '#pl_profile_moduleHisRelation'],
+			['PublicGroup', '#pl_profile_modulePublicGroup'],
+			['PublicGroupRecom', '#pl_profile_modulePublicGroupRecommend'],
+			['Album', '#pl_profile_modulealbum'],
+			['AppWidget', '#pl_profile_appWidget'],
 			['MemberIcon', '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)'],
 			['VerifyIcon', '.approve:not(.wbpShow), .approve_co:not(.wbpShow)'],
 			['DarenIcon', '.ico_club:not(.wbpShow)'],
@@ -869,8 +876,7 @@ var $page = (function () {
 					+ '.B_index .W_miniblog { padding-top: 20px; background-position-y: -40px }\n'
 					+ '.B_index .W_main { width: ' + width + 'px; background: ' + $options.readerModeBackColor + ' }\n'
 					+ '.B_index .W_main_a { width: auto }\n'
-					+ '.B_index #Box_center { width: 100% }\n'
-					+ '.B_index .WB_feed .repeat .input textarea { width: ' + (width-162) + 'px }\n'
+					+ '.B_index #Box_center, .B_index .WB_feed .repeat .input textarea { width: 100% }\n'
 					+ '.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n'
 					+ '.B_index .W_gotop { margin-left: ' + (width/2) + 'px }\n';
 			}
@@ -881,7 +887,7 @@ var $page = (function () {
 					+ '.B_profile .W_miniblog { padding-top: 20px; background-position-y: -40px }\n'
 					+ '.B_profile .W_main { width: ' + width + 'px; background: ' + $options.readerModeBackColor + ' }\n'
 					+ '.B_profile .W_main_c { padding-top: 0; width: 100% }\n'
-					+ '.B_profile .WB_feed .repeat .input textarea { width: ' + (width-92) + 'px }\n'
+					+ '.B_profile .WB_feed .repeat .input textarea { width: 100% }\n'
 					+ '.B_profile .W_gotop { margin-left: ' + (width/2) + 'px }\n';
 			}
 		} else if (readerModeStyles) {
