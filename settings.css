@@ -16,6 +16,21 @@
 .wbpTip:hover ~ * {
 	opacity: 0.5;
 }
+#wbpNavBar {
+	margin-bottom: 20px;
+}
+.B_index #wbpNavBar {
+	margin-top: 20px;
+}
+#wbpNavBar a {
+	background-image: none;
+}
+#wbpNavBar a.lev_curr {
+	background-color: transparent;
+}
+#wbpNavBar .icon_choose, #wbpNavBar .icon_chooseup {
+	margin-left: 188px;
+}
 .wbpSettings p {
 	line-height: 150%;
 }
