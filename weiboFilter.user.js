@@ -110,7 +110,7 @@ Options.prototype = {
 		floatBtn : ['bool', true],
 		useCustomStyles : ['bool', true],
 		customStyles : ['string'],
-		hideMods : ['object']
+		hideMods : ['array']
 	},
 	// 转换为字符串
 	toString : function (strip) {
@@ -162,6 +162,16 @@ Options.prototype = {
 				this[option] = typeDefault[this.items[option][0]];
 			}
 		}
+		// == LEGACY CODE START ==
+		// 兼容使用Object的旧版设置
+		if (this.hideMods instanceof Array === false) {
+			var hideModsArray = [];
+			for (var module in this.hideMods) {
+				if (this.hideMods[module]) { hideModsArray.push(module); }
+			}
+			this.hideMods = hideModsArray;
+		}
+		// == LEGACY CODE END ==
 		return (str !== null);
 	}
 };
@@ -337,9 +347,11 @@ var $dialog = (function () {
 			}
 		}
 		options.userBlacklist = getKeywords('userBlacklist', 'uid');
-		$page.modules.forEach(function (module) {
-			options.hideMods[module[0]] = getDom('hide' + module[0]).checked;
-		});
+		for (var module in $page.modules) {
+			if (getDom('hide' + module).checked) {
+				options.hideMods.push(module);
+			}
+		}
 		getDom('settingsString').value = options.toString(true);
 		return options;
 	};
@@ -368,10 +380,8 @@ var $dialog = (function () {
 		tipSample.style.backgroundColor = tipBackColor;
 		tipSample.style.borderColor = tipTextColor;
 		tipSample.style.color = tipTextColor;
-		if (options.hideMods) {
-			$page.modules.forEach(function (module) {
-				getDom('hide' + module[0]).checked = (options.hideMods[module[0]] === true);
-			});
+		for (var module in $page.modules) {
+			getDom('hide' + module).checked = (options.hideMods.indexOf(module) > -1);
 		}
 		getDom('settingsString').value = options.toString(true);
 	};
@@ -444,15 +454,15 @@ var $dialog = (function () {
 		// 点击“用户”标签时载入用户黑名单
 		bind('tabHeaderUser', function () { addUsers('userBlacklist', $options.userBlacklist); });
 		bind('hideAll', function () {
-			$page.modules.forEach(function (module) {
-				getDom('hide' + module[0]).checked = true;
-			});
+			for (var module in $page.modules) {
+				getDom('hide' + module).checked = true;
+			}
 		});
 		bind('hideInvert', function () {
-			$page.modules.forEach(function (module) {
-				var item = getDom('hide' + module[0]);
+			for (var module in $page.modules) {
+				var item = getDom('hide' + module);
 				item.checked = !item.checked;
-			});
+			}
 		});
 		// 对话框按钮点击事件
 		bind('import', function () {
@@ -737,36 +747,36 @@ var $filter = (function () {
 
 // 修改页面
 var $page = (function () {
-	var modules = [ // 模块屏蔽设置
-			['Ads', '#plc_main [id^="pl_rightmod_ads"], div[ad-data]'],
-			['RightSidebar', 'body:not(.S_profile) .W_main { width: 750px } .W_main_a { width: 600px } body:not(.S_profile) .W_gotop { margin-left: 375px } #Box_right'],
-			['Stats', '.B_index ul.user_atten > li, .B_profile ul.user_atten'],
-			['InterestUser', '#trustPagelet_recom_interestv5'],
-			['Promotion', '#pl_rightmod_yunying'],
-			['Topic', '#trustPagelet_zt_hottopicv5'],
-			['Member', '#trustPagelet_recom_memberv5'],
-			['AllInOne', '#trustPagelet_recom_allinonev5'],
-			['Notice', '#pl_rightmod_noticeboard'],
-			['Footer', 'div.global_footer'],
-			['Activity', '#pl_content_biztips'],
-			['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
-			['App', '#pl_leftnav_app'],
-			['Level', 'span.W_level_ico'],
-			['TopComment', '#pl_content_commentTopNav'],
-			['Medal', '#pl_profile_extraInfo .pf_badge_icon'],
-			['Nofollow', '#pl_profile_unfollow'],
-			['MyRightSidebar', '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .W_main_2r'],
-			['MyRelation', '#pl_profile_moduleMyRelation'],
-			['Relation', '#pl_profile_moduleHisRelation'],
-			['PublicGroup', '#pl_profile_modulePublicGroup'],
-			['PublicGroupRecom', '#pl_profile_modulePublicGroupRecommend'],
-			['Album', '#pl_profile_modulealbum'],
-			['AppWidget', '#pl_profile_appWidget'],
-			['MemberIcon', '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)'],
-			['VerifyIcon', '.approve:not(.wbpShow), .approve_co:not(.wbpShow)'],
-			['DarenIcon', '.ico_club:not(.wbpShow)'],
-			['VgirlIcon', '.ico_vlady:not(.wbpShow)']
-		];
+	var modules = { // 模块屏蔽设置
+			Ads : '#plc_main [id^="pl_rightmod_ads"], div[ad-data]',
+			RightSidebar : 'body:not(.S_profile) .W_main { width: 750px } .W_main_a { width: 600px } body:not(.S_profile) .W_gotop { margin-left: 375px } #Box_right',
+			Stats : '.B_index ul.user_atten > li, .B_profile ul.user_atten',
+			InterestUser : '#trustPagelet_recom_interestv5',
+			Promotion : '#pl_rightmod_yunying',
+			Topic : '#trustPagelet_zt_hottopicv5',
+			Member : '#trustPagelet_recom_memberv5',
+			AllInOne : '#trustPagelet_recom_allinonev5',
+			Notice : '#pl_rightmod_noticeboard',
+			Footer : 'div.global_footer',
+			Activity : '#pl_content_biztips',
+			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
+			App : '#pl_leftnav_app',
+			Level : 'span.W_level_ico',
+			TopComment : '#pl_content_commentTopNav',
+			Medal : '#pl_profile_extraInfo .pf_badge_icon',
+			Nofollow : '#pl_profile_unfollow',
+			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .W_main_2r',
+			MyRelation : '#pl_profile_moduleMyRelation',
+			Relation : '#pl_profile_moduleHisRelation',
+			PublicGroup : '#pl_profile_modulePublicGroup',
+			PublicGroupRecom : '#pl_profile_modulePublicGroupRecommend',
+			Album : '#pl_profile_modulealbum',
+			AppWidget : '#pl_profile_appWidget',
+			MemberIcon : '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)',
+			VerifyIcon : '.approve:not(.wbpShow), .approve_co:not(.wbpShow)',
+			DarenIcon : '.ico_club:not(.wbpShow)',
+			VgirlIcon : '.ico_vlady:not(.wbpShow)'
+		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
 		if (!$('wbpShowSettings')) {
@@ -887,9 +897,9 @@ var $page = (function () {
 	// 屏蔽模块
 	var hideModules = function () {
 		var cssText = '';
-		modules.forEach(function (module) {
-			if ($options.hideMods[module[0]] && module[1]) {
-				cssText += module[1] + ' { display: none !important }\n';
+		$options.hideMods.forEach(function (module) {
+			if (modules[module]) {
+				cssText += modules[module] + ' { display: none !important }\n';
 			}
 		});
 		// 屏蔽提示相关CSS
