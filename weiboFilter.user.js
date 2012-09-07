@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		支持新版微博(V5)；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
+// @features		支持新版微博(V5)；可以使用双栏版面（左边栏并入右边栏）；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
 // @version			1.0b3
 // @revision		66
 // @author			@富平侯
@@ -93,6 +93,7 @@ Options.prototype = {
 		readerModeProfile : ['bool'],
 		readerModeWidth : ['string', 750],
 		readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
+		mergeSidebars : ['bool'],
 		clearHotTopic : ['bool'],
 		showAllGroups : ['bool'],
 		overrideMySkin : ['bool'],
@@ -143,7 +144,7 @@ Options.prototype = {
 		if (str) {
 			try {
 				parsed = JSON.parse(str.replace(/\n/g, ''));
-				if (typeof parsed !== 'object') {throw 0; }
+				if (typeof parsed !== 'object') { throw 0; }
 			} catch (e) {
 				parsed = {};
 				str = null; // 出错，最后返回false
@@ -815,7 +816,7 @@ var $page = (function () {
 				return true;
 			} else if ($options.floatBtn && !floatBtn) {
 				var scrollToTop = $('base_scrollToTop');
-				if (!scrollToTop) {return false; }
+				if (!scrollToTop) { return false; }
 				floatBtn = document.createElement('a');
 				floatBtn.innerHTML = '<span class="S_line5" style="padding: 4px 0 6px; height: auto">★</span>';
 				floatBtn.className = 'W_gotop S_line3';
@@ -851,7 +852,7 @@ var $page = (function () {
 					+ '.B_index { background-position-y: -40px }\n'
 					+ '.B_index .W_miniblog { padding-top: 20px; background-position-y: -40px }\n'
 					+ '.B_index .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n'
-					+ '.B_index .W_main_a { width: auto !important }\n'
+					+ '.B_index .W_main_a { width: auto }\n'
 					+ '.B_index #Box_center, .B_index .WB_feed .repeat .input textarea { width: 100% }\n'
 					+ '.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n'
 					+ '.B_index .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
@@ -933,7 +934,30 @@ var $page = (function () {
 			}
 		}
 	};
-	// 自定义样式
+	// 将左边栏合并到右边栏
+	var leftBar = $.select('.W_main_l'), navBar;
+	if (leftBar) { navBar = leftBar.querySelector('.WB_left_nav'); }
+	var mergeSidebars = function () {
+		if (!navBar) { return; }
+		if ($options.mergeSidebars && !navBar.id) {
+			var rightBar = $.select('.W_main_r'), myInfo = $('pl_rightmod_myinfo');
+			if (!rightBar) { return; }
+			leftBar.style.display = 'none';
+			navBar.id = 'wbpNavBar';
+			// 注意：Firefox不支持background-position-x
+			$.select('.W_main').style.cssText = 'width: 830px; background-position: -150px 0';
+			// 左边栏移动到右边栏
+			rightBar.insertBefore(navBar, myInfo ? myInfo.nextSibling : rightBar.firstChild);
+		} else if (!$options.mergeSidebars && navBar.id) {
+			navBar.id = '';
+			leftBar.style.display = 'none';
+			$.select('.W_main').style.cssText = '';
+			// 移动回原位置
+			leftBar.appendChild(navBar);
+			leftBar.style.display = '';
+		}
+	}
+	// 用户自定义样式及程序附加样式
 	var customStyles = function () {
 		var cssText = '', styles = $('wbpCustomStyles');
 		if (!styles) {
@@ -944,6 +968,9 @@ var $page = (function () {
 		}
 		if ($options.showAllGroups) {
 			cssText += '#pl_leftnav_group div[node-type="moreList"] { display: block !important } #pl_leftnav_group .levmore { display: none }\n';
+		}
+		if ($options.mergeSidebars) {
+			cssText += 'body:not(.S_profile) .W_gotop { margin-left: 415px }\n';
 		}
 		if ($options.useCustomStyles) {
 			cssText += $options.customStyles;
@@ -996,6 +1023,8 @@ var $page = (function () {
 		showSettingsBtn();
 		// 浮动设置按钮
 		toggleFloatSettingsBtn();
+		// 合并边栏
+		mergeSidebars();
 		// 屏蔽版面模块
 		hideModules();
 		// 清除在发布框中嵌入的默认话题
@@ -1012,12 +1041,11 @@ var $page = (function () {
 	// 与IFRAME相关的处理在下面注册的DOMNodeInserted事件中完成
 	apply();
 	// 处理动态载入内容
-	document.addEventListener('DOMNodeInserted', function onDOMNodeInsertion(event) {
+	document.addEventListener('DOMNodeInserted', function (event) {
 		var scope = $.scope(), node = event.target;
 		//if (node.tagName !== 'SCRIPT') { console.log(node); }
 		if (scope && node.tagName === 'DIV' && node.classList.contains('group_read')) {
-			// 由于新浪微博使用了BigPipe技术，从"@我的微博"等页面进入时只载入部分页面
-			// 需要重新载入设置按钮
+			// 重新载入设置按钮
 			showSettingsBtn();
 		} else if (scope === 1 && node.tagName === 'DIV' && node.classList.contains('send_weibo')) {
 			// 清除在发布框中嵌入的默认话题
@@ -1025,8 +1053,20 @@ var $page = (function () {
 		} else if (node.tagName === 'DIV' && node.classList.contains('name_card')) {
 			// 用户信息气球
 			modifyNamecard(node);
+		} else if (node.tagName === 'DIV' && (node.classList.contains('W_main_r') || node.querySelector('.W_main_r'))) {
+			// 合并边栏
+			mergeSidebars();
 		}
 	}, false);
+	document.addEventListener('DOMNodeRemoved', function (event) {
+		if (!navBar || !navBar.id) { return; }
+		var node = event.target;
+		if (node.tagName === 'DIV' && node.querySelector('#wbpNavBar')) {
+			// 原左边栏所属模块即将随着右边栏被移除，需要将其暂时移动回左边栏（必须在DOM中时刻保持一个副本）
+			navBar.id = '';
+			leftBar.appendChild(navBar);
+		}
+	});
 	// 检测按键，开关极简阅读模式
 	document.addEventListener('keyup', function onKeyPress(event) {
 		if ($dialog.shown()) { return; }
