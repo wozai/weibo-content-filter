@@ -750,8 +750,7 @@ var $filter = (function () {
 var $page = (function () {
 	var modules = { // 模块屏蔽设置
 			Ads : '#plc_main [id^="pl_rightmod_ads"], div[ad-data]',
-			RightSidebar : 'body:not(.S_profile) .W_main { width: 750px } .W_main_a { width: 600px } body:not(.S_profile) .W_gotop { margin-left: 375px } #Box_right',
-			Stats : '.B_index ul.user_atten > li, .B_profile ul.user_atten',
+			Stats : '#pl_rightmod_myinfo .user_atten',
 			InterestUser : '#trustPagelet_recom_interestv5',
 			Promotion : '#pl_rightmod_yunying',
 			Topic : '#trustPagelet_zt_hottopicv5',
@@ -767,6 +766,8 @@ var $page = (function () {
 			Medal : '#pl_profile_extraInfo .pf_badge_icon',
 			Nofollow : '#pl_profile_unfollow',
 			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .W_main_2r',
+			ProfCover : '#plc_profile_header { min-height: 250px } #plc_profile_header .pf_head { top: 20px } #plc_profile_header .pf_info { margin-top: 20px } #pl_profile_cover',
+			ProfStats : 'div#plc_profile_header { min-height: 195px } #pl_profile_photo .user_atten',
 			MyRelation : '#pl_profile_moduleMyRelation',
 			Relation : '#pl_profile_moduleHisRelation',
 			PublicGroup : '#pl_profile_modulePublicGroup',
