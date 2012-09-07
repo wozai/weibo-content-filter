@@ -4,8 +4,8 @@
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
 // @features		支持新版微博(V5)；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
-// @version			1.0b2
-// @revision		65
+// @version			1.0b3
+// @revision		66
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
 // @include			http://weibo.com/*
@@ -53,16 +53,6 @@ var $ = (function () {
 	} else {
 		$.get = GM_getValue;
 		$.set = GM_setValue;
-	}
-	// 在数组中查找元素
-	$.find = function (array, val) {
-		var l = array.length, i;
-		for (i = 0; i < l; ++i) {
-			if (array[i] === val) {
-				return true;
-			}
-		}
-		return false;
 	}
 	// 删除节点
 	$.remove = function (el) {
@@ -237,44 +227,38 @@ var $dialog = (function () {
 	};
 	// 从显示列表建立关键词数组
 	var getKeywords = function (id, attr) {
-		if (!getDom(id).hasChildNodes()) { return []; }
-		var keywords = getDom(id).childNodes, list = [], i, len;
-		for (i = 0, len = keywords.length; i < len; ++i) {
-			if (keywords[i].tagName === 'A') {
-				list.push(attr ? keywords[i].getAttribute(attr) : keywords[i].innerHTML);
-			}
-		}
-		return list;
+		return Array.prototype.map.call(getDom(id).childNodes, function (keyword) {
+			return attr ? keyword.getAttribute(attr) : keyword.innerHTML;
+		});
 	};
 	// 将关键词添加到显示列表
 	var addKeywords = function (id, list) {
-		var keywords = list instanceof Array ? list : getDom(list).value.split(' '), i, len, malformed = [];
-		for (i = 0, len = keywords.length; i < len; ++i) {
-			var currentKeywords = ' ' + getKeywords(id).join(' ') + ' ', keyword = keywords[i];
-			if (keyword && currentKeywords.indexOf(' ' + keyword + ' ') === -1) {
-				var keywordLink = document.createElement('a');
-				if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
-					try {
-						// 尝试创建正则表达式，检验正则表达式的有效性
-						// 调用test()是必须的，否则浏览器可能跳过该语句
-						RegExp(keyword.substring(1, keyword.length - 1)).test('');
-					} catch (e) {
-						malformed.push(keyword);
-						continue;
-					}
-					keywordLink.className = 'regex';
+		var keywords = list instanceof Array ? list : getDom(list).value.split(' ');
+		var illegalRegex = keywords.filter(function (keyword) {
+			if (!keyword || getKeywords(id).indexOf(keyword) > -1) { return false; }
+			var keywordLink = document.createElement('a');
+			// 关键词是正则表达式？
+			if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
+				try {
+					// 尝试创建正则表达式，检验正则表达式的有效性
+					// 调用test()是必须的，否则浏览器可能跳过该语句
+					RegExp(keyword.substring(1, keyword.length - 1)).test('');
+				} catch (e) {
+					return true;
 				}
-				keywordLink.title = '删除关键词';
-				keywordLink.setAttribute('action-type', 'remove');
-				keywordLink.href = 'javascript:void(0)';
-				keywordLink.innerHTML = keyword;
-				getDom(id).appendChild(keywordLink);
+				keywordLink.className = 'regex';
 			}
-		}
+			keywordLink.title = '删除关键词';
+			keywordLink.setAttribute('action-type', 'remove');
+			keywordLink.href = 'javascript:void(0)';
+			keywordLink.innerHTML = keyword;
+			getDom(id).appendChild(keywordLink);
+			return false;
+		});
 		if (!(list instanceof Array)) {
 			// 在文本框中显示无效的正则表达式并闪烁提示
-			getDom(list).value = malformed.join(' ');
-			if (malformed.length) {
+			getDom(list).value = illegalRegex.join(' ');
+			if (illegalRegex.length) {
 				$.STK.common.extra.shine(getDom(list));
 			}
 		}
@@ -284,7 +268,7 @@ var $dialog = (function () {
 		var useIDs = list instanceof Array, div = getDom(id);
 		// 整个列表只载入一次
 		if (useIDs && div.innerHTML) { return; }
-		var users = useIDs ? list : getDom(list).value.split(' '), i, len, 
+		var users = useIDs ? list : getDom(list).value.split(' '),
 			unprocessed = users.length, unfound = [];
 		var searcher = $.STK.common.trans.relation.getTrans('userCard', { onComplete : 
 			function (result, data) {
@@ -293,7 +277,7 @@ var $dialog = (function () {
 					img = result.data.match(/<img[^>]+>/)[0];
 					if (!useIDs) { data.id = img.match(/uid="([^"]+)"/)[1]; }
 					// 防止重复添加
-					if (!$.find(getKeywords(id, 'uid'), data.id)) {
+					if (getKeywords(id, 'uid').indexOf(data.id) === -1) {
 						link.innerHTML = '<img ' + img.match(/src="[^"]+"/)[0] + ' /><br />' + img.match(/title="([^"]+)"/)[1];
 					}
 				} else if (useIDs) {
@@ -315,15 +299,15 @@ var $dialog = (function () {
 					div.appendChild(link);
 				}
 			} });
-		for (i = 0, len = users.length; i < len; ++i) {
+		users.forEach(function (user) {
 			var request = { type : 1 };
 			if (useIDs) {
-				request.id = users[i];
+				request.id = user;
 			} else {
-				request.name = users[i];
+				request.name = user;
 			}
 			searcher.request(request);
-		}
+		});
 	};
 	// 返回当前设置（可能未保存）
 	var exportSettings = function () {
@@ -353,10 +337,9 @@ var $dialog = (function () {
 			}
 		}
 		options.userBlacklist = getKeywords('userBlacklist', 'uid');
-		var i, len;
-		for (i = 0, len = $page.modules.length; i < len; ++i) {
-			options.hideMods[$page.modules[i][0]] = getDom('hide' + $page.modules[i][0]).checked;
-		}
+		$page.modules.forEach(function (module) {
+			options.hideMods[module[0]] = getDom('hide' + module[0]).checked;
+		});
 		getDom('settingsString').value = options.toString(true);
 		return options;
 	};
@@ -386,10 +369,9 @@ var $dialog = (function () {
 		tipSample.style.borderColor = tipTextColor;
 		tipSample.style.color = tipTextColor;
 		if (options.hideMods) {
-			var i, len;
-			for (i = 0, len = $page.modules.length; i < len; ++i) {
-				getDom('hide' + $page.modules[i][0]).checked = (options.hideMods[$page.modules[i][0]] === true);
-			}
+			$page.modules.forEach(function (module) {
+				getDom('hide' + module[0]).checked = (options.hideMods[module[0]] === true);
+			});
 		}
 		getDom('settingsString').value = options.toString(true);
 	};
@@ -445,16 +427,16 @@ var $dialog = (function () {
 		});
 		// 标签点击事件
 		bind('tabHeaders', function (event) {
-			var node = event.target, i, len;
+			var node = event.target;
 			if (node && node.tagName === 'A') {
 				node.className = 'current';
 				getDom(node.getAttribute('tab')).style.display = '';
-				for (i = 0, len = this.childNodes.length; i < len; ++i) {
-					if (node !== this.childNodes[i]) {
-						this.childNodes[i].className = '';
-						getDom(this.childNodes[i].getAttribute('tab')).style.display = 'none';
+				Array.prototype.forEach.call(this.childNodes, function (child) {
+					if (node !== child) {
+						child.className = '';
+						getDom(child.getAttribute('tab')).style.display = 'none';
 					}
-				}
+				});
 			}
 		});
 		// 点击“设置导入/导出”标签时更新内容
@@ -462,17 +444,15 @@ var $dialog = (function () {
 		// 点击“用户”标签时载入用户黑名单
 		bind('tabHeaderUser', function () { addUsers('userBlacklist', $options.userBlacklist); });
 		bind('hideAll', function () {
-			var i, len;
-			for (i = 0, len = $page.modules.length; i < len; ++i) {
-				getDom('hide' + $page.modules[i][0]).checked = true;
-			}
+			$page.modules.forEach(function (module) {
+				getDom('hide' + module[0]).checked = true;
+			});
 		});
 		bind('hideInvert', function () {
-			var i, len, item;
-			for (i = 0, len = $page.modules.length; i < len; ++i) {
-				item = getDom('hide' + $page.modules[i][0]);
+			$page.modules.forEach(function (module) {
+				var item = getDom('hide' + module[0]);
 				item.checked = !item.checked;
-			}
+			});
 		});
 		// 对话框按钮点击事件
 		bind('import', function () {
@@ -521,23 +501,21 @@ var $filter = (function () {
 	var forwardFeeds = {}, floodFeeds = {};
 	// 搜索指定文本中是否包含列表中的关键词
 	var search = function  (str, key) {
-		var text = str.toLowerCase(), keywords = $options[key], keyword, i, len = keywords.length;
-		if (str === '' || len === 0) { return ''; }
-		for (i = 0; i < len; ++i) {
-			keyword = keywords[i];
-			if (!keyword) { continue; }
+		var text = str.toLowerCase(), keywords = $options[key];
+		if (str === '' || keywords.length === 0) { return ''; }
+		var matched = keywords.filter(function (keyword) {
+			if (!keyword) { return false; }
 			if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
 				try {
 					// 尝试匹配正则表达式
-					if (RegExp(keyword.substring(1, keyword.length - 1)).test(str)) {return keyword; }
-				} catch (e) {
-					continue;
-				}
+					return (RegExp(keyword.substring(1, keyword.length - 1)).test(str));
+				} catch (e) { }
 			} else if (text.indexOf(keyword.toLowerCase()) > -1) {
-				return keyword;
+				return true;
 			}
-		}
-		return '';
+			return false;
+		});
+		return matched.length ? matched[0] : '';
 	};
 	// 获取微博正文
 	var converter = document.createElement('div');
@@ -598,8 +576,8 @@ var $filter = (function () {
 				return true;
 			}
 			// 用户黑名单
-			if ((scope === 1 && author && $.find($options.userBlacklist, author.getAttribute('usercard').match(/id=(\d+)/)[1]))
-				|| (isForward && fauthor && $.find($options.userBlacklist, fauthor.getAttribute('usercard').match(/id=(\d+)/)[1]))) {
+			if ((scope === 1 && author && $options.userBlacklist.indexOf(author.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1)
+				|| (isForward && fauthor && $options.userBlacklist.indexOf(fauthor.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1)) {
 				console.warn('↑↑↑【被用户黑名单屏蔽】↑↑↑');
 				return true;
 			}
@@ -616,14 +594,14 @@ var $filter = (function () {
 			}
 			// 反版聊（屏蔽重复转发）
 			if ($options.filterDupFwd && fmid && forwardFeeds[fmid]) {
-				if (forwardFeeds[fmid].length >= Number($options.maxDupFwd) && !$.find(forwardFeeds[fmid], mid)) {
+				if (forwardFeeds[fmid].length >= Number($options.maxDupFwd) && forwardFeeds[fmid].indexOf(mid) === -1) {
 					console.warn('↑↑↑【被反版聊功能屏蔽】↑↑↑');
 					return true;
 				}
 			}
 			// 反刷屏（屏蔽同一用户大量发帖）
 			if ($options.filterFlood && uid && floodFeeds[uid]) {
-				if (floodFeeds[uid] >= Number($options.maxFlood) && !$.find(floodFeeds[uid], mid)) {
+				if (floodFeeds[uid] >= Number($options.maxFlood) && floodFeeds[uid].indexOf(mid) === -1) {
 					console.warn('↑↑↑【被反刷屏功能屏蔽】↑↑↑');
 					return true;
 				}
@@ -634,14 +612,13 @@ var $filter = (function () {
 				return true;
 			}
 			// 搜索t.cn短链接
-			var links = feed.getElementsByTagName('A'), i, len;
-			for (i = 0, len = links.length; i < len; ++i) {
-				if (links[i].href.substring(0, 12) === 'http://t.cn/' && search(links[i].title, 'URLKeywords')) {
+			return Array.prototype.some.call(feed.getElementsByTagName('A'), function (link) {
+				if (link.href.substring(0, 12) === 'http://t.cn/' && search(link.title, 'URLKeywords')) {
 					console.warn('↑↑↑【被链接黑名单屏蔽】↑↑↑');
 					return true;
 				}
-			}
-			return false;
+				return false;
+			});
 		})()) {
 			feed.style.display = 'none'; // 直接隐藏，不显示屏蔽提示
 			return true;
@@ -689,7 +666,7 @@ var $filter = (function () {
 				if (!forwardFeeds[fmid]) {
 					forwardFeeds[fmid] = [];
 				}
-				if (!$.find(forwardFeeds[fmid], mid)) {
+				if (forwardFeeds[fmid].indexOf(mid) === -1) {
 					forwardFeeds[fmid].push(mid);
 				}
 			}
@@ -697,7 +674,7 @@ var $filter = (function () {
 				if (!floodFeeds[uid]) {
 					floodFeeds[uid] = [];
 				}
-				if (!$.find(floodFeeds[uid], mid)) {
+				if (floodFeeds[uid].indexOf(mid) === -1) {
 					floodFeeds[uid].push(mid);
 				}
 			}
@@ -708,9 +685,8 @@ var $filter = (function () {
 	var applyToAll = function () {
 		// 过滤所有微博
 		if ($.scope()) {
-			var feeds = document.querySelectorAll('.WB_feed_type'), i, len;
 			forwardFeeds = {}; floodFeeds = {};
-			for (i = 0, len = feeds.length; i < len; ++i) { apply(feeds[i]); }
+			Array.prototype.forEach.call(document.querySelectorAll('.WB_feed_type'), apply);
 		}
 	};
 	// 屏蔽提示相关事件的冒泡处理
@@ -910,12 +886,12 @@ var $page = (function () {
 	};
 	// 屏蔽模块
 	var hideModules = function () {
-		var cssText = '', i, len = modules.length;
-		for (i = 0; i < len; ++i) {
-			if ($options.hideMods[modules[i][0]] && modules[i][1]) {
-				cssText += modules[i][1] + ' { display: none !important }\n';
+		var cssText = '';
+		modules.forEach(function (module) {
+			if ($options.hideMods[module[0]] && module[1]) {
+				cssText += module[1] + ' { display: none !important }\n';
 			}
-		}
+		});
 		// 屏蔽提示相关CSS
 		var tipBackColor = $options.tipBackColor;
 		var tipTextColor = $options.tipTextColor;
@@ -983,17 +959,15 @@ var $page = (function () {
 		// 创建操作链接
 		var link = document.createElement('a');
 		link.href = 'javascript:void(0)';
-		link.innerHTML = $.find($options.userBlacklist, uid) ? '解除屏蔽' : '屏蔽';
+		link.innerHTML = $options.userBlacklist.indexOf(uid) === -1 ? '屏蔽' : '解除屏蔽';
 		$.click(link, function () {
 			// 切换屏蔽状态
-			var l = $options.userBlacklist.length, i;
-			for (i = 0; i < l; ++i) {
-				if ($options.userBlacklist[i] === uid) {
-					$options.userBlacklist.splice(i, 1);
-					break;
-				}
+			var i = $options.userBlacklist.indexOf(uid);
+			if (i === -1) {
+				$options.userBlacklist.push(uid);
+			} else {
+				$options.userBlacklist.splice(i, 1);
 			}
-			if (i === l) { $options.userBlacklist.push(uid); }
 			$options.save();
 			$filter();
 			// 回溯到顶层，关闭信息气球
