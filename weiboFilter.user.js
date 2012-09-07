@@ -41,7 +41,7 @@ var $ = (function () {
 	$.STK = $.window.STK;
 	// Chrome不支持GM_setValue(), GM_getValue()等，需要使用localStorage重新定义
 	// Firefox 2+, Internet Explorer 8+, Safari 4+和Chrome均支持DOM Storage (HTML5)
-	if (!GM_getValue || (GM_getValue.toString && GM_getValue.toString().indexOf("not supported")>-1)) {
+	if (!GM_getValue || (GM_getValue.toString && GM_getValue.toString().indexOf("not supported") > -1)) {
 		var CHROME_KEY_ROOT = 'weiboPlus.';
 		$.get = function (name, defval) {
 			var val = localStorage.getItem(CHROME_KEY_ROOT + name);
@@ -64,8 +64,7 @@ var $ = (function () {
 	};
 	// 返回当前页面的位置
 	$.scope = function () {
-		return document.body.classList.contains('B_index') ? 1 : 
-			document.body.classList.contains('B_profile') ? 2 : 0;
+		return document.body.classList.contains('B_index') ? 1 : document.body.classList.contains('B_profile') ? 2 : 0;
 	};
 	return $;
 })();
@@ -84,7 +83,7 @@ if ($.config.any && $.config.any.indexOf('wvr=5') === -1) {
 }
 // == LEGACY CODE END ==
 
-function Options() {};
+function Options() {}
 
 Options.prototype = {
 	// 选项类型与默认值
@@ -193,7 +192,7 @@ if (!$options.load($.get($.uid.toString()))) {
 
 var $update = (function () {
 	// 检查更新
-	var checkUpdate = function (dummy) {
+	var checkUpdate = function () {
 		GM_xmlhttpRequest({
 			method: 'GET',
 			// 只载入metadata
@@ -218,7 +217,7 @@ var $update = (function () {
 				}
 			}
 		});
-	}
+	};
 	// 自动检查更新
 	if ($options.autoUpdate) {
 		// 部分自动更新代码改写自http://loonyone.livejournal.com/
@@ -543,7 +542,7 @@ var $filter = (function () {
 		// 替换表情，去掉标签
 		if ($options.filterSmiley) {
 			converter.innerHTML = content.innerHTML.replace(/<img[^>]+alt="(\[[^\]">]+\])"[^>]*>/g, '$1')
-				.replace(/<\/?[^>]+>/g, '').replace(/[\r\n\t]/g, '').trim();
+					.replace(/<\/?[^>]+>/g, '').replace(/[\r\n\t]/g, '').trim();
 			// 利用未插入文档的div进行HTML反转义
 			return converter.textContent;
 		}
@@ -558,7 +557,7 @@ var $filter = (function () {
 			source = source.title || source.innerHTML;
 		}
 		return search(source, keywords);
-	}
+	};
 	// 过滤单条微博
 	var apply = function (feed) {
 		if (feed.firstChild && feed.firstChild.className === 'wbpTip') {
@@ -572,7 +571,7 @@ var $filter = (function () {
 			forwardContent = feed.querySelector('.WB_media_expand .WB_text'),
 			forwardLink = feed.querySelector('.WB_media_expand .WB_func .WB_time'),
 			source = feed.querySelector('.WB_detail > .WB_func a[target="_blank"]'),
-			forwardSource = feed.querySelector('.WB_media_expand > .WB_func a[target="_blank"]');
+			forwardSource = feed.querySelector('.WB_media_expand > .WB_func a[target="_blank"]'),
 			fauthor = feed.querySelector('.WB_media_expand .WB_info > a.WB_name');
 		var fmid = isForward ? (forwardLink ? forwardLink.href : null) : null,
 			author = (scope === 1) ? feed.querySelector('.WB_detail > .WB_info > a.WB_name') : null,
@@ -596,8 +595,8 @@ var $filter = (function () {
 				return true;
 			}
 			// 用户黑名单
-			if ((scope === 1 && author && $options.userBlacklist.indexOf(author.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1)
-				|| (isForward && fauthor && $options.userBlacklist.indexOf(fauthor.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1)) {
+			if ((scope === 1 && author && $options.userBlacklist.indexOf(author.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1) ||
+					(isForward && fauthor && $options.userBlacklist.indexOf(fauthor.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1)) {
 				console.warn('↑↑↑【被用户黑名单屏蔽】↑↑↑');
 				return true;
 			}
@@ -700,7 +699,7 @@ var $filter = (function () {
 			}
 		}
 		return false;
-	}
+	};
 	// 过滤所有微博
 	var applyToAll = function () {
 		// 过滤所有微博
@@ -723,7 +722,7 @@ var $filter = (function () {
 				}
 			}
 		});
-	}
+	};
 
 	// 如果第一次运行时就在作用范围内，则直接屏蔽关键词（此时页面已载入完成）；
 	// 否则交由后面注册的DOMNodeInserted事件处理
@@ -733,7 +732,7 @@ var $filter = (function () {
 	}
 	// 处理动态载入的微博
 	document.addEventListener('DOMNodeInserted', function (event) {
-		if ($.scope() === 0) { return false; }
+		if ($.scope() === 0) { return; }
 		var node = event.target;
 		if (node.tagName === 'DIV' && node.classList.contains('WB_feed_type')) {
 			// 处理动态载入的微博
@@ -807,11 +806,11 @@ var $page = (function () {
 		var floatBtn = null, lastTime = null, lastTimerID = null;
 		// 仿照STK.comp.content.scrollToTop延时100ms显示/隐藏，防止scroll事件调用过于频繁
 		function scrollDelayTimer() {
-			if ((lastTime != null && (new Date).getTime() - lastTime < 500)) {
+			if ((lastTime !== null && (new Date()).getTime() - lastTime < 500)) {
 				clearTimeout(lastTimerID);
 				lastTimerID = null;
 			}
-			lastTime = (new Date).getTime();
+			lastTime = (new Date()).getTime();
 			lastTimerID = setTimeout(function () {
 				if (floatBtn) {
 					floatBtn.style.visibility = window.scrollY > 0 ? 'visible' : 'hidden';
@@ -857,25 +856,25 @@ var $page = (function () {
 			var width = Number($options.readerModeWidth);
 			readerModeStyles.innerHTML = '';
 			if ($options.readerModeIndex) {
-				readerModeStyles.innerHTML += '.B_index .W_main_l, .B_index .W_main_r, .B_index #Box_center > div:not(#pl_content_homeFeed), .B_index .group_read, .B_index .global_footer { display: none }\n'
-					+ '.B_index #pl_content_top, .B_index .WB_global_nav { top: -40px }\n'
-					+ '.B_index { background-position-y: -40px }\n'
-					+ '.B_index .W_miniblog { padding-top: 20px; background-position-y: -40px }\n'
-					+ '.B_index .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n'
-					+ '.B_index .W_main_a { width: auto }\n'
-					+ '.B_index #Box_center, .B_index .WB_feed .repeat .input textarea { width: 100% }\n'
-					+ '.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n'
-					+ '.B_index .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
+				readerModeStyles.innerHTML += '.B_index .W_main_l, .B_index .W_main_r, .B_index #Box_center > div:not(#pl_content_homeFeed), .B_index .group_read, .B_index .global_footer { display: none }\n' +
+						'.B_index #pl_content_top, .B_index .WB_global_nav { top: -40px }\n' +
+						'.B_index { background-position-y: -40px }\n' +
+						'.B_index .W_miniblog { padding-top: 20px; background-position-y: -40px }\n' +
+						'.B_index .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n' +
+						'.B_index .W_main_a { width: auto }\n' +
+						'.B_index #Box_center, .B_index .WB_feed .repeat .input textarea { width: 100% }\n' +
+						'.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n' +
+						'.B_index .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 			}
 			if ($options.readerModeProfile) {
-				readerModeStyles.innerHTML += '.B_profile #plc_profile_header, .B_profile #pl_profile_nav, .B_profile .group_read, .B_profile .W_main_2r, .B_profile .group_read, .B_profile .global_footer { display: none }\n'
-					+ '.B_profile #pl_content_top, .B_profile .WB_global_nav { top: -40px }\n'
-					+ '.B_profile { background-position-y: -40px }\n'
-					+ '.B_profile .W_miniblog { padding-top: 20px; background-position-y: -40px }\n'
-					+ '.B_profile .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n'
-					+ '.B_profile .W_main_c { padding-top: 0; width: 100% }\n'
-					+ '.B_profile .WB_feed .repeat .input textarea { width: 100% }\n'
-					+ '.B_profile .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
+				readerModeStyles.innerHTML += '.B_profile #plc_profile_header, .B_profile #pl_profile_nav, .B_profile .group_read, .B_profile .W_main_2r, .B_profile .group_read, .B_profile .global_footer { display: none }\n' +
+						'.B_profile #pl_content_top, .B_profile .WB_global_nav { top: -40px }\n' +
+						'.B_profile { background-position-y: -40px }\n' +
+						'.B_profile .W_miniblog { padding-top: 20px; background-position-y: -40px }\n' +
+						'.B_profile .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n' +
+						'.B_profile .W_main_c { padding-top: 0; width: 100% }\n' +
+						'.B_profile .WB_feed .repeat .input textarea { width: 100% }\n' +
+						'.B_profile .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 			}
 		} else if (readerModeStyles) {
 			$.remove(readerModeStyles);
@@ -896,9 +895,9 @@ var $page = (function () {
 				skinCSS.charset = 'utf-8';
 				document.head.insertBefore(skinCSS, formerStyle);
 			}
-			skinCSS.href = $.config.cssPath + 'skin/' + $options.skinID
-				+ '/skin' + ($.config.lang == "zh-tw" ? '_CHT' : '')
-				+ '.css?version=' + $.config.version;
+			skinCSS.href = $.config.cssPath + 'skin/' + $options.skinID + 
+					'/skin' + ($.config.lang === "zh-tw" ? '_CHT' : '') +
+					'.css?version=' + $.config.version;
 			formerStyle.disabled = true;
 		} else if (skinCSS) {
 			$.remove(skinCSS);
@@ -966,7 +965,7 @@ var $page = (function () {
 			leftBar.appendChild(navBar);
 			leftBar.style.display = '';
 		}
-	}
+	};
 	// 用户自定义样式及程序附加样式
 	var customStyles = function () {
 		var cssText = '', styles = $('wbpCustomStyles');
