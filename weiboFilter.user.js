@@ -247,7 +247,7 @@ var $dialog = (function () {
 	// 从显示列表建立关键词数组
 	var getKeywords = function (id, attr) {
 		return Array.prototype.map.call(getDom(id).childNodes, function (keyword) {
-			return attr ? keyword.getAttribute(attr) : keyword.innerHTML;
+			return attr ? keyword.getAttribute(attr) : keyword.textContent;
 		});
 	};
 	// 将关键词添加到显示列表
@@ -270,7 +270,7 @@ var $dialog = (function () {
 			keywordLink.title = '删除关键词';
 			keywordLink.setAttribute('action-type', 'remove');
 			keywordLink.href = 'javascript:void(0)';
-			keywordLink.innerHTML = keyword;
+			keywordLink.textContent = keyword;
 			getDom(id).appendChild(keywordLink);
 			return false;
 		});
@@ -554,7 +554,7 @@ var $filter = (function () {
 			source = '未通过审核应用';
 		} else {
 			// 过长的应用名称会被压缩，完整名称存放在title属性中
-			source = source.title || source.innerHTML;
+			source = source.title || source.textContent;
 		}
 		return search(source, keywords);
 	};
@@ -654,7 +654,7 @@ var $filter = (function () {
 				if (scope === 1) {
 					// 添加隐藏提示链接
 					authorClone = author.cloneNode(false);
-					authorClone.innerHTML = '@' + author.getAttribute('nick-name');
+					authorClone.textContent = '@' + author.getAttribute('nick-name');
 					authorClone.className = '';
 				}
 				var showFeedLink = document.createElement('a');
@@ -663,7 +663,7 @@ var $filter = (function () {
 				var keywordLink = document.createElement('a');
 				keywordLink.href = 'javascript:void(0)';
 				keywordLink.className = 'wbpTipKeyword';
-				keywordLink.innerHTML = keyword || sourceKeyword;
+				keywordLink.textContent = keyword || sourceKeyword;
 				if (scope === 1) {
 					showFeedLink.appendChild(document.createTextNode('本条来自'));
 					showFeedLink.appendChild(authorClone);
