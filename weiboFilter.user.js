@@ -3,8 +3,8 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、来源、外部链接，隐藏版面模块等功能
-// @features		
-// @version			1.0.0b1
+// @features		去除奥运相关模块；增加对新版微博的升级提示；修正包含特殊字符的关键词无法被屏蔽的问题；修正关闭浮动按钮后设置窗口无法关闭的问题
+// @version			0.94
 // @revision		64
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
@@ -21,7 +21,7 @@ var $blocks = [ // 模块屏蔽设置
 		['InterestApp', '#trustPagelete_recom_allinone', true],
 		['Notice', '#pl_rightmod_noticeboard', true],
 		['HelpFeedback', '#pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle', true],
-		['Ads', '#plc_main .W_main_r [id^="ads_"], div[ad-data], dl.feed_list div.olympic_adv_feed'],
+		['Ads', '#plc_main .W_main_r [id^="ads_"], div[ad-data]'],
 		['Footer', 'div.global_footer'],
 		['PullyList', '#pl_content_biztips'],
 		['RecommendedTopic', '#pl_content_publisherTop div[node-type="recommendTopic"]'],
@@ -150,7 +150,7 @@ function filterSource(source, keywords) {
 		source = '未通过审核应用';
 	} else {
 		// 过长的应用名称会被压缩，完整名称存放在title属性中
-		source = source.title || source.innerHTML;
+		source = source.title || source.textContent;
 	}
 	return searchKeyword(source, keywords);
 }
@@ -291,7 +291,7 @@ function filterFeed(node) {
 		// 添加隐藏提示链接
 		authorClone = author.cloneNode(false);
 		// 默认的用户链接中多了一个换行符和两个tab
-		authorClone.innerHTML = '@' + author.innerHTML.slice(3);
+		authorClone.textContent = '@' + author.getAttribute('nick-name');
 	}
 	var showFeedLink = document.createElement('a');
 	showFeedLink.href = 'javascript:void(0)';
@@ -299,7 +299,7 @@ function filterFeed(node) {
 	var keywordLink = document.createElement('a');
 	keywordLink.href = 'javascript:void(0)';
 	keywordLink.className = 'wbpTipKeyword';
-	keywordLink.innerHTML = keyword || sourceKeyword;
+	keywordLink.textContent = keyword || sourceKeyword;
 	if (scope === 1) {
 		showFeedLink.appendChild(document.createTextNode('本条来自'));
 		showFeedLink.appendChild(authorClone);
@@ -587,7 +587,7 @@ var $settingsWindow = (function () {
 		if (!getDom(id).hasChildNodes()) {return []; }
 		var keywords = getDom(id).childNodes, list = [], i, len;
 		for (i = 0, len = keywords.length; i < len; ++i) {
-			if (keywords[i].tagName === 'A') {list.push(keywords[i].innerHTML); }
+			if (keywords[i].tagName === 'A') { list.push(keywords[i].textContent); }
 		}
 		return list;
 	};
@@ -613,7 +613,7 @@ var $settingsWindow = (function () {
 				keywordLink.title = '删除关键词';
 				keywordLink.setAttribute('action-type', 'remove');
 				keywordLink.href = 'javascript:void(0)';
-				keywordLink.innerHTML = keyword;
+				keywordLink.textContent = keyword;
 				getDom(id).appendChild(keywordLink);
 			}
 		}
@@ -894,7 +894,14 @@ function loadSettings() {
 	if (!$uid || isNaN(Number($uid))) {
 		console.warn('不在作用范围内，脚本未运行！');
 		return false;
-	} 
+	}
+	// 如果正在运行新版微博则停止运行并显示提示
+	if ($window.$CONFIG.any && $window.$CONFIG.any.indexOf('wvr=5') > -1) {
+		if (confirm('您当前使用的“眼不见心不烦”(v${VER})不支持新版微博。\n请使用较高版本(v1.0及以上)的“眼不见心不烦”。\n如果您希望安装新版，请点击“确认”。')) {
+			window.open('http://code.google.com/p/weibo-content-filter/downloads/list');
+		}
+		return false;
+	}
 	if (!reloadSettings($options, getValue($uid.toString()))) {
 		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 	}
