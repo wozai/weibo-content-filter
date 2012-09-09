@@ -22,8 +22,8 @@ if [ ! -f compiler.jar ]
 then
 	wget -q http://closure-compiler.googlecode.com/files/compiler-latest.tar.gz
 	tar -xzf compiler-latest.tar.gz compiler.jar
-	rm compiler-latest.tar.gz
+	rm -f compiler-latest.tar.gz
 fi
 java -jar compiler.jar --charset=UTF-8 --compilation_level SIMPLE_OPTIMIZATIONS --js=$OUTFILE --js_output_file=weiboFilter.user.body.js
 cat weiboFilter.user.head.js weiboFilter.user.body.js > $OUTFILE
-rm weiboFilter.user.head.js weiboFilter.user.body.js
+rm -f weiboFilter.user.head.js weiboFilter.user.body.js
