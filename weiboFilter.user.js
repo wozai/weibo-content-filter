@@ -252,10 +252,10 @@ var $dialog = (function () {
 		});
 	};
 	// 将关键词添加到显示列表
-	var addKeywords = function (id, list) {
+	var addKeywords = function (id, list, attr) {
 		var keywords = list instanceof Array ? list : getDom(list).value.split(' ');
 		var illegalRegex = keywords.filter(function (keyword) {
-			if (!keyword || getKeywords(id).indexOf(keyword) > -1) { return false; }
+			if (!keyword || getKeywords(id, attr).indexOf(keyword) > -1) { return false; }
 			var keywordLink = document.createElement('a');
 			// 关键词是正则表达式？
 			if (keyword.length > 2 && keyword.charAt(0) === '/' && keyword.charAt(keyword.length - 1) === '/') {
@@ -268,8 +268,9 @@ var $dialog = (function () {
 				}
 				keywordLink.className = 'regex';
 			}
-			keywordLink.title = '删除关键词';
+			keywordLink.title = '点击删除';
 			keywordLink.setAttribute('action-type', 'remove');
+			if (attr) { keywordLink.setAttribute(attr, keyword); }
 			keywordLink.href = 'javascript:void(0)';
 			keywordLink.textContent = keyword;
 			getDom(id).appendChild(keywordLink);
@@ -283,26 +284,39 @@ var $dialog = (function () {
 			}
 		}
 	};
+	var usercardLoaded = false;
 	// 将用户添加到屏蔽用户列表
 	var addUsers = function (id, list) {
-		var useIDs = list instanceof Array, div = getDom(id);
+		var updateOnly = !list, div = getDom(id);
 		// 整个列表只载入一次
-		if (useIDs && div.innerHTML) { return; }
-		var users = useIDs ? list : getDom(list).value.split(' '),
+		if (updateOnly && usercardLoaded) { return; }
+		var users = updateOnly ? getKeywords(id, 'uid') : getDom(list).value.split(' '),
 			unprocessed = users.length, unfound = [];
 		var searcher = $.STK.common.trans.relation.getTrans('userCard', { onComplete : 
 			function (result, data) {
-				var link = document.createElement('a'), img;
+				var link;
+				if (updateOnly) {
+					link = div.querySelector('a[uid="' + data.id + '"]');
+				} else {
+					link = document.createElement('a');
+				}
 				if (result.code === '100000') { // 成功
-					img = result.data.match(/<img[^>]+>/)[0];
-					if (!useIDs) { data.id = img.match(/uid="([^"]+)"/)[1]; }
+					var img = result.data.match(/<img[^>]+>/)[0];
+					if (!updateOnly) { data.id = img.match(/uid="([^"]+)"/)[1]; }
 					// 防止重复添加
-					if (getKeywords(id, 'uid').indexOf(data.id) === -1) {
+					if (updateOnly || getKeywords(id, 'uid').indexOf(data.id) === -1) {
 						link.innerHTML = '<img ' + img.match(/src="[^"]+"/)[0] + ' /><br />' + img.match(/title="([^"]+)"/)[1];
+						if (!updateOnly) {
+							// 添加新的用户
+							link.title = '点击删除';
+							link.href = 'javascript:void(0)';
+							link.setAttribute('uid', data.id);
+							link.setAttribute('action-type', 'remove');
+							div.appendChild(link);
+						}
 					}
-				} else if (useIDs) {
-					// 载入设置时，即使出现错误（如用户被删除），仍然添加链接
-					link.innerHTML = '错误';
+				} else if (updateOnly) {
+					link.innerHTML += '<br />（未找到）';
 				} else {
 					unfound.push(data.name);
 				}
@@ -313,21 +327,17 @@ var $dialog = (function () {
 						$.STK.common.extra.shine(getDom(list));
 					}
 				}
-				if (link.innerHTML) {
-					link.setAttribute('uid', data.id);
-					link.setAttribute('action-type', 'remove');
-					div.appendChild(link);
-				}
 			} });
 		users.forEach(function (user) {
 			var request = { type : 1 };
-			if (useIDs) {
+			if (updateOnly) {
 				request.id = user;
 			} else {
 				request.name = user;
 			}
 			searcher.request(request);
 		});
+		usercardLoaded = true;
 	};
 	// 返回当前设置（可能未保存）
 	var exportSettings = function () {
@@ -383,7 +393,10 @@ var $dialog = (function () {
 				break;
 			}
 		}
+		getDom('userBlacklistNew').value = '';
 		getDom('userBlacklist').innerHTML = '';
+		addKeywords('userBlacklist', options.userBlacklist, 'uid');
+		usercardLoaded = false;
 		var tipBackColor = getDom('tipBackColor').value,
 			tipTextColor = getDom('tipTextColor').value,
 			tipSample = getDom('tipSample');
@@ -461,8 +474,8 @@ var $dialog = (function () {
 		});
 		// 点击“设置导入/导出”标签时更新内容
 		bind('tabHeaderSettings', exportSettings);
-		// 点击“用户”标签时载入用户黑名单
-		bind('tabHeaderUser', function () { addUsers('userBlacklist', $options.userBlacklist); });
+		// 点击“用户”标签时载入用户黑名单头像
+		bind('tabHeaderUser', function () { addUsers('userBlacklist'); });
 		bind('hideAll', function () {
 			for (var module in $page.modules) {
 				getDom('hide' + module).checked = true;
@@ -505,7 +518,7 @@ var $dialog = (function () {
 		shown = true;
 		importSettings($options);
 		if (getDom('tabHeaderUser').classList.contains('current')) {
-			addUsers('userBlacklist', $options.userBlacklist);
+			addUsers('userBlacklist');
 		}
 		dialog.show().setMiddle();
 	};
