@@ -4,8 +4,8 @@
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
 // @features		支持新版微博(V5)；可以使用双栏版式（左边栏并入右边栏）；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
-// @version			1.0b3
-// @revision		66
+// @version			1.0b4
+// @revision		67
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
 // @include			http://weibo.com/*
@@ -76,7 +76,7 @@ if (!$.uid || isNaN(Number($.uid))) {
 // == LEGACY CODE START ==
 // 如果正在运行旧版微博则停止运行并显示提示
 if ($.config.any && $.config.any.indexOf('wvr=5') === -1) {
-	if (confirm('您使用的“眼不见心不烦”版本(${VER})不支持旧版微博。\n请升级到新版微博（V5），或使用较低版本的“眼不见心不烦”插件。\n如果您希望安装旧版“眼不见心不烦”，请点击“确认”。')) {
+	if (confirm('您使用的“眼不见心不烦”版本(v${VER})不支持旧版微博。\n请升级到新版微博（V5），或使用较低版本的“眼不见心不烦”插件。\n如果您希望安装旧版“眼不见心不烦”，请点击“确认”。')) {
 		window.open('http://code.google.com/p/weibo-content-filter/downloads/list');
 	}
 	return false;
@@ -192,7 +192,7 @@ if (!$options.load($.get($.uid.toString()))) {
 
 var $update = (function () {
 	// 检查更新
-	var checkUpdate = function () {
+	var checkUpdate = function (event) {
 		GM_xmlhttpRequest({
 			method: 'GET',
 			// 只载入metadata
@@ -204,7 +204,8 @@ var $update = (function () {
 				var ver = RegExp.$1;
 				if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= Number('${REV}')) {
 					// 自动检查更新且并无新版本时不必提示
-					if (arguments.length) { alert('“眼不见心不烦”已经是最新版。'); }
+					// 用户手动检查时event是click事件对象
+					if (event) { alert('您使用的“眼不见心不烦”(v${VER})已经是最新版。'); }
 					return;
 				}
 				var features = '';
@@ -225,12 +226,12 @@ var $update = (function () {
 		var DoS_PREVENTION_TIME = 2 * 60 * 1000;
 		var lastAttempt = $.get('lastCheckUpdateAttempt', 0);
 		var now = new Date().getTime();
-		if (lastAttempt && (now - lastAttempt) > DoS_PREVENTION_TIME) {
+		if (now - lastAttempt > DoS_PREVENTION_TIME) {
 			$.set('lastCheckUpdateAttempt', now.toString());
 			// 每周检查一次，避免频繁升级
 			var ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
 			var lastSuccess = $.get('lastCheckUpdateSuccess', 0);
-			if (lastSuccess && (now - lastSuccess) > ONE_WEEK) { checkUpdate(); }
+			if (now - lastSuccess > ONE_WEEK) { checkUpdate(); }
 		}
 	}
 	return checkUpdate;
