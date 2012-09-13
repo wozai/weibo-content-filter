@@ -586,8 +586,8 @@ var $filter = (function () {
 			content = feed.querySelector('.WB_detail > .WB_text'),
 			forwardContent = feed.querySelector('.WB_media_expand .WB_text'),
 			forwardLink = feed.querySelector('.WB_media_expand .WB_func .WB_time'),
-			source = feed.querySelector('.WB_detail > .WB_func a[target="_blank"]'),
-			forwardSource = feed.querySelector('.WB_media_expand > .WB_func a[target="_blank"]'),
+			source = feed.querySelector('.WB_detail > .WB_func > .WB_from > em + a'),
+			forwardSource = feed.querySelector('.WB_media_expand > .WB_func > .WB_from > em + a'),
 			fauthor = feed.querySelector('.WB_media_expand .WB_info > a.WB_name');
 		var fmid = isForward ? (forwardLink ? forwardLink.href : null) : null,
 			author = (scope === 1) ? feed.querySelector('.WB_detail > .WB_info > a.WB_name') : null,
