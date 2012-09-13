@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		支持新版微博(V5)；可以使用双栏版式（左边栏并入右边栏）；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
+// @features		支持新版微博(V5)；可以使用双栏版式（左边栏并入右边栏）；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；可设置微博作者与正文间不折行；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
 // @version			1.0b4
 // @revision		67
 // @author			@富平侯
@@ -103,6 +103,7 @@ Options.prototype = {
 		readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
 		mergeSidebars : ['bool'],
 		clearHotTopic : ['bool'],
+		unwrapText : ['bool'],
 		showAllGroups : ['bool'],
 		overrideMySkin : ['bool'],
 		overrideOtherSkin : ['bool'],
@@ -575,7 +576,8 @@ var $filter = (function () {
 	// 过滤单条微博
 	var apply = function (feed) {
 		if (feed.firstChild && feed.firstChild.className === 'wbpTip') {
-			// 已被灰名单屏蔽过，移除屏蔽提示
+			// 已被灰名单屏蔽过，移除屏蔽提示和分隔线
+			feed.removeChild(feed.firstChild);
 			feed.removeChild(feed.firstChild);
 		}
 		var mid = feed.getAttribute('mid');
@@ -688,7 +690,10 @@ var $filter = (function () {
 				showFeedLink.appendChild(document.createTextNode(keyword ? '内容包含“' : '来源名称包含“'));
 				showFeedLink.appendChild(keywordLink);
 				showFeedLink.appendChild(document.createTextNode('”而被隐藏，点击显示'));
-				feed.insertBefore(showFeedLink, feed.firstChild);
+				var line = document.createElement('div');
+				line.className = 'S_line2 wbpTipLine';
+				feed.insertBefore(line, feed.firstChild);
+				feed.insertBefore(showFeedLink, line);
 				return true;
 			}
 		}
@@ -732,6 +737,7 @@ var $filter = (function () {
 					$dialog();
 					event.stopPropagation(); // 防止事件冒泡触发屏蔽提示的onclick事件
 				} else if (node.className === 'wbpTip') {
+					$.remove(node.nextSibling); // 分隔线
 					$.remove(node);
 				}
 			}
@@ -991,6 +997,9 @@ var $page = (function () {
 		}
 		if ($options.showAllGroups) {
 			cssText += '#pl_leftnav_group div[node-type="moreList"] { display: block !important } #pl_leftnav_group .levmore { display: none }\n';
+		}
+		if ($options.unwrapText) {
+			cssText += '.WB_info, .WB_text { display: inline } .WB_info+.WB_text:before { content: "：" } .WB_func { margin-top: 5px } .B_index .WB_feed .W_ico16 { vertical-align: -3px !important }\n';
 		}
 		if ($options.mergeSidebars) {
 			cssText += 'body:not(.S_profile) .W_gotop { margin-left: 415px }\n';

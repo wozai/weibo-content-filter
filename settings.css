@@ -10,11 +10,19 @@
 	color: #40D040;
 	margin-bottom: 10px;
 }
-.wbpTip:not(:hover) ~ * {
+.wbpTip:not(:hover) ~ div:not(.wbpTipLine) {
 	display: none !important;
 }
 .wbpTip:hover ~ * {
 	opacity: 0.5;
+}
+.wbpTip:hover + .wbpTipLine {
+	display: none;
+}
+.wbpTipLine {
+	padding-bottom: 20px;
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
 }
 #wbpNavBar {
 	margin-bottom: 20px;
