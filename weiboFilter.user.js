@@ -4,8 +4,8 @@
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
 // @features		支持新版微博(V5)；可以使用双栏版式（左边栏并入右边栏）；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；可设置微博作者与正文间不折行；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
-// @version			1.0b4
-// @revision		67
+// @version			1.0
+// @revision		68
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
 // @include			http://weibo.com/*
@@ -29,8 +29,8 @@ var $ = (function () {
 		if (!root) { root = document; }
 		return root.querySelector(css);
 	};
-	// 对于Chrome和Opera，通过脚本注入获得unsafeWindow
-	$.window = (!window.chrome) ? unsafeWindow :
+	// 如果必要(Chrome)，通过脚本注入获得unsafeWindow
+	$.window = (unsafeWindow && unsafeWindow.$CONFIG) ? unsafeWindow :
 			(function () {
 				var e = document.createElement('p');
 				e.setAttribute('onclick', 'return window;');
