@@ -3,8 +3,8 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		支持新版微博(V5)；可以使用双栏版式（左边栏并入右边栏）；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；可设置微博作者与正文间不折行；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
-// @version			1.0
+// @features		同时支持旧版和新版微博(V5)；可以使用双栏版式（左边栏并入右边栏）；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；可设置微博作者与正文间不折行；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
+// @version			1.0b5
 // @revision		68
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
@@ -37,7 +37,9 @@ var $ = (function () {
 				return e.onclick();
 			})();
 	$.config = $.window.$CONFIG;
+	if (!$.config) { return undefined; }
 	$.uid = $.config && $.config.uid;
+	$.V5 = ($.config.any && $.config.any.indexOf('wvr=5') > -1);
 	$.STK = $.window.STK;
 	// Chrome不支持GM_setValue(), GM_getValue()等，需要使用localStorage重新定义
 	// Firefox 2+, Internet Explorer 8+, Safari 4+和Chrome均支持DOM Storage (HTML5)
@@ -64,24 +66,15 @@ var $ = (function () {
 	};
 	// 返回当前页面的位置
 	$.scope = function () {
-		return document.body.classList.contains('B_index') ? 1 : document.body.classList.contains('B_profile') ? 2 : 0;
+		return document.body.classList.contains('B_index') ? 1 : document.body.classList.contains($.V5 ? 'B_profile' : 'B_my_profile_other') ? 2 : 0;
 	};
 	return $;
 })();
 
-if (!$.uid || isNaN(Number($.uid))) {
+if (!$) {
 	console.warn('不在作用范围内，脚本未运行！');
 	return false;
 }
-// == LEGACY CODE START ==
-// 如果正在运行旧版微博则停止运行并显示提示
-if ($.config.any && $.config.any.indexOf('wvr=5') === -1) {
-	if (confirm('您使用的“眼不见心不烦”版本(v${VER})不支持旧版微博。\n请升级到新版微博（V5），或使用较低版本的“眼不见心不烦”插件。\n如果您希望安装旧版“眼不见心不烦”，请点击“确认”。')) {
-		window.open('http://code.google.com/p/weibo-content-filter/downloads/list');
-	}
-	return false;
-}
-// == LEGACY CODE END ==
 
 function Options() {}
 
@@ -413,7 +406,20 @@ var $dialog = (function () {
 	var createDialog = function () {
 		dialog = $.STK.ui.dialog({isHold: true});
 		dialog.setTitle('“眼不见心不烦”(v${VER})设置');
-		content = $.STK.ui.mod.layer('${HTML}');
+		content = ($.STK.module.layer || $.STK.ui.mod.layer)('${HTML}');
+		content.getOuter().classList.add($.V5 ? 'wbpV5' : 'wbpV4'); // 版本标识
+		if (!$.V5) { // 新旧版微博不同的class
+			Array.prototype.forEach.call(
+				content.getOuter().querySelectorAll('.W_btn_b'),
+				function (button) { button.className = 'W_btn_a'; }
+			);
+			Array.prototype.forEach.call(
+				content.getOuter().querySelectorAll('.wbpShow'),
+				function (img) { img.classList.remove('W_ico16'); }
+			);
+			getDom('OK').className = 'W_btn_b';
+			getDom('cancel').className = 'W_btn_a';
+		}
 		dialog.setContent(content.getOuter());
 		// 修改屏蔽提示颜色事件
 		bind('tipBackColor', function () {
@@ -578,41 +584,51 @@ var $filter = (function () {
 		if (feed.firstChild && feed.firstChild.className === 'wbpTip') {
 			// 已被灰名单屏蔽过，移除屏蔽提示和分隔线
 			feed.removeChild(feed.firstChild);
-			feed.removeChild(feed.firstChild);
+			if ($.V5) { feed.removeChild(feed.firstChild); }
 		}
 		var mid = feed.getAttribute('mid');
 		if (!mid) { return false; } // 动态没有mid
-		var scope = $.scope(), isForward = (feed.getAttribute('isforward') === '1'),
-			content = feed.querySelector('.WB_detail > .WB_text'),
-			forwardContent = feed.querySelector('.WB_media_expand .WB_text'),
-			forwardLink = feed.querySelector('.WB_media_expand .WB_func .WB_time'),
-			source = feed.querySelector('.WB_detail > .WB_func > .WB_from > em + a'),
-			forwardSource = feed.querySelector('.WB_media_expand > .WB_func > .WB_from > em + a'),
-			fauthor = feed.querySelector('.WB_media_expand .WB_info > a.WB_name');
-		var fmid = isForward ? (forwardLink ? forwardLink.href : null) : null,
-			author = (scope === 1) ? feed.querySelector('.WB_detail > .WB_info > a.WB_name') : null,
+		var scope = $.scope(), isForward = (feed.getAttribute('isforward') === '1');
+		if ($.V5) {
+			var author = (scope === 1) ? feed.querySelector('.WB_detail>.WB_info>a.WB_name') : null,
+				content = feed.querySelector('.WB_detail>.WB_text'),
+				source = feed.querySelector('.WB_detail>.WB_func>.WB_from>em+a'),
+				fwdAuthor = feed.querySelector('.WB_media_expand .WB_info>a.WB_name'),
+				fwdContent = feed.querySelector('.WB_media_expand .WB_text'),
+				fwdSource = feed.querySelector('.WB_media_expand>.WB_func>.WB_from>em+a'),
+				fwdLink = feed.querySelector('.WB_media_expand .WB_func .WB_time');
+		} else {
+			var author = (scope === 1) ? feed.querySelector('dd.content>p[node-type="feed_list_content"]>a[usercard]') : null,
+				content = feed.querySelector('dd.content>p[node-type="feed_list_content"]' + (scope === 1 ? '>em' : '')),
+				source = feed.querySelector('dd.content>p.info>a.date+a'),
+				fwdAuthor = feed.querySelector('dd.content>dl.comment>dt[node-type="feed_list_forwardContent"]>a[usercard]'),
+				fwdContent = feed.querySelector('dd.content>dl.comment>dt[node-type="feed_list_forwardContent"]>em'),
+				fwdSource = feed.querySelector('dd.content>dl.comment>dd.info>a.date + a'),
+				fwdLink = feed.querySelector('dd.content>dl.comment>dd.info>a.date');
+		}
+		var fmid = isForward ? (fwdLink ? fwdLink.href : null) : null,
 			uid = author ? author.getAttribute('usercard') : null;
 
 		if (!content) { return false; }
 		var text = (scope === 1) ? '@' + author.getAttribute('nick-name') + ': ' : ''; 
 		text += getText(content);
-		if (isForward && fauthor && forwardContent) {
+		if (isForward && fwdAuthor && fwdContent) {
 			// 转发内容
-			text += '////@' + fauthor.getAttribute('nick-name') + ': ' + getText(forwardContent);
+			text += '////@' + fwdAuthor.getAttribute('nick-name') + ': ' + getText(fwdContent);
 		}
 		console.log(text);
 
 		if ($options.filterPaused || search(text, 'whiteKeywords')) {
 			// 白名单条件
 		} else if ((function () { // 黑名单条件
-			// 屏蔽已删除微博的转发
-			if ($options.filterDeleted && isForward && feed.querySelector('.WB_media_expand > .WB_deltxt')) {
+			// 屏蔽已删除微博的转发（是转发但无转发作者）
+			if ($options.filterDeleted && isForward && !fwdAuthor) {
 				console.warn('↑↑↑【已删除微博的转发被屏蔽】↑↑↑');
 				return true;
 			}
 			// 用户黑名单
 			if ((scope === 1 && author && $options.userBlacklist.indexOf(author.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1) ||
-					(isForward && fauthor && $options.userBlacklist.indexOf(fauthor.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1)) {
+					(isForward && fwdAuthor && $options.userBlacklist.indexOf(fwdAuthor.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1)) {
 				console.warn('↑↑↑【被用户黑名单屏蔽】↑↑↑');
 				return true;
 			}
@@ -623,7 +639,7 @@ var $filter = (function () {
 			}
 			// 屏蔽指定来源
 			if (searchSource(source, 'sourceKeywords') ||
-					(isForward && searchSource(forwardSource, 'sourceKeywords'))) {
+					(isForward && searchSource(fwdSource, 'sourceKeywords'))) {
 				console.warn('↑↑↑【被来源黑名单屏蔽】↑↑↑');
 				return true;
 			}
@@ -662,8 +678,8 @@ var $filter = (function () {
 			var sourceKeyword = searchSource(source, 'sourceGrayKeywords'), 
 				keyword = search(text, 'grayKeywords');
 			if (!sourceKeyword && isForward) {
-				sourceKeyword = searchSource(forwardSource, 'sourceGrayKeywords');
-			}			
+				sourceKeyword = searchSource(fwdSource, 'sourceGrayKeywords');
+			}
 			if (keyword || sourceKeyword) {
 				// 找到了待隐藏的微博
 				var authorClone;
@@ -690,10 +706,14 @@ var $filter = (function () {
 				showFeedLink.appendChild(document.createTextNode(keyword ? '内容包含“' : '来源名称包含“'));
 				showFeedLink.appendChild(keywordLink);
 				showFeedLink.appendChild(document.createTextNode('”而被隐藏，点击显示'));
-				var line = document.createElement('div');
-				line.className = 'S_line2 wbpTipLine';
-				feed.insertBefore(line, feed.firstChild);
-				feed.insertBefore(showFeedLink, line);
+				if ($.V5) {
+					var line = document.createElement('div');
+					line.className = 'S_line2 wbpTipLine';
+					feed.insertBefore(line, feed.firstChild);
+					feed.insertBefore(showFeedLink, line);
+				} else {
+					feed.insertBefore(showFeedLink, feed.firstChild);
+				}
 				return true;
 			}
 		}
@@ -724,7 +744,7 @@ var $filter = (function () {
 		// 过滤所有微博
 		if ($.scope()) {
 			forwardFeeds = {}; floodFeeds = {};
-			Array.prototype.forEach.call(document.querySelectorAll('.WB_feed_type'), apply);
+			Array.prototype.forEach.call(document.querySelectorAll($.V5 ? '.WB_feed_type' : '.feed_list'), apply);
 		}
 	};
 	// 屏蔽提示相关事件的冒泡处理
@@ -747,14 +767,14 @@ var $filter = (function () {
 	// 如果第一次运行时就在作用范围内，则直接屏蔽关键词（此时页面已载入完成）；
 	// 否则交由后面注册的DOMNodeInserted事件处理
 	if ($.scope()) {
-		bindTipOnClick($.select('div.WB_feed'));
+		bindTipOnClick($.select($.V5 ? '.WB_feed' : '.feed_lists'));
 		applyToAll();
 	}
 	// 处理动态载入的微博
 	document.addEventListener('DOMNodeInserted', function (event) {
 		if ($.scope() === 0) { return; }
 		var node = event.target;
-		if (node.tagName === 'DIV' && node.classList.contains('WB_feed_type')) {
+		if (node.tagName === ($.V5 ? 'DIV' : 'DL') && node.classList.contains($.V5 ? 'WB_feed_type' : 'feed_list')) {
 			// 处理动态载入的微博
 			apply(node);
 		} else if (node.tagName === 'DIV' && node.classList.contains('W_loading')) {
@@ -764,7 +784,7 @@ var $filter = (function () {
 			if (requestType === 'search' || requestType === 'page') {
 				forwardFeeds = {}; floodFeeds = {};
 			}
-		} else if (node.tagName === 'DIV' && node.classList.contains('WB_feed')) {
+		} else if (node.tagName === 'DIV' && node.classList.contains($.V5 ? 'WB_feed' : 'feed_lists')) {
 			// 微博列表作为pagelet被一次性载入
 			bindTipOnClick(node);
 			applyToAll();
@@ -776,7 +796,8 @@ var $filter = (function () {
 
 // 修改页面
 var $page = (function () {
-	var modules = { // 模块屏蔽设置
+	// 模块屏蔽设置
+	var modules = $.V5 ? { 
 			Ads : '#plc_main [id^="pl_rightmod_ads"], div[ad-data]',
 			Stats : '#pl_rightmod_myinfo .user_atten',
 			InterestUser : '#trustPagelet_recom_interestv5',
@@ -806,16 +827,43 @@ var $page = (function () {
 			VerifyIcon : '.approve:not(.wbpShow), .approve_co:not(.wbpShow)',
 			DarenIcon : '.ico_club:not(.wbpShow)',
 			VgirlIcon : '.ico_vlady:not(.wbpShow)'
+		} : {
+			Ads : '#plc_main .W_main_r [id^="ads_"], div[ad-data]',
+			Stats : 'ul.user_atten',
+			Topic : '#trustPagelete_zt_hottopic',
+			InterestUser : '#trustPagelete_recom_interest',
+			AllInOne : '#trustPagelete_recom_allinone',
+			Notice : '#pl_rightmod_noticeboard',
+			HelpFeedback : '#pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle',
+			Footer : 'div.global_footer',
+			Activity : '#pl_content_biztips',
+			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
+			Mood : '#pl_content_mood',
+			Medal : '#pl_rightmod_medal, .declist',
+			Game : '#pl_leftNav_game',
+			App : '#pl_leftNav_app',
+			Tasks : '#pl_content_tasks',
+			UserGuide : '#pl_guide_oldUser',
+			Promotion : '#trustPagelet_ugrowth_invite',
+			Level : 'span.W_level_ico',
+			Hello : 'div.wbim_hello',
+			Balloon : 'div.layer_tips',
+			TopComment : '#pl_content_commentTopNav',
+			Member : '#trustPagelet_recom_member, #trustPagelet_member_zone',
+			MemberIcon : '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)',
+			VerifyIcon : '.approve:not(.wbpShow), .approve_co:not(.wbpShow)',
+			DarenIcon : '.ico_club:not(.wbpShow)',
+			VgirlIcon : '.ico_vlady:not(.wbpShow)'
 		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
 		if (!$('wbpShowSettings')) {
-			var groups = $.select('ul.sort');
+			var groups = $.select($.V5 ? 'ul.sort' : '#pl_content_homeFeed .nfTagB > ul, #pl_content_hisFeed .nfTagB > ul');
 			if (!groups) { return false; }
 			var tab = document.createElement('li');
 			tab.id = 'wbpShowSettings';
 			tab.className = 'item';
-			tab.innerHTML = '<a href="javascript:void(0)" class="item_link S_func1">眼不见心不烦</a>';
+			tab.innerHTML = $.V5 ? '<a href="javascript:void(0)" class="item_link S_func1">眼不见心不烦</a>' : '<span><em><a href="javascript:void(0)">眼不见心不烦</a></em></span>';
 			$.click(tab, $dialog);
 			groups.appendChild(tab);
 		}
@@ -847,13 +895,19 @@ var $page = (function () {
 				var scrollToTop = $('base_scrollToTop');
 				if (!scrollToTop) { return false; }
 				floatBtn = document.createElement('a');
-				floatBtn.innerHTML = '<span class="S_line5" style="padding: 4px 0 6px; height: auto">★</span>';
-				floatBtn.className = 'W_gotop S_line3';
 				floatBtn.href = 'javascript:void(0)';
 				floatBtn.title = '眼不见心不烦';
 				floatBtn.id = 'wbpFloatBtn';
-				floatBtn.style.bottom = '75px';
-				floatBtn.style.height = '24px';
+				if ($.V5) {
+					floatBtn.innerHTML = '<span class="S_line5" style="padding: 4px 0 6px; height: auto">★</span>';
+					floatBtn.className = 'W_gotop S_line3';
+					floatBtn.style.bottom = '75px';
+					floatBtn.style.height = '24px';
+				} else {
+					floatBtn.innerHTML = '<span style="padding: 0 0 6px;">★</span>';
+					floatBtn.className = 'W_gotop';
+					floatBtn.style.bottom = '72px';
+				}
 				$.click(floatBtn, $dialog);
 				scrollToTop.parentNode.appendChild(floatBtn);
 				window.addEventListener('scroll', scrollDelayTimer, false);
@@ -876,26 +930,70 @@ var $page = (function () {
 			var width = Number($options.readerModeWidth);
 			readerModeStyles.innerHTML = '';
 			if ($options.readerModeIndex) {
-				readerModeStyles.innerHTML += '.B_index .W_main_l, .B_index .W_main_r, .B_index #Box_center > div:not(#pl_content_homeFeed), .B_index .group_read, .B_index .global_footer { display: none }\n' +
-						'.B_index #pl_content_top, .B_index .WB_global_nav { top: -40px }\n' +
-						'.B_index { background-position-y: -40px }\n' +
-						'.B_index .W_miniblog { padding-top: 20px; background-position-y: -40px }\n' +
-						'.B_index .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n' +
-						'.B_index .W_main_a { width: auto }\n' +
-						'.B_index #Box_center, .B_index .WB_feed .repeat .input textarea { width: 100% }\n' +
-						'.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n' +
-						'.B_index .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
+				if ($.V5) { // 新版
+					readerModeStyles.innerHTML += '.B_index .W_main_l, .B_index .W_main_r, .B_index #Box_center>div:not(#pl_content_homeFeed), .B_index .group_read, .B_index .global_footer { display: none }\n' +
+							'.B_index #pl_content_top, .B_index .WB_global_nav { top: -40px }\n' +
+							'.B_index { background-position-y: -40px }\n' +
+							'.B_index .W_miniblog { padding-top: 20px; background-position-y: -40px }\n' +
+							'.B_index .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n' +
+							'.B_index #Box_center, .B_index .W_main_a { width: auto }\n' +
+							'.B_index .WB_feed .repeat .input textarea { width: 100% }\n' +
+							'.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n' +
+							'.B_index';
+				} else if (!$.config.isnarrow) { // 体验版
+					readerModeStyles.innerHTML += '.B_index #Box_left, .B_index #Box_right, .B_index #Box_center>div:not(#pl_content_homeFeed), .B_index .global_footer { display: none }\n' +
+							'.B_index .global_header { top: -35px }\n' +
+							'.B_index .W_miniblog { background-position-y: -35px }\n' + 
+							'.B_index .W_main { padding-top: 17px; width: ' + width + 'px }\n' +
+							'.B_index #Box_center { width: auto }\n' +
+							'.B_index .W_main_bg { background: ' + $options.readerModeBackColor + ' }\n' +
+							'.B_index .feed_list .repeat .input textarea { width: 100% }\n' +
+							'.B_index';
+							
+				} else { // 传统版
+					readerModeStyles.innerHTML += '.B_index .W_main_r, .B_index .W_main_c>div:not(.custom_content_bg), .B_index .custom_content_bg>div:not(#pl_content_homeFeed), .B_index .global_footer { display: none }\n' +
+							'.B_index .global_header { top: -35px }\n' +
+							'.B_index .W_miniblog { background-position-y: -35px }\n' +
+							'.B_index #plc_main .custom_content_bg { padding-top: 30px }\n' +
+							'.B_index .W_main_narrow { padding-top: 17px; width: ' + width + 'px }\n' +
+							'.B_index .W_main_c { width: auto }\n' +
+							'.B_index .W_main_narrow_bg { background: ' + $options.readerModeBackColor + ' }\n' +
+							'.B_index .feed_list .repeat .input textarea { width: 100% }\n' +
+							'.B_index';
+				}
 			}
-			if ($options.readerModeProfile) {
-				readerModeStyles.innerHTML += '.B_profile #plc_profile_header, .B_profile #pl_profile_nav, .B_profile .group_read, .B_profile .W_main_2r, .B_profile .group_read, .B_profile .global_footer { display: none }\n' +
-						'.B_profile #pl_content_top, .B_profile .WB_global_nav { top: -40px }\n' +
-						'.B_profile { background-position-y: -40px }\n' +
-						'.B_profile .W_miniblog { padding-top: 20px; background-position-y: -40px }\n' +
-						'.B_profile .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n' +
-						'.B_profile .W_main_c { padding-top: 0; width: 100% }\n' +
-						'.B_profile .WB_feed .repeat .input textarea { width: 100% }\n' +
-						'.B_profile .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
+			if ($options.readerModeProfile) { // 新版
+				if ($.V5) { // 新版
+					readerModeStyles.innerHTML += '.B_profile #plc_profile_header, .B_profile #pl_profile_nav, .B_profile .group_read, .B_profile .W_main_2r, .B_profile .group_read, .B_profile .global_footer { display: none }\n' +
+							'.B_profile #pl_content_top, .B_profile .WB_global_nav { top: -40px }\n' +
+							'.B_profile { background-position-y: -40px }\n' +
+							'.B_profile .W_miniblog { padding-top: 20px; background-position-y: -40px }\n' +
+							'.B_profile .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n' +
+							'.B_profile .W_main_c { padding-top: 0; width: auto }\n' +
+							'.B_profile .WB_feed .repeat .input textarea { width: 100% }\n' +
+							'.B_profile';
+				} else if (!$.config.isnarrow) { // 体验版
+					readerModeStyles.innerHTML += '.B_my_profile_other .W_main_l, .B_my_profile_other .W_main_r, .B_my_profile_other .W_main_c>div:not(#pl_content_hisFeed), .B_my_profile_other .global_footer { display: none }\n' +
+							'.B_my_profile_other .global_header { top: -35px }\n' +
+							'.B_my_profile_other .W_miniblog { background-position-y: -35px }\n' +
+							'.B_my_profile_other .W_main { padding-top: 17px; width: ' + width + 'px }\n' +
+							'.B_my_profile_other .W_main_c { width: auto }\n' +
+							'.B_my_profile_other .W_main_bg { background: rgba(100%, 100%, 100%, 0.8) }\n' +
+							'.B_my_profile_other .feed_list .repeat .input textarea { width: 100% }\n' +
+							'.B_my_profile_other';
+				} else { // 传统版
+					readerModeStyles.innerHTML += '.B_my_profile_other .W_main_r, .B_my_profile_other .W_main_c>div:not(.custom_content_bg), .B_my_profile_other .custom_content_bg>div:not(#pl_content_hisFeed), .B_my_profile_other .global_footer { display: none }\n' +
+							'.B_my_profile_other .global_header { top: -35px }\n' +
+							'.B_my_profile_other .W_miniblog { background-position-y: -35px }\n' +
+							'.B_my_profile_other #plc_main .custom_content_bg { padding-top: 30px }\n' +
+							'.B_my_profile_other .W_main_narrow { padding-top: 17px; width: ' + width + 'px }\n' +
+							'.B_my_profile_other .W_main_c { width: auto }\n' +
+							'.B_my_profile_other .W_main_narrow_bg { background: white }\n' +
+							'.B_my_profile_other .feed_list .repeat .input textarea { width: 100% }\n' +
+							'.B_my_profile_other';
+				}
 			}
+			readerModeStyles.innerHTML += ' .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 		} else if (readerModeStyles) {
 			$.remove(readerModeStyles);
 		}
@@ -916,7 +1014,7 @@ var $page = (function () {
 				document.head.insertBefore(skinCSS, formerStyle);
 			}
 			skinCSS.href = $.config.cssPath + 'skin/' + $options.skinID + 
-					'/skin' + ($.config.lang === "zh-tw" ? '_CHT' : '') +
+					'/skin' + ($.config.isnarrow ? '_narrow' : '') + ($.config.lang === "zh-tw" ? '_CHT' : '') +
 					'.css?version=' + $.config.version;
 			formerStyle.disabled = true;
 		} else if (skinCSS) {
@@ -995,13 +1093,13 @@ var $page = (function () {
 			styles.id = 'wbpCustomStyles';
 			document.head.appendChild(styles);
 		}
-		if ($options.showAllGroups) {
+		if ($.V5 && $options.showAllGroups) {
 			cssText += '#pl_leftnav_group div[node-type="moreList"] { display: block !important } #pl_leftnav_group .levmore { display: none }\n';
 		}
-		if ($options.unwrapText) {
+		if ($.V5 && $options.unwrapText) {
 			cssText += '.WB_info, .WB_text { display: inline } .WB_info+.WB_text:before { content: "：" } .WB_func { margin-top: 5px } .B_index .WB_feed .W_ico16 { vertical-align: -3px !important }\n';
 		}
-		if ($options.mergeSidebars) {
+		if ($.V5 && $options.mergeSidebars) {
 			cssText += 'body:not(.S_profile) .W_gotop { margin-left: 415px }\n';
 		}
 		if ($options.useCustomStyles) {
@@ -1076,7 +1174,7 @@ var $page = (function () {
 	document.addEventListener('DOMNodeInserted', function (event) {
 		var scope = $.scope(), node = event.target;
 		//if (node.tagName !== 'SCRIPT') { console.log(node); }
-		if (scope && node.tagName === 'DIV' && node.classList.contains('group_read')) {
+		if (scope && node.tagName === 'DIV' && ($.V5 ? node.classList.contains('group_read') : node.querySelector('.nfTagB'))) {
 			// 重新载入设置按钮
 			showSettingsBtn();
 		} else if (scope === 1 && node.tagName === 'DIV' && node.classList.contains('send_weibo')) {

@@ -242,11 +242,23 @@
 <td><input type="checkbox" node-type="hideActivity"><label>微活动（发布框下方）</label></td>
 <td><input type="checkbox" node-type="hideRecommendedTopic"><label>推荐微话题（发布框右上）</label></td>
 </tr>
-<tr>
-<td><input type="checkbox" node-type="hideLevel"><label>微博等级</label></td>
-<td><input type="checkbox" node-type="hideApp"><label>我的应用（左边栏）</label></td>
+<tr class="wbpV4Only">
+<td><input type="checkbox" node-type="hideUserGuide"><label>微博精选</label></td>
+<td><input type="checkbox" node-type="hideTasks"><label>微博宝典</label></td>
 </tr>
 <tr>
+<td><input type="checkbox" node-type="hideMedal"><label>勋章</label></td>
+<td><input type="checkbox" node-type="hideLevel"><label>微博等级</label></td>
+</tr>
+<tr class="wbpV4Only">
+<td><input type="checkbox" node-type="hideHello"><label>打招呼（他人主页）</label></td>
+<td><input type="checkbox" node-type="hideBalloon"><label>各种提示气球</label></td>
+</tr>
+<tr>
+<td><input type="checkbox" node-type="hideApp"><label>我的应用（左边栏）</label></td>
+<td class="wbpV4Only"><input type="checkbox" node-type="hideGame"><label>我的游戏（左边栏）</label></td>
+</tr>
+<tr class="wbpRowSpacing">
 <td><input type="checkbox" node-type="hideStats"><label>关注/粉丝/微博数</label></td>
 <td><input type="checkbox" node-type="hideTopComment"><label>热评微博（“我的评论”页）</label></td>
 </tr>
@@ -262,6 +274,10 @@
 <td><input type="checkbox" node-type="hideAllInOne"><label>微群/活动/应用</label></td>
 <td><input type="checkbox" node-type="hideNotice"><label>公告栏</label></td>
 </tr>
+<tr class="wbpV4Only">
+<td><input type="checkbox" node-type="hideMood"><label>心情</label></td>
+<td><input type="checkbox" node-type="hideHelpFeedback"><label>玩转微博</label></td>
+</tr>
 <tr class="wbpRowSpacing">
 <td><input type="checkbox" node-type="hideVerifyIcon"><label>个人/机构认证标识</label><a href="http://verified.weibo.com/verify" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 approve wbpShow"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 approve_co wbpShow"></a></td>
 <td><input type="checkbox" node-type="hideDarenIcon"><label>微博达人标识</label><a href="http://club.weibo.com/intro" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 ico_club wbpShow"></a></td>
@@ -270,26 +286,25 @@
 <td><input type="checkbox" node-type="hideMemberIcon"><label>微博会员标识</label><a href="http://vip.weibo.com/" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 ico_member wbpShow"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 ico_member_dis wbpShow"></a></td>
 <td><input type="checkbox" node-type="hideVgirlIcon"><label>微博女郎标识</label><a href="http://vgirl.weibo.com/" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 ico_vlady wbpShow"></a></td>
 </tr>
-<tr class="wbpRowSpacing">
-<td><input type="checkbox" node-type="hideMedal"><label>勋章（用户主页）</label></td>
-<td><input type="checkbox" node-type="hideNofollow"><label>加关注（未关注的用户主页）</label></td>
-</tr>
-<tr>
+<tr class="wbpRowSpacing wbpV5Only">
 <td><input type="checkbox" node-type="hideProfCover"><label>封面图（用户主页）</label></td>
 <td><input type="checkbox" node-type="hideProfStats"><label>关注/粉丝/微博数（用户主页）</label></td>
 </tr>
-<tr>
+<tr class="wbpV5Only">
+<td><input type="checkbox" node-type="hideNofollow"><label>加关注（未关注的用户主页）</label></td>
+</tr>
+<tr class="wbpV5Only">
 <td colspan="2"><input type="checkbox" node-type="hideMyRightSidebar"><label><span style="color: red">用户主页右边栏</span>：选中后整个右边栏将被去除</label></td>
 </tr>
-<tr>
+<tr class="wbpV5Only">
 <td><input type="checkbox" node-type="hideMyRelation"><label>我的关注/粉丝（用户主页）</label></td>
 <td><input type="checkbox" node-type="hideRelation"><label>微关系（用户主页）</label></td>
 </tr>
-<tr>
+<tr class="wbpV5Only">
 <td><input type="checkbox" node-type="hidePublicGroup"><label>公开分组（用户主页）</label></td>
 <td><input type="checkbox" node-type="hidePublicGroupRecom"><label>推荐的公开分组（用户主页）</label></td>
 </tr>
-<tr>
+<tr class="wbpV5Only">
 <td><input type="checkbox" node-type="hideAlbum"><label>微相册（用户主页）</label></td>
 <td><input type="checkbox" node-type="hideAppWidget"><label>应用挂件（用户主页）</label></td>
 </tr>
@@ -301,9 +316,9 @@
 </p>
 </div>
 <div node-type="tabModify" style="display: none">
-<p><input type="checkbox" node-type="mergeSidebars"><label><span style="color: red">使用双栏版式</span>（将左边栏并入右边栏）</label></p>
-<p><input type="checkbox" node-type="showAllGroups"><label>始终显示所有分组</label></p>
-<p><input type="checkbox" node-type="unwrapText"><label>微博作者与正文间不折行</label></p>
+<p class="wbpV5Only"><input type="checkbox" node-type="mergeSidebars"><label><span style="color: red">使用双栏版式</span>（将左边栏并入右边栏）</label></p>
+<p class="wbpV5Only"><input type="checkbox" node-type="showAllGroups"><label>始终显示所有分组</label></p>
+<p class="wbpV5Only"><input type="checkbox" node-type="unwrapText"><label>微博作者与正文间不折行</label></p>
 <p><input type="checkbox" node-type="clearHotTopic"><label title="关闭此选项后需要刷新页面生效">清除微博发布框中的默认话题</label></p>
 <div style="margin-top: 15px">
 在
