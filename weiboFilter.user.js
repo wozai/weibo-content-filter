@@ -8,6 +8,10 @@
 // @revision		68
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
+// @grant			GM_getValue
+// @grant			GM_setValue
+// @grant			GM_addStyle
+// @grant			GM_xmlhttpRequest
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // @updateURL		https://userscripts.org/scripts/source/114087.meta.js
