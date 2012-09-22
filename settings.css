@@ -10,7 +10,7 @@
 	color: #40D040;
 	margin-bottom: 10px;
 }
-.wbpTip:not(:hover) ~ div:not(.wbpTipLine) {
+.wbpTip:not(:hover) ~ :not(.wbpTipLine) {
 	display: none !important;
 }
 .wbpTip:hover ~ * {
@@ -38,6 +38,9 @@
 }
 #wbpNavBar .icon_choose, #wbpNavBar .icon_chooseup {
 	margin-left: 188px;
+}
+.wbpV4 .wbpV5Only, .wbpV5 .wbpV4Only {
+	display: none;
 }
 .wbpSettings p {
 	line-height: 150%;
@@ -113,8 +116,12 @@
 	font-weight: bold;
 	margin-right: 15px;
 }
-.wbpToolBtns {
+.wbpV5 .wbpToolBtns {
 	width: 105px;
+	text-align: right;
+}
+.wbpV4 .wbpToolBtns {
+	width: 120px;
 	text-align: right;
 }
 .wbpToolBtns a + a {
