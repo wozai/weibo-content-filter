@@ -943,8 +943,7 @@ var $page = (function () {
 							'.B_index .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n' +
 							'.B_index #Box_center, .B_index .W_main_a { width: auto }\n' +
 							'.B_index .WB_feed .repeat .input textarea { width: 100% }\n' +
-							'.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n' +
-							'.B_index';
+							'.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n';
 				} else if (!$.config.isnarrow) { // 体验版
 					readerModeStyles.innerHTML += '.B_index #Box_left, .B_index #Box_right, .B_index #Box_center>div:not(#pl_content_homeFeed), .B_index .global_footer { display: none }\n' +
 							'.B_index .global_header { top: -35px }\n' +
@@ -952,9 +951,7 @@ var $page = (function () {
 							'.B_index .W_main { padding-top: 17px; width: ' + width + 'px }\n' +
 							'.B_index #Box_center { width: auto }\n' +
 							'.B_index .W_main_bg { background: ' + $options.readerModeBackColor + ' }\n' +
-							'.B_index .feed_list .repeat .input textarea { width: 100% }\n' +
-							'.B_index';
-							
+							'.B_index .feed_list .repeat .input textarea { width: 100% }\n';
 				} else { // 传统版
 					readerModeStyles.innerHTML += '.B_index .W_main_r, .B_index .W_main_c>div:not(.custom_content_bg), .B_index .custom_content_bg>div:not(#pl_content_homeFeed), .B_index .global_footer { display: none }\n' +
 							'.B_index .global_header { top: -35px }\n' +
@@ -963,9 +960,9 @@ var $page = (function () {
 							'.B_index .W_main_narrow { padding-top: 17px; width: ' + width + 'px }\n' +
 							'.B_index .W_main_c { width: auto }\n' +
 							'.B_index .W_main_narrow_bg { background: ' + $options.readerModeBackColor + ' }\n' +
-							'.B_index .feed_list .repeat .input textarea { width: 100% }\n' +
-							'.B_index';
+							'.B_index .feed_list .repeat .input textarea { width: 100% }\n';
 				}
+				readerModeStyles.innerHTML += '.B_index .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 			}
 			if ($options.readerModeProfile) { // 新版
 				if ($.V5) { // 新版
@@ -997,8 +994,8 @@ var $page = (function () {
 							'.B_my_profile_other .feed_list .repeat .input textarea { width: 100% }\n' +
 							'.B_my_profile_other';
 				}
+				readerModeStyles.innerHTML += ' .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 			}
-			readerModeStyles.innerHTML += ' .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 		} else if (readerModeStyles) {
 			$.remove(readerModeStyles);
 		}
