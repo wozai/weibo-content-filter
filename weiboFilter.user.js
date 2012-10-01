@@ -4,8 +4,8 @@
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
 // @features		同时支持旧版和新版微博(V5)；可以使用双栏版式（左边栏并入右边栏）；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；可设置微博作者与正文间不折行；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
-// @version			1.0b5
-// @revision		68
+// @version			1.0
+// @revision		69
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
 // @grant			GM_getValue
@@ -593,22 +593,23 @@ var $filter = (function () {
 		var mid = feed.getAttribute('mid');
 		if (!mid) { return false; } // 动态没有mid
 		var scope = $.scope(), isForward = (feed.getAttribute('isforward') === '1');
+		var author, content, source, fwdAuthor, fwdContent, fwdSource, fwdLink;
 		if ($.V5) {
-			var author = (scope === 1) ? feed.querySelector('.WB_detail>.WB_info>a.WB_name') : null,
-				content = feed.querySelector('.WB_detail>.WB_text'),
-				source = feed.querySelector('.WB_detail>.WB_func>.WB_from>em+a'),
-				fwdAuthor = feed.querySelector('.WB_media_expand .WB_info>a.WB_name'),
-				fwdContent = feed.querySelector('.WB_media_expand .WB_text'),
-				fwdSource = feed.querySelector('.WB_media_expand>.WB_func>.WB_from>em+a'),
-				fwdLink = feed.querySelector('.WB_media_expand .WB_func .WB_time');
+			author = (scope === 1) ? feed.querySelector('.WB_detail>.WB_info>a.WB_name') : null;
+			content = feed.querySelector('.WB_detail>.WB_text');
+			source = feed.querySelector('.WB_detail>.WB_func>.WB_from>em+a');
+			fwdAuthor = feed.querySelector('.WB_media_expand .WB_info>a.WB_name');
+			fwdContent = feed.querySelector('.WB_media_expand .WB_text');
+			fwdSource = feed.querySelector('.WB_media_expand>.WB_func>.WB_from>em+a');
+			fwdLink = feed.querySelector('.WB_media_expand .WB_func .WB_time');
 		} else {
-			var author = (scope === 1) ? feed.querySelector('dd.content>p[node-type="feed_list_content"]>a[usercard]') : null,
-				content = feed.querySelector('dd.content>p[node-type="feed_list_content"]' + (scope === 1 ? '>em' : '')),
-				source = feed.querySelector('dd.content>p.info>a.date+a'),
-				fwdAuthor = feed.querySelector('dd.content>dl.comment>dt[node-type="feed_list_forwardContent"]>a[usercard]'),
-				fwdContent = feed.querySelector('dd.content>dl.comment>dt[node-type="feed_list_forwardContent"]>em'),
-				fwdSource = feed.querySelector('dd.content>dl.comment>dd.info>a.date + a'),
-				fwdLink = feed.querySelector('dd.content>dl.comment>dd.info>a.date');
+			author = (scope === 1) ? feed.querySelector('dd.content>p[node-type="feed_list_content"]>a[usercard]') : null;
+			content = feed.querySelector('dd.content>p[node-type="feed_list_content"]' + (scope === 1 ? '>em' : ''));
+			source = feed.querySelector('dd.content>p.info>a.date+a');
+			fwdAuthor = feed.querySelector('dd.content>dl.comment>dt[node-type="feed_list_forwardContent"]>a[usercard]');
+			fwdContent = feed.querySelector('dd.content>dl.comment>dt[node-type="feed_list_forwardContent"]>em');
+			fwdSource = feed.querySelector('dd.content>dl.comment>dd.info>a.date + a');
+			fwdLink = feed.querySelector('dd.content>dl.comment>dd.info>a.date');
 		}
 		var fmid = isForward ? (fwdLink ? fwdLink.href : null) : null,
 			uid = author ? author.getAttribute('usercard') : null;
