@@ -30,14 +30,17 @@
 .B_index #wbpNavBar {
 	margin-top: 20px;
 }
-#wbpNavBar .lev > a {
+#wbpNavBar .lev a, #wbpNavBar .levmenu, #wbpNavBar .levmenu .lm_li:hover {
 	background-image: none;
 }
-#wbpNavBar .lev > a.lev_curr {
+#wbpNavBar .lev a.lev_curr {
 	background-color: transparent;
 }
 #wbpNavBar .left_nav_line fieldset .btns {
 	margin-left: 148px;
+}
+#wbpNavBar .WB_left_nav .lev_edit .lev a {
+	width: 200px;
 }
 .wbpV4 .wbpV5Only, .wbpV5 .wbpV4Only {
 	display: none;
