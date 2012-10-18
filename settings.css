@@ -30,14 +30,14 @@
 .B_index #wbpNavBar {
 	margin-top: 20px;
 }
-#wbpNavBar a {
+#wbpNavBar .lev > a {
 	background-image: none;
 }
-#wbpNavBar a.lev_curr {
+#wbpNavBar .lev > a.lev_curr {
 	background-color: transparent;
 }
-#wbpNavBar .icon_choose, #wbpNavBar .icon_chooseup {
-	margin-left: 188px;
+#wbpNavBar .left_nav_line fieldset .btns {
+	margin-left: 148px;
 }
 .wbpV4 .wbpV5Only, .wbpV5 .wbpV4Only {
 	display: none;
