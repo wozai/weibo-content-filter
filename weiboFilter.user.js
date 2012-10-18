@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		同时支持旧版和新版微博(V5)；可以使用双栏版式（左边栏并入右边栏）；增加屏蔽用户的功能；可在用户主页启用极简阅读模式；可以调整极简阅读模式的宽度；可设置微博作者与正文间不折行；增加始终显示所有分组的功能；自定义屏蔽改为自定义样式
-// @version			1.0
-// @revision		69
+// @features		增加“我的首页”透明背景设置
+// @version			1.0.1
+// @revision		70
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
 // @grant			GM_getValue
@@ -101,6 +101,7 @@ Options.prototype = {
 		mergeSidebars : ['bool'],
 		clearHotTopic : ['bool'],
 		unwrapText : ['bool'],
+		transBack : ['bool'],
 		showAllGroups : ['bool'],
 		overrideMySkin : ['bool'],
 		overrideOtherSkin : ['bool'],
@@ -1103,6 +1104,9 @@ var $page = (function () {
 		}
 		if ($.V5 && $options.mergeSidebars) {
 			cssText += 'body:not(.S_profile) .W_gotop { margin-left: 415px }\n';
+		}
+		if ($.V5 && $options.transBack) {
+			cssText += 'body:not(.S_profile) .W_main { background-image: none !important; background-color: rgba(100%,100%,100%,0) }\n';
 		}
 		if ($options.useCustomStyles) {
 			cssText += $options.customStyles;
