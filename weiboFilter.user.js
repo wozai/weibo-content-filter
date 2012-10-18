@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		增加“我的首页”透明背景设置
+// @features		增加“我的首页”透明背景设置（新版微博）；增加对“升级新版”模块的屏蔽（旧版微博）；修正“微游戏/微吧”模块不能被屏蔽的问题（新版微博）
 // @version			1.0.1
 // @revision		70
 // @author			@富平侯
@@ -828,7 +828,7 @@ var $page = (function () {
 			PublicGroup : '#pl_profile_modulePublicGroup',
 			PublicGroupRecom : '#pl_profile_modulePublicGroupRecommend',
 			Album : '#pl_profile_modulealbum',
-			AppWidget : '#pl_profile_appWidget',
+			AppWidget : '#pl_profile_appWidget, #trustPagelet_profile_openApplist',
 			MemberIcon : '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)',
 			VerifyIcon : '.approve:not(.wbpShow), .approve_co:not(.wbpShow)',
 			DarenIcon : '.ico_club:not(.wbpShow)',
@@ -841,6 +841,7 @@ var $page = (function () {
 			AllInOne : '#trustPagelete_recom_allinone',
 			Notice : '#pl_rightmod_noticeboard',
 			HelpFeedback : '#pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle',
+			UpgradeToV5 : '#pl_rightmod_freeupgrade',
 			Footer : 'div.global_footer',
 			Activity : '#pl_content_biztips',
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
