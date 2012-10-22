@@ -30,7 +30,7 @@
 .B_index #wbpNavBar {
 	margin-top: 20px;
 }
-#wbpNavBar .lev a, #wbpNavBar .levmenu, #wbpNavBar .levmenu .lm_li:hover {
+#wbpNavBar .lev a, #wbpNavBar .lev2 a, #wbpNavBar .levmenu, #wbpNavBar .levmenu .lm_li:hover {
 	background-image: none;
 }
 #wbpNavBar .lev a.lev_curr {
