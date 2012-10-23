@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		（新版微博）可屏蔽“为你推荐”弹窗和“精彩微博推荐”
+// @features		（新版微博）可屏蔽“为你推荐”弹窗和“精彩微博推荐”；（新版微博）可设置“我的首页”及个人主页背景透明度
 // @version			1.0.2
 // @revision		71
 // @author			@富平侯
@@ -101,8 +101,10 @@ Options.prototype = {
 		mergeSidebars : ['bool'],
 		clearHotTopic : ['bool'],
 		unwrapText : ['bool'],
-		transBack : ['bool'],
 		showAllGroups : ['bool'],
+		overrideMyBack : ['bool'],
+		overrideOtherBack : ['bool'],
+		backColor : ['string', 'rgba(100%, 100%, 100%, 0.2)'],
 		overrideMySkin : ['bool'],
 		overrideOtherSkin : ['bool'],
 		skinID : ['string', 'skinvip001'],
@@ -1131,9 +1133,12 @@ var $page = (function () {
 		if ($.V5 && $options.mergeSidebars) {
 			cssText += 'body:not(.S_profile) .W_gotop { margin-left: 415px }\n';
 		}
-		if ($.V5 && $options.transBack) {
-			cssText += 'body:not(.S_profile) .W_main { background-image: none !important; background-color: rgba(100%,100%,100%,0) }\n';
+		if ($.V5 && $options.overrideMyBack) {
+			cssText += 'body:not(.S_profile) .W_main { background-image: none !important; background-color: ' + $options.backColor + ' }\n';
 		}
+		if ($.V5 && $options.overrideOtherBack) {
+			cssText += '.S_profile .W_profile_bg { background-color: ' + $options.backColor + ' }\n';
+		}		
 		if ($options.useCustomStyles) {
 			cssText += $options.customStyles;
 		}
