@@ -806,7 +806,7 @@ var $filter = (function () {
 var $page = (function () {
 	// 模块屏蔽设置
 	var modules = $.V5 ? { 
-			Ads : '#plc_main [id^="pl_rightmod_ads"], div[ad-data]',
+			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], div[ad-data]',
 			Stats : '#pl_rightmod_myinfo .user_atten',
 			InterestUser : '#trustPagelet_recom_interestv5',
 			Promotion : '#pl_rightmod_yunying',
@@ -1125,7 +1125,7 @@ var $page = (function () {
 			document.head.appendChild(styles);
 		}
 		if ($.V5 && $options.showAllGroups) {
-			cssText += '#pl_leftnav_group div[node-type="moreList"] { display: block !important } #pl_leftnav_group .levmore { display: none }\n';
+			cssText += '#pl_leftnav_group div[node-type="moreList"] { display: block !important } #pl_leftnav_group .level_2_Box > .levmore { display: none }\n';
 		}
 		if ($.V5 && $options.unwrapText) {
 			cssText += '.WB_info, .WB_text { display: inline } .WB_info+.WB_text:before { content: "：" } .WB_func { margin-top: 5px } .B_index .WB_feed .W_ico16 { vertical-align: -3px !important }\n';
