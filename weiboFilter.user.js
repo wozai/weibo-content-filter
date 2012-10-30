@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		（新版微博）可屏蔽“为你推荐”弹窗和“精彩微博推荐”；（新版微博）可设置“我的首页”及个人主页背景透明度
-// @version			1.0.2
-// @revision		71
+// @features		（新版微博）增加对单条微博“推荐微吧”模块的屏蔽
+// @version			1.0.3
+// @revision		72
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
 // @grant			GM_getValue
@@ -837,6 +837,7 @@ var $page = (function () {
 			RecomPerson : '#pl_rightmod_recomperson',
 			RecomTopic : '#trustPagelet_mblog_topic',
 			RecomWeibo : '#pl_rightmod_recommblog',
+			RecomWeiba : '#trustPagelet_mblog_weiba',
 			HotWeibo : '#trustPagelet_mblog_hotmblog',
 			MemberIcon : '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)',
 			VerifyIcon : '.approve:not(.wbpShow), .approve_co:not(.wbpShow)',
