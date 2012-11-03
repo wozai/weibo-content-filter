@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		（新版微博）增加对单条微博“推荐微吧”模块的屏蔽
+// @features		增加对“十八大幸福在身边”模块的屏蔽；增加对“热门话题”中嵌入广告的屏蔽；（新版微博）增加对单条微博“推荐微吧”模块的屏蔽；（新版微博）修正分组顺序保存按钮被误屏蔽的问题；（新版微博）修正单条微博右边栏被误屏蔽的问题
 // @version			1.0.3
 // @revision		72
 // @author			@富平侯
@@ -814,6 +814,7 @@ var $page = (function () {
 			Member : '#trustPagelet_recom_memberv5',
 			AllInOne : '#trustPagelet_recom_allinonev5',
 			Notice : '#pl_rightmod_noticeboard',
+			PartyEighteen : 'div.party_eighteen',
 			Footer : 'div.global_footer',
 			Activity : '#pl_content_biztips',
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
@@ -824,7 +825,7 @@ var $page = (function () {
 			FollowGuide : '.layer_userguide_brief',
 			RecomFeed : 'div[node-type="feed_list_recommend"]',
 			Nofollow : '#pl_profile_unfollow',
-			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .W_main_2r',
+			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .B_profile .W_main_2r',
 			ProfCover : '#plc_profile_header { min-height: 250px } #plc_profile_header .pf_head { top: 20px } #plc_profile_header .pf_info { margin-top: 20px } #pl_profile_cover',
 			ProfStats : 'div#plc_profile_header { min-height: 195px } #pl_profile_photo .user_atten',
 			MyRelation : '#pl_profile_moduleMyRelation',
@@ -833,7 +834,7 @@ var $page = (function () {
 			PublicGroupRecom : '#pl_profile_modulePublicGroupRecommend',
 			Album : '#pl_profile_modulealbum',
 			AppWidget : '#pl_profile_appWidget, #trustPagelet_profile_openApplist',
-			FeedRightSidebar : '.B_onefeed .W_main_c, .B_onefeed .WB_detail .WB_media_expand .input textarea { width: 100% } .W_main_2r',
+			FeedRightSidebar : '.B_onefeed .W_main_c, .B_onefeed .WB_detail .WB_media_expand .input textarea { width: 100% } .B_onefeed .W_main_2r',
 			RecomPerson : '#pl_rightmod_recomperson',
 			RecomTopic : '#trustPagelet_mblog_topic',
 			RecomWeibo : '#pl_rightmod_recommblog',
@@ -852,6 +853,7 @@ var $page = (function () {
 			Notice : '#pl_rightmod_noticeboard',
 			HelpFeedback : '#pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle',
 			UpgradeToV5 : '#pl_rightmod_freeupgrade',
+			PartyEighteen : 'div.party_eighteen',
 			Footer : 'div.global_footer',
 			Activity : '#pl_content_biztips',
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
