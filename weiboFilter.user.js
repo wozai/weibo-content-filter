@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		增加对“十八大幸福在身边”模块的屏蔽；增加对“热门话题”中嵌入广告的屏蔽；（新版微博）增加对单条微博“推荐微吧”模块的屏蔽；（新版微博）修正分组顺序保存按钮被误屏蔽的问题；（新版微博）修正单条微博右边栏被误屏蔽的问题
+// @features		增加对“十八大幸福在身边”模块的屏蔽；增加对“热门话题”中嵌入广告的屏蔽；（新版微博）增加对单条微博“推荐微吧”模块的屏蔽；（新版微博）修正分组顺序保存按钮被误屏蔽的问题；（新版微博）修正单条微博右边栏被误屏蔽的问题；（新版微博）修正使用自定义配色时首页透明度失效的问题；（新版微博）修正个人主页极简阅读模式带封面图的问题
 // @version			1.0.3
 // @revision		72
 // @author			@富平侯
@@ -980,7 +980,7 @@ var $page = (function () {
 			}
 			if ($options.readerModeProfile) { // 新版
 				if ($.V5) { // 新版
-					readerModeStyles.innerHTML += '.B_profile #plc_profile_header, .B_profile #pl_profile_nav, .B_profile .group_read, .B_profile .W_main_2r, .B_profile .group_read, .B_profile .global_footer { display: none }\n' +
+					readerModeStyles.innerHTML += '.B_profile #plc_profile_header, .B_profile #pl_profile_nav, .B_profile #pl_profile_cover, .B_profile .group_read, .B_profile .W_main_2r, .B_profile .group_read, .B_profile .global_footer { display: none }\n' +
 							'.B_profile #pl_content_top, .B_profile .WB_global_nav { top: -40px }\n' +
 							'.B_profile { background-position-y: -40px }\n' +
 							'.B_profile .W_miniblog { padding-top: 20px; background-position-y: -40px }\n' +
@@ -1137,10 +1137,10 @@ var $page = (function () {
 			cssText += 'body:not(.S_profile) .W_gotop { margin-left: 415px }\n';
 		}
 		if ($.V5 && $options.overrideMyBack) {
-			cssText += 'body:not(.S_profile) .W_main { background-image: none !important; background-color: ' + $options.backColor + ' }\n';
+			cssText += 'body:not(.S_profile) .W_main { background-image: none !important; background-color: ' + $options.backColor + ' } body:not(.S_profile) .S_bg4, body:not(.S_profile) .W_main_a { background-color: transparent !important }\n';
 		}
 		if ($.V5 && $options.overrideOtherBack) {
-			cssText += '.S_profile .W_profile_bg { background-color: ' + $options.backColor + ' }\n';
+			cssText += '.S_profile .W_profile_bg { background-color: ' + $options.backColor + ' } .S_profile .S_bg4:not(.W_profile_bg) { background-color: transparent }\n';
 		}		
 		if ($options.useCustomStyles) {
 			cssText += $options.customStyles;
