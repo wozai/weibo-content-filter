@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		增加对“十八大幸福在身边”模块的屏蔽；增加对“热门话题”中嵌入广告的屏蔽；（新版微博）增加对单条微博“推荐微吧”模块的屏蔽；（新版微博）修正分组顺序保存按钮被误屏蔽的问题；（新版微博）修正单条微博右边栏被误屏蔽的问题；（新版微博）修正使用自定义配色时首页透明度失效的问题；（新版微博）修正个人主页极简阅读模式带封面图的问题
-// @version			1.0.3
-// @revision		72
+// @features		（旧版微博）增加对升级新版微博邀请的屏蔽；（新版微博）增加对单条微博“推荐微刊”模块的屏蔽
+// @version			1.0.4
+// @revision		73
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
 // @grant			GM_getValue
@@ -814,20 +814,18 @@ var $page = (function () {
 			Member : '#trustPagelet_recom_memberv5',
 			AllInOne : '#trustPagelet_recom_allinonev5',
 			Notice : '#pl_rightmod_noticeboard',
-			PartyEighteen : 'div.party_eighteen',
 			Footer : 'div.global_footer',
 			Activity : '#pl_content_biztips',
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
 			App : '#pl_leftnav_app',
 			Level : 'span.W_level_ico',
 			TopComment : '#pl_content_commentTopNav',
-			Medal : '#pl_profile_extraInfo .pf_badge_icon',
-			FollowGuide : '.layer_userguide_brief',
+			Medal : '.pf_badge_icon',
 			RecomFeed : 'div[node-type="feed_list_recommend"]',
 			Nofollow : '#pl_profile_unfollow',
 			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .B_profile .W_main_2r',
 			ProfCover : '#plc_profile_header { min-height: 250px } #plc_profile_header .pf_head { top: 20px } #plc_profile_header .pf_info { margin-top: 20px } #pl_profile_cover',
-			ProfStats : 'div#plc_profile_header { min-height: 195px } #pl_profile_photo .user_atten',
+			ProfStats : '#plc_profile_header { min-height: 195px } #pl_profile_photo .user_atten',
 			MyRelation : '#pl_profile_moduleMyRelation',
 			Relation : '#pl_profile_moduleHisRelation',
 			PublicGroup : '#pl_profile_modulePublicGroup',
@@ -839,6 +837,7 @@ var $page = (function () {
 			RecomTopic : '#trustPagelet_mblog_topic',
 			RecomWeibo : '#pl_rightmod_recommblog',
 			RecomWeiba : '#trustPagelet_mblog_weiba',
+			RecomWeikan : '#trustPagelet_mblog_weikan',
 			HotWeibo : '#trustPagelet_mblog_hotmblog',
 			MemberIcon : '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)',
 			VerifyIcon : '.approve:not(.wbpShow), .approve_co:not(.wbpShow)',
@@ -852,8 +851,7 @@ var $page = (function () {
 			AllInOne : '#trustPagelete_recom_allinone',
 			Notice : '#pl_rightmod_noticeboard',
 			HelpFeedback : '#pl_rightmod_help, #pl_rightmod_feedback, #pl_rightmod_tipstitle',
-			UpgradeToV5 : '#pl_rightmod_freeupgrade',
-			PartyEighteen : 'div.party_eighteen',
+			UpgradeToV5 : '#pl_rightmod_freeupgrade, #pl_rightmod_upgradeassis',
 			Footer : 'div.global_footer',
 			Activity : '#pl_content_biztips',
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
@@ -1059,24 +1057,6 @@ var $page = (function () {
 			document.head.appendChild(styles);
 		}
 		styles.innerHTML = cssText + '\n';
-		// 单独处理“为你推荐”弹窗
-		if ($.V5 && $options.hideMods.indexOf('FollowGuide') > -1) {
-			// 载入页面时，如果DOM中包含#pl_guide_homeguide > div[node-type="follow_dialog"]则会弹出
-			// 如果能抢在pl.guide.homeguide.index前去除之，可以避免弹窗出现
-			$.remove($.select('#pl_guide_homeguide > div[node-type="follow_dialog"]'));
-			// 如果弹窗已经显示，则关闭之
-			//var closeBtn = $.select('.layer_userguide_brief .W_close');
-			//if (closeBtn) { closeBtn.click(); }
-			// 模拟点击关闭按钮会导致页面刷新，改为去除弹窗DOM及其下的overlay
-			var followGuide = $.select('.layer_userguide_brief');
-			if (followGuide) {
-				while (!followGuide.classList.contains('W_layer')) { followGuide = followGuide.parentNode; }
-				if (followGuide.previousSibling.style.zIndex === followGuide.style.zIndex) {
-					$.remove(followGuide.previousSibling); // 覆盖层
-				}
-				$.remove(followGuide);
-			}
-		}
 	};
 	// 清除在发布框中嵌入的默认话题
 	var clearHotTopic = function () {
@@ -1226,9 +1206,6 @@ var $page = (function () {
 		} else if (node.tagName === 'DIV' && (node.classList.contains('W_main_r') || node.querySelector('.W_main_r'))) {
 			// 合并边栏
 			mergeSidebars();
-		} else if ($.V5 && node.tagName === 'DIV' && node.getAttribute('node-type') === 'follow_dialog' && $options.hideMods.indexOf('FollowGuide') > -1) {
-			// 动态载入的div[node-type="follow_dialog"]会使后续运行的pl.guide.homeguide.index显示“为你推荐”弹窗
-			$.remove(node);
 		}
 	}, false);
 	document.addEventListener('DOMNodeRemoved', function (event) {
