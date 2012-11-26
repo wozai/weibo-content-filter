@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		修正极简阅读模式下微博正文溢出的问题；（旧版微博）增加对升级新版微博邀请的屏蔽；（新版微博）增加对单条微博“推荐微刊”模块的屏蔽
+// @features		可以使用双引号添加带空格的关键词；修正极简阅读模式下微博正文溢出的问题；（旧版微博）增加对升级新版微博邀请的屏蔽；（新版微博）增加对单条微博“推荐微刊”模块的屏蔽
 // @version			1.0.4
 // @revision		73
 // @author			@富平侯
@@ -254,7 +254,17 @@ var $dialog = (function () {
 	};
 	// 将关键词添加到显示列表
 	var addKeywords = function (id, list, attr) {
-		var keywords = list instanceof Array ? list : getDom(list).value.split(' ');
+		var keywords;
+		if (list instanceof Array) {
+			keywords = list;
+		} else {
+			keywords = []; 
+			var str = ' ' + getDom(list).value + ' ', regex = new RegExp('(\\s"([^"]+)"\\s|\\s([^\\s]+)\\s)', 'g'), result;
+			while ((result = regex.exec(str)) !== null) {
+				keywords.push(result[2] || result[3]); // 提取关键词
+				--regex.lastIndex;
+			}
+		}
 		var illegalRegex = keywords.filter(function (keyword) {
 			if (!keyword || getKeywords(id, attr).indexOf(keyword) > -1) { return false; }
 			var keywordLink = document.createElement('a');
