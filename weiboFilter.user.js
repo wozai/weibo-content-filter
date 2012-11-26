@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		（旧版微博）增加对升级新版微博邀请的屏蔽；（新版微博）增加对单条微博“推荐微刊”模块的屏蔽
+// @features		修正极简阅读模式下微博正文溢出的问题；（旧版微博）增加对升级新版微博邀请的屏蔽；（新版微博）增加对单条微博“推荐微刊”模块的屏蔽
 // @version			1.0.4
 // @revision		73
 // @author			@富平侯
@@ -953,7 +953,7 @@ var $page = (function () {
 							'.B_index { background-position-y: -40px }\n' +
 							'.B_index .W_miniblog { padding-top: 20px; background-position-y: -40px }\n' +
 							'.B_index .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n' +
-							'.B_index #Box_center, .B_index .W_main_a { width: auto }\n' +
+							'.B_index #Box_center, .B_index .W_main_a { width: ' + width + 'px }\n' +
 							'.B_index .WB_feed .repeat .input textarea { width: 100% }\n' +
 							'.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n';
 				} else if (!$.config.isnarrow) { // 体验版
@@ -961,7 +961,7 @@ var $page = (function () {
 							'.B_index .global_header { top: -35px }\n' +
 							'.B_index .W_miniblog { background-position-y: -35px }\n' + 
 							'.B_index .W_main { padding-top: 17px; width: ' + width + 'px }\n' +
-							'.B_index #Box_center { width: auto }\n' +
+							'.B_index #Box_center { width: ' + (width-45) + 'px }\n' +
 							'.B_index .W_main_bg { background: ' + $options.readerModeBackColor + ' }\n' +
 							'.B_index .feed_list .repeat .input textarea { width: 100% }\n';
 				} else { // 传统版
@@ -970,7 +970,7 @@ var $page = (function () {
 							'.B_index .W_miniblog { background-position-y: -35px }\n' +
 							'.B_index #plc_main .custom_content_bg { padding-top: 30px }\n' +
 							'.B_index .W_main_narrow { padding-top: 17px; width: ' + width + 'px }\n' +
-							'.B_index .W_main_c { width: auto }\n' +
+							'.B_index .W_main_c { width: ' + width + 'px }\n' +
 							'.B_index .W_main_narrow_bg { background: ' + $options.readerModeBackColor + ' }\n' +
 							'.B_index .feed_list .repeat .input textarea { width: 100% }\n';
 				}
@@ -983,7 +983,7 @@ var $page = (function () {
 							'.B_profile { background-position-y: -40px }\n' +
 							'.B_profile .W_miniblog { padding-top: 20px; background-position-y: -40px }\n' +
 							'.B_profile .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n' +
-							'.B_profile .W_main_c { padding-top: 0; width: auto }\n' +
+							'.B_profile .W_main_c { padding-top: 0; width: ' + width + 'px }\n' +
 							'.B_profile .WB_feed .repeat .input textarea { width: 100% }\n' +
 							'.B_profile';
 				} else if (!$.config.isnarrow) { // 体验版
@@ -991,7 +991,7 @@ var $page = (function () {
 							'.B_my_profile_other .global_header { top: -35px }\n' +
 							'.B_my_profile_other .W_miniblog { background-position-y: -35px }\n' +
 							'.B_my_profile_other .W_main { padding-top: 17px; width: ' + width + 'px }\n' +
-							'.B_my_profile_other .W_main_c { width: auto }\n' +
+							'.B_my_profile_other .W_main_c { width: ' + (width-45) + 'px }\n' +
 							'.B_my_profile_other .W_main_bg { background: rgba(100%, 100%, 100%, 0.8) }\n' +
 							'.B_my_profile_other .feed_list .repeat .input textarea { width: 100% }\n' +
 							'.B_my_profile_other';
@@ -1001,7 +1001,7 @@ var $page = (function () {
 							'.B_my_profile_other .W_miniblog { background-position-y: -35px }\n' +
 							'.B_my_profile_other #plc_main .custom_content_bg { padding-top: 30px }\n' +
 							'.B_my_profile_other .W_main_narrow { padding-top: 17px; width: ' + width + 'px }\n' +
-							'.B_my_profile_other .W_main_c { width: auto }\n' +
+							'.B_my_profile_other .W_main_c { width: ' + width + 'px }\n' +
 							'.B_my_profile_other .W_main_narrow_bg { background: white }\n' +
 							'.B_my_profile_other .feed_list .repeat .input textarea { width: 100% }\n' +
 							'.B_my_profile_other';
