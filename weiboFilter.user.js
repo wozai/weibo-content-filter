@@ -99,7 +99,6 @@ Options.prototype = {
 		readerModeWidth : ['string', 750],
 		readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
 		mergeSidebars : ['bool'],
-		clearHotTopic : ['bool'],
 		unwrapText : ['bool'],
 		showAllGroups : ['bool'],
 		overrideMyBack : ['bool'],
@@ -1068,23 +1067,6 @@ var $page = (function () {
 		}
 		styles.innerHTML = cssText + '\n';
 	};
-	// 清除在发布框中嵌入的默认话题
-	var clearHotTopic = function () {
-		if ($options.clearHotTopic && $.scope() === 1) {
-			var inputBox = document.querySelector('#pl_content_publisherTop .send_weibo .input textarea');
-			if (inputBox && inputBox.classList.contains('topic_color')) {
-				// IFRAME载入方式，hotTopic可能尚未启动，直接清除相关属性即可
-				inputBox.removeAttribute('hottopic');
-				inputBox.removeAttribute('hottopicid');
-				// 在发布框中模拟输入，欺骗STK.common.editor.plugin.hotTopic
-				inputBox.value = 'DUMMY';
-				inputBox.focus();
-				inputBox.value = '';
-				inputBox.blur();
-				inputBox.classList.remove('topic_color');
-			}
-		}
-	};
 	// 将左边栏合并到右边栏
 	var leftBar = $.select('.W_main_l'), navBar;
 	if (leftBar) { navBar = leftBar.querySelector('.WB_left_nav'); }
@@ -1187,8 +1169,6 @@ var $page = (function () {
 		mergeSidebars();
 		// 屏蔽版面模块
 		hideModules();
-		// 清除在发布框中嵌入的默认话题
-		clearHotTopic();
 		// 覆盖当前模板设置
 		overrideSkin();
 		// 应用自定义CSS
@@ -1207,9 +1187,6 @@ var $page = (function () {
 		if (scope && node.tagName === 'DIV' && ($.V5 ? node.classList.contains('group_read') : node.querySelector('.nfTagB'))) {
 			// 重新载入设置按钮
 			showSettingsBtn();
-		} else if (scope === 1 && node.tagName === 'DIV' && node.classList.contains('send_weibo')) {
-			// 清除在发布框中嵌入的默认话题
-			clearHotTopic();
 		} else if (node.tagName === 'DIV' && node.classList.contains('name_card')) {
 			// 用户信息气球
 			modifyNamecard(node);
