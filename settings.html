@@ -26,8 +26,18 @@
 </div>
 <div node-type="inner" style="float: right; width: 440px">
 <div node-type="tabKeywords">
-<p>如果要添加的关键词中有空格，可将其置于一对<span style="color: blue">半角双引号</span>内，如"I love you"；使用<span style="color: blue">加号</span>分隔需要同时出现的关键词，如A+B+C代表A、B、C三个词必须同时出现</p>
-<p><input type="checkbox" node-type="filterSmiley"><label title="如果选中，[呵呵]等表情也可以作为关键词被屏蔽">允许表情关键词</label></p>
+<div class="clearfix">
+<div style="float: left">
+<input type="checkbox" node-type="filterSmiley"><label title="如果选中，[呵呵]等表情也可以作为关键词被屏蔽">允许表情关键词</label>
+</div>
+<div style="float: right; display: inline; position: relative">
+<span class="link"><a href="javascript:void(0);" style="cursor: help">关键词设置帮助<span><ul>
+<li>如果要添加的关键词中有空格，可将其置于一对<span style="color: blue">半角双引号</span>内，如<span style="color: green">"I love you"</span></li>
+<li>使用<span style="color: blue">加号</span>分隔需要同时出现的关键词，如<span style="color: green">A+B+C</span>代表A、B、C三个词必须同时出现</li>
+<li>使用<span style="color: blue">斜杠</span>设置正则表达式关键词，如<span style="color: green">/转发并@.{2,3}好友/</span></li>
+</ul></span></a></span>
+</div>
+</div>
 <div class="wbpKeywordBlock">
 <em>白名单</em>包含下列关键词的微博不会被屏蔽
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -266,7 +276,7 @@
 </tr>
 <tr>
 <td><input type="checkbox" node-type="hideInterestUser"><label>可能感兴趣的人</label></td>
-<td><input type="checkbox" node-type="hidePromotion"><label>微博推广（邀请好友）</label></td>
+<td><input type="checkbox" node-type="hidePromotion"><label>新版微博推广</label></td>
 </tr>
 <tr>
 <td><input type="checkbox" node-type="hideTopic"><label>热门话题/关注的话题</label></td>
@@ -344,7 +354,7 @@
 在
 <input type="checkbox" node-type="readerModeIndex" style="margin: 0 2px 0 8px"><label>我的首页</label>
 <input type="checkbox" node-type="readerModeProfile" style="margin: 0 2px 0 8px"><label style="margin-right: 8px">个人主页</label>
-启用极简阅读模式（可在浏览页面时按F8切换）
+启用极简阅读模式<span style="color: red">（可按F8切换）</span>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 3px">
 <tbody>
 <tr>

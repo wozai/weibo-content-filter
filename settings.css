@@ -58,6 +58,36 @@
 	line-height: 30px;
 	margin-top: 8px;
 }
+.wbpSettings span.link {
+	position: relative;
+}
+.wbpSettings span.link a > span {
+	display: none;
+}
+.wbpSettings span.link a > span li {
+	list-style: circle inside;
+	padding-left: 1em;
+	text-indent: -1em;
+}
+.wbpSettings span.link a > span li+li {
+	margin-top: 5px;
+}
+.wbpSettings span.link a:hover > span {
+	display: block;
+	position: absolute; 
+	margin-top: 10px; 
+	margin-left: -100px; 
+	width: 250px; 
+	padding: 5px; 
+	z-index: 20000; 
+	background: #FFFFB0;
+	color: black;
+	border: 1px solid #808000;
+	text-align: left; 
+	text-decoration: none;
+	border-radius: 3px 3px;
+	box-shadow: 3px 3px 3px rgba(0,0,0,0.2);
+}
 .wbpTabHeaders {
 	float: left;
 	width: 100px;
