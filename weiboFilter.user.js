@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		可以使用加号指定多个需要同时出现的关键词；可以使用双引号添加带空格的关键词；修正极简阅读模式下微博正文溢出的问题；（旧版微博）增加对升级新版微博邀请的屏蔽；（新版微博）增加对单条微博“推荐微刊”模块的屏蔽
-// @version			1.0.4
-// @revision		73
+// @features		可禁止默认选中“同时转发到我的微博”
+// @version			1.0.5
+// @revision		74
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
 // @grant			GM_getValue
@@ -101,6 +101,7 @@ Options.prototype = {
 		mergeSidebars : ['bool'],
 		unwrapText : ['bool'],
 		showAllGroups : ['bool'],
+		noDefaultFwd : ['bool'],
 		overrideMyBack : ['bool'],
 		overrideOtherBack : ['bool'],
 		backColor : ['string', 'rgba(100%, 100%, 100%, 0.2)'],
@@ -1067,6 +1068,13 @@ var $page = (function () {
 		}
 		styles.innerHTML = cssText + '\n';
 	};
+	// 禁止默认选中“同时转发到我的微博”
+	var disableDefaultForward = function (node) {
+		var fwdCheckbox = node.querySelector('.commoned_list .W_checkbox[name="forward"]');
+		if (fwdCheckbox && fwdCheckbox.checked) {
+			fwdCheckbox.checked = false;
+		}
+	};
 	// 将左边栏合并到右边栏
 	var leftBar = $.select('.W_main_l'), navBar;
 	if (leftBar) { navBar = leftBar.querySelector('.WB_left_nav'); }
@@ -1180,19 +1188,25 @@ var $page = (function () {
 	// 直接应用页面设置（此时页面已载入完成）
 	// 与IFRAME相关的处理在下面注册的DOMNodeInserted事件中完成
 	apply();
+	// 禁止默认选中“同时转发到我的微博”（对于单条微博页面，只运行一次）
+	disableDefaultForward(document);
 	// 处理动态载入内容
 	document.addEventListener('DOMNodeInserted', function (event) {
 		var scope = $.scope(), node = event.target;
 		//if (node.tagName !== 'SCRIPT') { console.log(node); }
-		if (scope && node.tagName === 'DIV' && ($.V5 ? node.classList.contains('group_read') : node.querySelector('.nfTagB'))) {
+		if (node.tagName !== 'DIV') { return; }
+		if (scope && ($.V5 ? node.classList.contains('group_read') : node.querySelector('.nfTagB'))) {
 			// 重新载入设置按钮
 			showSettingsBtn();
-		} else if (node.tagName === 'DIV' && node.classList.contains('name_card')) {
+		} else if (node.classList.contains('name_card')) {
 			// 用户信息气球
 			modifyNamecard(node);
-		} else if (node.tagName === 'DIV' && (node.classList.contains('W_main_r') || node.querySelector('.W_main_r'))) {
+		} else if (node.classList.contains('W_main_r') || node.querySelector('.W_main_r')) {
 			// 合并边栏
 			mergeSidebars();
+		} else if ($options.noDefaultFwd && node.querySelector('.commoned_list')) {
+			// 禁止默认选中“同时转发到我的微博”
+			disableDefaultForward(node);
 		}
 	}, false);
 	document.addEventListener('DOMNodeRemoved', function (event) {
