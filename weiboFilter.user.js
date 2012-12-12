@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		可禁止默认选中“同时转发到我的微博”
+// @features		可禁止默认选中“同时转发到我的微博”；（新版微博）屏蔽“回顾你的微博点滴”；（新版微博）修正首页使用自定义模板时无法完全透明的问题；（新版微博）修正个人主页背景无法完全透明的问题
 // @version			1.0.5
 // @revision		74
 // @author			@富平侯
@@ -834,7 +834,7 @@ var $page = (function () {
 			RecomFeed : 'div[node-type="feed_list_recommend"]',
 			Nofollow : '#pl_profile_unfollow',
 			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .B_profile .W_main_2r',
-			ProfCover : '#plc_profile_header { min-height: 250px } #plc_profile_header .pf_head { top: 20px } #plc_profile_header .pf_info { margin-top: 20px } #pl_profile_cover',
+			ProfCover : '#plc_profile_header { min-height: 250px } #plc_profile_header .pf_head { top: 10px } #plc_profile_header .pf_info { margin-top: 20px } #pl_profile_cover',
 			ProfStats : '#plc_profile_header { min-height: 195px } #pl_profile_photo .user_atten',
 			MyRelation : '#pl_profile_moduleMyRelation',
 			Relation : '#pl_profile_moduleHisRelation',
@@ -1117,10 +1117,10 @@ var $page = (function () {
 			cssText += 'body:not(.S_profile) .W_gotop { margin-left: 415px }\n';
 		}
 		if ($.V5 && $options.overrideMyBack) {
-			cssText += 'body:not(.S_profile) .W_main { background-image: none !important; background-color: ' + $options.backColor + ' } body:not(.S_profile) .S_bg4, body:not(.S_profile) .W_main_a { background-color: transparent !important }\n';
+			cssText += 'body:not(.S_profile) .W_main { background: none ' + $options.backColor + ' !important } body:not(.S_profile) .S_bg4, body:not(.S_profile) .W_main_a, body:not(.S_profile) .W_main_bg { background: none transparent !important }\n';
 		}
 		if ($.V5 && $options.overrideOtherBack) {
-			cssText += '.S_profile .W_profile_bg { background-color: ' + $options.backColor + ' } .S_profile .S_bg4:not(.W_profile_bg) { background-color: transparent }\n';
+			cssText += '.S_profile .W_profile_bg { background-color: ' + $options.backColor + ' } .S_profile .S_bg4:not(.W_profile_bg), .S_profile .S_bg5, .S_profile .profile_tabbig { background: none transparent !important }\n';
 		}		
 		if ($options.useCustomStyles) {
 			cssText += $options.customStyles;
