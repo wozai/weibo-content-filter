@@ -819,7 +819,7 @@ var $page = (function () {
 			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], div[ad-data]',
 			Stats : '#pl_rightmod_myinfo .user_atten',
 			InterestUser : '#trustPagelet_recom_interestv5',
-			Promotion : '#pl_rightmod_yunying',
+			Promotion : '#pl_rightmod_yunying, #trustPagelet_checkin_lotteryv5',
 			Topic : '#trustPagelet_zt_hottopicv5',
 			Member : '#trustPagelet_recom_memberv5',
 			AllInOne : '#trustPagelet_recom_allinonev5',
