@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		可禁止默认选中“同时转发到我的微博”；（新版微博）屏蔽“回顾你的微博点滴”；（新版微博）修正首页使用自定义模板时无法完全透明的问题；（新版微博）修正个人主页背景无法完全透明的问题
+// @features		可禁止默认选中“同时转发到我的微博”；（新版微博）常用边栏可随页面滚动；（新版微博）屏蔽“回顾你的微博点滴”；（新版微博）修正首页使用自定义模板时无法完全透明的问题；（新版微博）修正个人主页背景无法完全透明的问题
 // @version			1.0.5
 // @revision		74
 // @author			@富平侯
@@ -99,6 +99,7 @@ Options.prototype = {
 		readerModeWidth : ['string', 750],
 		readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
 		mergeSidebars : ['bool'],
+		floatSidebar : ['bool'],
 		unwrapText : ['bool'],
 		showAllGroups : ['bool'],
 		noDefaultFwd : ['bool'],
@@ -1100,7 +1101,7 @@ var $page = (function () {
 	};
 	// 用户自定义样式及程序附加样式
 	var customStyles = function () {
-		var cssText = '', styles = $('wbpCustomStyles');
+		var cssText = '.W_person_info { margin: 0 20px 20px !important }\n', styles = $('wbpCustomStyles');
 		if (!styles) {
 			styles = document.createElement('style');
 			styles.type = 'text/css';
@@ -1115,6 +1116,13 @@ var $page = (function () {
 		}
 		if ($.V5 && $options.mergeSidebars) {
 			cssText += 'body:not(.S_profile) .W_gotop { margin-left: 415px }\n';
+		}
+		if ($.V5 && $options.floatSidebar) {
+			if ($options.mergeSidebars) {
+				cssText += 'body:not(.S_profile) .W_main_r { position: fixed; margin-left: 600px; } body:not(.S_profile) .W_main_r > div { display: none } body:not(.S_profile) #wbpNavBar, #pl_rightmod_myinfo { display: block !important }\n';
+			} else {
+				cssText += 'body:not(.S_profile) .WB_left_nav { position: fixed; width: 150px }\n';
+			}
 		}
 		if ($.V5 && $options.overrideMyBack) {
 			cssText += 'body:not(.S_profile) .W_main { background: none ' + $options.backColor + ' !important } body:not(.S_profile) .S_bg4, body:not(.S_profile) .W_main_a, body:not(.S_profile) .W_main_bg { background: none transparent !important }\n';
