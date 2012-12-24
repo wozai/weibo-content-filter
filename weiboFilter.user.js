@@ -3,9 +3,9 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		可禁止默认选中“同时转发到我的微博”；（新版微博）常用边栏可随页面滚动；（新版微博）屏蔽“回顾你的微博点滴”；（新版微博）修正首页使用自定义模板时无法完全透明的问题；（新版微博）修正个人主页背景无法完全透明的问题
-// @version			1.0.5
-// @revision		74
+// @features		增加对自由之星标识、礼物盒模块的屏蔽；修正关闭双栏模式时“我关注的人”左边栏部分按钮失效的问题
+// @version			1.0.6
+// @revision		75
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
 // @grant			GM_getValue
@@ -835,8 +835,10 @@ var $page = (function () {
 			RecomFeed : 'div[node-type="feed_list_recommend"]',
 			Nofollow : '#pl_profile_unfollow',
 			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .B_profile .W_main_2r',
-			ProfCover : '#plc_profile_header { min-height: 250px } #plc_profile_header .pf_head { top: 10px } #plc_profile_header .pf_info { margin-top: 20px } #pl_profile_cover',
+			ProfCover : '#plc_profile_header { min-height: 250px } #plc_profile_header .pf_head { top: 10px } #plc_profile_header .pf_info { margin-top: 20px } #plc_profile_header .S_bg5 { background-color: transparent !important } #pl_profile_cover',
 			ProfStats : '#plc_profile_header { min-height: 195px } #pl_profile_photo .user_atten',
+			MyGift : '#pl_profile_giftBox',
+			HisGift : '#pl_profile_hisGiftBox',
 			MyRelation : '#pl_profile_moduleMyRelation',
 			Relation : '#pl_profile_moduleHisRelation',
 			PublicGroup : '#pl_profile_modulePublicGroup',
@@ -853,7 +855,8 @@ var $page = (function () {
 			MemberIcon : '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)',
 			VerifyIcon : '.approve:not(.wbpShow), .approve_co:not(.wbpShow)',
 			DarenIcon : '.ico_club:not(.wbpShow)',
-			VgirlIcon : '.ico_vlady:not(.wbpShow)'
+			VgirlIcon : '.ico_vlady:not(.wbpShow)',
+			OppoIcon : '.ico_oppo:not(.wbpShow)'
 		} : {
 			Ads : '#plc_main .W_main_r [id^="ads_"], div[ad-data]',
 			Stats : 'ul.user_atten',
@@ -1080,7 +1083,8 @@ var $page = (function () {
 	var leftBar = $.select('.W_main_l'), navBar;
 	if (leftBar) { navBar = leftBar.querySelector('.WB_left_nav'); }
 	var mergeSidebars = function () {
-		if (!navBar) { return; }
+		// 不要作用于“我关注的人”页面
+		if (!navBar || navBar.id === 'pl_leftNav_relation') { return; }
 		if ($options.mergeSidebars && !navBar.id) {
 			var rightBar = $.select('.W_main_r'), myInfo = $('pl_rightmod_myinfo');
 			if (!rightBar) { return; }
