@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		增加对自由之星标识、礼物盒模块的屏蔽；修正关闭双栏模式时“我关注的人”左边栏部分按钮失效的问题
+// @features		（新版微博）可以禁止在浏览分组时默认发布新微博到该分组；增加对自由之星标识、礼物盒模块的屏蔽；（新版微博）修正关闭双栏模式时“我关注的人”左边栏部分按钮失效的问题；（新版微博）修正去掉个人主页封面图时背景颜色的问题
 // @version			1.0.6
 // @revision		75
 // @author			@富平侯
@@ -103,6 +103,7 @@ Options.prototype = {
 		unwrapText : ['bool'],
 		showAllGroups : ['bool'],
 		noDefaultFwd : ['bool'],
+		noDefaultGroupPub : ['bool'],
 		overrideMyBack : ['bool'],
 		overrideOtherBack : ['bool'],
 		backColor : ['string', 'rgba(100%, 100%, 100%, 0.2)'],
@@ -1079,6 +1080,14 @@ var $page = (function () {
 			fwdCheckbox.checked = false;
 		}
 	};
+	// 禁止默认发布新微博到当前浏览的分组
+	var disableDefaultGroupPub = function (node) {
+		var groupLink = node.querySelector('.limits a[node-type="showPublishTo"]');
+		if ($.V5 && groupLink) {
+			groupLink.firstChild.innerHTML = '公开';
+			groupLink.setAttribute('action-data', 'rank=0');
+		}
+	};
 	// 将左边栏合并到右边栏
 	var leftBar = $.select('.W_main_l'), navBar;
 	if (leftBar) { navBar = leftBar.querySelector('.WB_left_nav'); }
@@ -1202,6 +1211,8 @@ var $page = (function () {
 	apply();
 	// 禁止默认选中“同时转发到我的微博”（对于单条微博页面，只运行一次）
 	disableDefaultForward(document);
+	// 禁止默认发布新微博到当前浏览的分组（只运行一次）
+	disableDefaultGroupPub(document);
 	// 处理动态载入内容
 	document.addEventListener('DOMNodeInserted', function (event) {
 		var scope = $.scope(), node = event.target;
@@ -1219,6 +1230,9 @@ var $page = (function () {
 		} else if ($options.noDefaultFwd && node.querySelector('.commoned_list')) {
 			// 禁止默认选中“同时转发到我的微博”
 			disableDefaultForward(node);
+		} else if ($options.noDefaultGroupPub && node.classList.contains('send_weibo')) {
+			// 禁止默认发布新微博到当前浏览的分组
+			disableDefaultGroupPub(node);
 		}
 	}, false);
 	document.addEventListener('DOMNodeRemoved', function (event) {
