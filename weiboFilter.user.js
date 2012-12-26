@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		（新版微博）可以禁止在浏览分组时默认发布新微博到该分组；增加对自由之星标识、礼物盒模块的屏蔽；（新版微博）修正关闭双栏模式时“我关注的人”左边栏部分按钮失效的问题；（新版微博）修正去掉个人主页封面图时背景颜色的问题
+// @features		（新版微博）可以屏蔽推广微博；（新版微博）可以禁止在浏览分组时默认发布新微博到该分组；增加对自由之星标识、礼物盒模块的屏蔽；（新版微博）修正关闭双栏模式时“我关注的人”左边栏部分按钮失效的问题；（新版微博）修正去掉个人主页封面图时背景颜色的问题
 // @version			1.0.6
 // @revision		75
 // @author			@富平侯
@@ -112,6 +112,7 @@ Options.prototype = {
 		skinID : ['string', 'skinvip001'],
 		filterPaused : ['bool'],
 		filterSmiley : ['bool'],
+		filterPromotions : ['bool'],
 		filterDeleted : ['bool'],
 		filterFeelings : ['bool'],
 		filterDupFwd : ['bool'],
@@ -557,7 +558,7 @@ var $dialog = (function () {
 
 // 关键词过滤器
 var $filter = (function () {
-	var forwardFeeds = {}, floodFeeds = {};
+	var forwardFeeds = {}, floodFeeds = {}, promotionFeeds = [];
 	// 搜索指定文本中是否包含列表中的关键词
 	var search = function  (str, key) {
 		var text = str.toLowerCase(), keywords = $options[key];
@@ -608,11 +609,12 @@ var $filter = (function () {
 		var mid = feed.getAttribute('mid');
 		if (!mid) { return false; } // 动态没有mid
 		var scope = $.scope(), isForward = (feed.getAttribute('isforward') === '1');
-		var author, content, source, fwdAuthor, fwdContent, fwdSource, fwdLink;
+		var author, content, source, pubTime, fwdAuthor, fwdContent, fwdSource, fwdLink;
 		if ($.V5) {
 			author = (scope === 1) ? feed.querySelector('.WB_detail>.WB_info>a.WB_name') : null;
 			content = feed.querySelector('.WB_detail>.WB_text');
 			source = feed.querySelector('.WB_detail>.WB_func>.WB_from>em+a');
+			pubTime = feed.querySelector('.WB_detail>.WB_func>.WB_from>.WB_time');
 			fwdAuthor = feed.querySelector('.WB_media_expand .WB_info>a.WB_name');
 			fwdContent = feed.querySelector('.WB_media_expand .WB_text');
 			fwdSource = feed.querySelector('.WB_media_expand>.WB_func>.WB_from>em+a');
@@ -641,6 +643,19 @@ var $filter = (function () {
 		if ($options.filterPaused || search(text, 'whiteKeywords')) {
 			// 白名单条件
 		} else if ((function () { // 黑名单条件
+			// 屏蔽推广微博
+			if (scope === 1 && $.V5 && $options.filterPromotions) {
+				if (promotionFeeds.indexOf(mid) > -1) {
+					console.warn('↑↑↑【推广微博被屏蔽】↑↑↑');
+					return true;
+				}
+				if (pubTime.innerHTML.indexOf('推广') > -1) {
+					promotionFeeds.push(mid);
+					//console.warn('↑↑↑【推广微博被屏蔽】↑↑↑');
+					alert('发现来自@' + author.getAttribute('nick-name') + ' 的推广微博，已屏蔽！');
+					return true;
+				}
+			}
 			// 屏蔽已删除微博的转发（是转发但无转发作者）
 			if ($options.filterDeleted && isForward && !fwdAuthor) {
 				console.warn('↑↑↑【已删除微博的转发被屏蔽】↑↑↑');
