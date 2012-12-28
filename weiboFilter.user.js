@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		（新版微博）可以屏蔽推广微博；（新版微博）可以禁止在浏览分组时默认发布新微博到该分组；增加对自由之星标识、礼物盒模块的屏蔽；（新版微博）修正关闭双栏模式时“我关注的人”左边栏部分按钮失效的问题；（新版微博）修正去掉个人主页封面图时背景颜色的问题
+// @features		（新版微博）可以屏蔽推广微博；（新版微博）可以禁止在浏览分组时默认发布新微博到该分组；（新版微博）可以选择不屏蔽自己发布的微博；增加对自由之星标识、礼物盒模块的屏蔽；（新版微博）修正关闭双栏模式时“我关注的人”左边栏部分按钮失效的问题；（新版微博）修正去掉个人主页封面图时背景颜色的问题
 // @version			1.0.6
 // @revision		75
 // @author			@富平侯
@@ -110,6 +110,7 @@ Options.prototype = {
 		overrideMySkin : ['bool'],
 		overrideOtherSkin : ['bool'],
 		skinID : ['string', 'skinvip001'],
+		filterOthersOnly : ['bool'],
 		filterPaused : ['bool'],
 		filterSmiley : ['bool'],
 		filterPromotions : ['bool'],
@@ -639,12 +640,13 @@ var $filter = (function () {
 		}
 		console.log(text);
 
-		if ($options.filterPaused || search(text, 'whiteKeywords')) {
+		if ($options.filterPaused || // 暂停屏蔽
+			($.V5 && $options.filterOthersOnly && feed.querySelector('.WB_detail>.WB_func>.WB_handle a[action-type="feed_list_delete"]')) || // 不要屏蔽自己的微博（判据：工具栏是否有“删除”）
+			search(text, 'whiteKeywords')) { // 白名单
 			// 白名单条件
 		} else if ((function () { // 黑名单条件
 			// 屏蔽推广微博
 			if (scope === 1 && $.V5 && $options.filterPromotions && feed.getAttribute('feedtype') === 'ad') {
-				alert('发现来自@' + author.getAttribute('nick-name') + ' 的推广微博，已屏蔽！');
 				console.warn('↑↑↑【推广微博被屏蔽】↑↑↑');
 				return true;
 			}
