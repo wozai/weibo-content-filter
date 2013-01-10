@@ -39,9 +39,6 @@
 #wbpNavBar .WB_left_nav .lev_edit .lev a {
 	width: 200px;
 }
-.wbpV4 .wbpV5Only, .wbpV5 .wbpV4Only {
-	display: none;
-}
 .wbpSettings p {
 	line-height: 150%;
 }
@@ -146,12 +143,8 @@
 	font-weight: bold;
 	margin-right: 15px;
 }
-.wbpV5 .wbpToolBtns {
+.wbpToolBtns {
 	width: 105px;
-	text-align: right;
-}
-.wbpV4 .wbpToolBtns {
-	width: 120px;
 	text-align: right;
 }
 .wbpToolBtns a + a {
