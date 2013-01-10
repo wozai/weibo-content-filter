@@ -45,7 +45,7 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" node-type="whiteKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+<input type="text" node-type="whiteKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；区分简繁体">
 </div>
 </td>
 <td class="wbpToolBtns">
@@ -66,7 +66,7 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" node-type="blackKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+<input type="text" node-type="blackKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；区分简繁体">
 </div>
 </td>
 <td class="wbpToolBtns">
@@ -87,7 +87,7 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" node-type="grayKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+<input type="text" node-type="grayKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；区分简繁体">
 </div>
 </td>
 <td class="wbpToolBtns">
@@ -141,7 +141,7 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" node-type="URLKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+<input type="text" node-type="URLKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；区分简繁体">
 </div>
 </td>
 <td class="wbpToolBtns">
@@ -185,7 +185,7 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" node-type="sourceKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+<input type="text" node-type="sourceKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；区分简繁体">
 </div>
 </td>
 <td class="wbpToolBtns">
@@ -206,7 +206,7 @@
 <tr>
 <td>
 <div class="wbpInput">
-<input type="text" node-type="sourceGrayKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；支持正则表达式">
+<input type="text" node-type="sourceGrayKeywords" class="input" placeholder="多个关键词用空格隔开；不区分大小写；区分简繁体">
 </div>
 </td>
 <td class="wbpToolBtns">
@@ -223,9 +223,9 @@
 </div>
 <div node-type="tabAdvanced" style="display: none">
 <p>注意：对于所有屏蔽微博的功能，白名单具有最高优先级；如果一条微博包含白名单中的关键词，则<span style="color: red">一定不会</span>被屏蔽。</p>
-<p class="wbpV5Only"><input type="checkbox" node-type="filterOthersOnly"><label><span style="color: blue">不要屏蔽我自己发布的微博</span></label></p>
+<p><input type="checkbox" node-type="filterOthersOnly"><label>不要屏蔽我自己发布的微博</label></p>
 <p><input type="checkbox" node-type="filterPaused"><label><span style="color: red">暂停屏蔽</span>：选中时暂时停止屏蔽微博</label></p>
-<p class="wbpV5Only"><input type="checkbox" node-type="filterPromotions"><label><span style="color: blue">屏蔽推广微博</span></label></p>
+<p><input type="checkbox" node-type="filterPromotions"><label>屏蔽推广微博</label></p>
 <p><input type="checkbox" node-type="filterDeleted"><label>屏蔽已删除微博的转发</label></p>
 <p><input type="checkbox" node-type="filterFeelings"><label>屏蔽写心情微博</label></p>
 <div style="margin-top: 8px">
@@ -255,22 +255,13 @@
 <td><input type="checkbox" node-type="hideActivity"><label>微活动（发布框下方）</label></td>
 <td><input type="checkbox" node-type="hideRecommendedTopic"><label>推荐微话题（发布框右上）</label></td>
 </tr>
-<tr class="wbpV4Only">
-<td><input type="checkbox" node-type="hideUserGuide"><label>微博精选</label></td>
-<td><input type="checkbox" node-type="hideTasks"><label>微博宝典</label></td>
-</tr>
 <tr>
 <td><input type="checkbox" node-type="hideMedal"><label>勋章</label></td>
 <td><input type="checkbox" node-type="hideLevel"><label>微博等级</label></td>
 </tr>
-<tr class="wbpV4Only">
-<td><input type="checkbox" node-type="hideHello"><label>打招呼（个人主页）</label></td>
-<td><input type="checkbox" node-type="hideBalloon"><label>各种提示气球</label></td>
-</tr>
 <tr>
 <td><input type="checkbox" node-type="hideApp"><label>我的应用（左边栏）</label></td>
-<td class="wbpV5Only"><input type="checkbox" node-type="hideRecomFeed"><label>精彩微博推荐</label></td>
-<td class="wbpV4Only"><input type="checkbox" node-type="hideGame"><label>我的游戏（左边栏）</label></td>
+<td><input type="checkbox" node-type="hideRecomFeed"><label>精彩微博推荐</label></td>
 </tr>
 <tr class="wbpRowSpacing">
 <td><input type="checkbox" node-type="hideStats"><label>关注/粉丝/微博数</label></td>
@@ -288,13 +279,6 @@
 <td><input type="checkbox" node-type="hideAllInOne"><label>微吧/微刊/应用</label></td>
 <td><input type="checkbox" node-type="hideNotice"><label>公告栏</label></td>
 </tr>
-<tr class="wbpV4Only">
-<td><input type="checkbox" node-type="hideMood"><label>心情</label></td>
-<td><input type="checkbox" node-type="hideHelpFeedback"><label>玩转微博</label></td>
-</tr>
-<tr class="wbpV4Only">
-<td><input type="checkbox" node-type="hideUpgradeToV5"><label>升级新版微博</label></td>
-</tr>
 <tr class="wbpRowSpacing">
 <td><input type="checkbox" node-type="hideVerifyIcon"><label>个人/机构认证标识</label><a href="http://verified.weibo.com/verify" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 approve wbpShow"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 approve_co wbpShow"></a></td>
 <td><input type="checkbox" node-type="hideDarenIcon"><label>微博达人标识</label><a href="http://club.weibo.com/intro" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 ico_club wbpShow"></a></td>
@@ -304,46 +288,46 @@
 <td><input type="checkbox" node-type="hideVgirlIcon"><label>微博女郎标识</label><a href="http://vgirl.weibo.com/" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 ico_vlady wbpShow"></a></td>
 </tr>
 <tr>
-<td><input type="checkbox" node-type="hideOppoIcon"><label><span style="color: blue">自由之星标识</span></label><a href="http://all.vic.sina.com.cn/2012oppoulike/index.php?c=index&a=home" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 ico_oppo wbpShow"></a></td>
+<td><input type="checkbox" node-type="hideOppoIcon"><label>自由之星标识</label><a href="http://all.vic.sina.com.cn/2012oppoulike/index.php?c=index&a=home" target="_blank"><img src="http://img.t.sinajs.cn/t4/style/images/common/transparent.gif" class="W_ico16 ico_oppo wbpShow"></a></td>
 </tr>
-<tr class="wbpRowSpacing wbpV5Only">
+<tr class="wbpRowSpacing">
 <td><input type="checkbox" node-type="hideProfCover"><label>封面图（个人主页）</label></td>
 <td><input type="checkbox" node-type="hideProfStats"><label>关注/粉丝/微博数（个人主页）</label></td>
 </tr>
-<tr class="wbpV5Only">
+<tr>
 <td><input type="checkbox" node-type="hideNofollow"><label>加关注（未关注用户的个人主页）</label></td>
 </tr>
-<tr class="wbpV5Only">
+<tr>
 <td colspan="2"><input type="checkbox" node-type="hideMyRightSidebar"><label><span style="color: red">个人主页右边栏</span>：选中后整个右边栏将被去除</label></td>
 </tr>
-<tr class="wbpV5Only">
-<td><input type="checkbox" node-type="hideMyGift"><label><span style="color: blue">我的礼物盒（个人主页）</span></label></td>
-<td><input type="checkbox" node-type="hideHisGift"><label><span style="color: blue">他/她的礼物盒（个人主页）</span></label></td>
+<tr>
+<td><input type="checkbox" node-type="hideMyGift"><label>我的礼物盒（个人主页）</label></td>
+<td><input type="checkbox" node-type="hideHisGift"><label>他/她的礼物盒（个人主页）</label></td>
 </tr>
-<tr class="wbpV5Only">
+<tr>
 <td><input type="checkbox" node-type="hideMyRelation"><label>我的关注/粉丝（个人主页）</label></td>
 <td><input type="checkbox" node-type="hideRelation"><label>微关系（个人主页）</label></td>
 </tr>
-<tr class="wbpV5Only">
+<tr>
 <td><input type="checkbox" node-type="hidePublicGroup"><label>公开分组（个人主页）</label></td>
 <td><input type="checkbox" node-type="hidePublicGroupRecom"><label>推荐的公开分组（个人主页）</label></td>
 </tr>
-<tr class="wbpV5Only">
+<tr>
 <td><input type="checkbox" node-type="hideAlbum"><label>微相册（个人主页）</label></td>
 <td><input type="checkbox" node-type="hideAppWidget"><label>应用卡片（微游戏等，个人主页）</label></td>
 </tr>
-<tr class="wbpRowSpacing wbpV5Only">
+<tr class="wbpRowSpacing">
 <td colspan="2"><input type="checkbox" node-type="hideFeedRightSidebar"><label><span style="color: red">单条微博右边栏</span>：选中后整个右边栏将被去除</label></td></tr>
 </tr>
-<tr class="wbpV5Only">
+<tr>
 <td><input type="checkbox" node-type="hideRecomPerson"><label>微博相关人（单条微博）</label></td>
 <td><input type="checkbox" node-type="hideRecomTopic"><label>推荐话题（单条微博）</label></td>
 </tr>
-<tr class="wbpV5Only">
+<tr>
 <td><input type="checkbox" node-type="hideRecomWeibo"><label>推荐微博（单条微博）</label></td>
 <td><input type="checkbox" node-type="hideHotWeibo"><label>热门微博（单条微博）</label></td>
 </tr>
-<tr class="wbpV5Only">
+<tr>
 <td><input type="checkbox" node-type="hideRecomWeiba"><label>推荐微吧（单条微博）</label></td>
 <td><input type="checkbox" node-type="hideRecomWeikan"><label>推荐微刊（单条微博）</label></td>
 </tr>
@@ -355,12 +339,12 @@
 </p>
 </div>
 <div node-type="tabModify" style="display: none">
-<p class="wbpV5Only"><input type="checkbox" node-type="mergeSidebars"><label><span style="color: red">双栏版式</span>（将左边栏并入右边栏）</label></p>
-<p class="wbpV5Only"><input type="checkbox" node-type="floatSidebar"><label><span style="color: red">浮动常用边栏</span>（常用边栏随页面滚动）</label></p>
-<p class="wbpV5Only"><input type="checkbox" node-type="showAllGroups"><label>始终显示所有分组</label></p>
-<p class="wbpV5Only"><input type="checkbox" node-type="unwrapText"><label>微博作者与正文间不折行</label></p>
-<p><input type="checkbox" node-type="noDefaultFwd"><label>禁止默认选中“同时转发到我的微博”</label></p>
-<p class="wbpV5Only"><input type="checkbox" node-type="noDefaultGroupPub"><label><span style="color: blue">禁止在浏览分组时默认发布新微博到该分组</span></label></p>
+<p><input type="checkbox" node-type="mergeSidebars"><label><span style="color: red">双栏版式</span>（将左边栏并入右边栏）</label></p>
+<p><input type="checkbox" node-type="floatSidebar"><label><span style="color: red">浮动常用边栏</span>（常用边栏随页面滚动）</label></p>
+<p><input type="checkbox" node-type="showAllGroups"><label>始终显示所有分组</label></p>
+<p><input type="checkbox" node-type="unwrapText"><label>微博作者与正文间不折行</label></p>
+<p><input type="checkbox" node-type="noDefaultFwd"><label>禁止在评论时默认选中“同时转发到我的微博”</label></p>
+<p><input type="checkbox" node-type="noDefaultGroupPub"><label>禁止在浏览分组时默认发布新微博到该分组</label></p>
 <div style="margin-top: 15px">
 在
 <input type="checkbox" node-type="readerModeIndex" style="margin: 0 2px 0 8px"><label>我的首页</label>
@@ -385,7 +369,7 @@
 </tbody>
 </table>
 </div>
-<div class="wbpV5Only" style="margin-top: 10px">
+<div style="margin-top: 10px">
 设置
 <input type="checkbox" node-type="overrideMyBack" style="margin: 0 2px 0 8px"><label>我的首页</label>
 <input type="checkbox" node-type="overrideOtherBack" style="margin: 0 2px 0 8px"><label style="margin-right: 8px">个人主页</label>
