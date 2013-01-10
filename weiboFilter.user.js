@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		【！！旧版微博用户请勿升级！！】
+// @features		【！！旧版微博用户请勿升级！！】；增加对“Vivo敢梦”标识的屏蔽；修正屏蔽来源在用户主页失效的问题
 // @version			1.1
 // @revision		76
 // @author			@富平侯
@@ -605,12 +605,12 @@ var $filter = (function () {
 		var mid = feed.getAttribute('mid');
 		if (!mid) { return false; } // 动态没有mid
 		var scope = $.scope(), isForward = (feed.getAttribute('isforward') === '1');
-		var author = (scope === 1) ? feed.querySelector('.WB_detail>.WB_info>a.WB_name') : null,
+		var author = (scope === 1) ? feed.querySelector('.WB_detail>.WB_info .WB_name') : null,
 			content = feed.querySelector('.WB_detail>.WB_text'),
-			source = feed.querySelector('.WB_detail>.WB_func>.WB_from>em+a'),
-			fwdAuthor = feed.querySelector('.WB_media_expand .WB_info>a.WB_name'),
+			source = feed.querySelector('.WB_detail>.WB_func .WB_from>em+a'),
+			fwdAuthor = feed.querySelector('.WB_media_expand .WB_info .WB_name'),
 			fwdContent = feed.querySelector('.WB_media_expand .WB_text'),
-			fwdSource = feed.querySelector('.WB_media_expand>.WB_func>.WB_from>em+a'),
+			fwdSource = feed.querySelector('.WB_media_expand .WB_func .WB_from>em+a'),
 			fwdLink = feed.querySelector('.WB_media_expand .WB_func .WB_time'),
 			fmid = isForward ? (fwdLink ? fwdLink.href : null) : null,
 			uid = author ? author.getAttribute('usercard') : null;
@@ -846,7 +846,8 @@ var $page = (function () {
 			VerifyIcon : '.approve:not(.wbpShow), .approve_co:not(.wbpShow)',
 			DarenIcon : '.ico_club:not(.wbpShow)',
 			VgirlIcon : '.ico_vlady:not(.wbpShow)',
-			OppoIcon : '.ico_oppo:not(.wbpShow)'
+			OppoIcon : '.ico_oppo:not(.wbpShow)',
+			VivoIcon : '.ico_vivo:not(.wbpShow)'
 		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
