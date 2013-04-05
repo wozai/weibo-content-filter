@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		【！！旧版微博用户请勿升级！！】；增加对“Vivo敢梦”标识的屏蔽；修正屏蔽来源在用户主页失效的问题；修正更换模板功能在使用非自定义模板的页面失效的问题
+// @features		【！！旧版微博用户请勿升级！！】；修正屏蔽来源在用户主页失效的问题；修正更换模板功能在使用非自定义模板的页面失效的问题
 // @version			1.1
 // @revision		76
 // @author			@富平侯
@@ -835,9 +835,7 @@ var $page = (function () {
 			MemberIcon : '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)',
 			VerifyIcon : '.approve:not(.wbpShow), .approve_co:not(.wbpShow)',
 			DarenIcon : '.ico_club:not(.wbpShow)',
-			VgirlIcon : '.ico_vlady:not(.wbpShow)',
-			OppoIcon : '.ico_oppo:not(.wbpShow)',
-			VivoIcon : '.ico_vivo:not(.wbpShow)'
+			VgirlIcon : '.ico_vlady:not(.wbpShow)'
 		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
