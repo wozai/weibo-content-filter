@@ -107,7 +107,9 @@ Options.prototype = {
 		maxDupFwd : ['string', 1],
 		filterFlood : ['bool'],
 		maxFlood : ['string', 5],
+		//#if GREASEMONKEY
 		autoUpdate : ['bool', true],
+		//#endif
 		floatBtn : ['bool', true],
 		useCustomStyles : ['bool', true],
 		customStyles : ['string'],
@@ -172,6 +174,7 @@ if (!$options.load($.get($.uid.toString()))) {
 	alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 }
 
+//#if GREASEMONKEY
 var $update = (function () {
 	// 检查更新
 	var checkUpdate = function (event) {
@@ -218,6 +221,7 @@ var $update = (function () {
 	}
 	return checkUpdate;
 })();
+//#endif
 
 var $dialog = (function () {
 	var shown = false, dialog, content;
@@ -489,7 +493,9 @@ var $dialog = (function () {
 				alert('设置导入失败！\n设置信息格式有问题。');
 			}
 		});
+		//#if GREASEMONKEY
 		bind('checkUpdate', $update);
+		//#endif
 		bind('OK', function () {
 			$options = exportSettings();
 			$options.save();
