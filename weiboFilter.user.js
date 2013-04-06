@@ -591,7 +591,9 @@ var $filter = (function () {
 			// 转发内容
 			text += '////@' + fwdAuthor.getAttribute('nick-name') + ': ' + getText(fwdContent);
 		}
+		//#if DEBUG
 		console.log(text);
+		//#endif
 
 		if ($options.filterPaused || // 暂停屏蔽
 			($options.filterOthersOnly && feed.querySelector('.WB_detail>.WB_func>.WB_handle a[action-type="feed_list_delete"]')) || // 不要屏蔽自己的微博（判据：工具栏是否有“删除”）
@@ -600,54 +602,72 @@ var $filter = (function () {
 		} else if ((function () { // 黑名单条件
 			// 屏蔽推广微博
 			if (scope === 1 && $options.filterPromotions && feed.getAttribute('feedtype') === 'ad') {
+				//#if DEBUG
 				console.warn('↑↑↑【推广微博被屏蔽】↑↑↑');
+				//#endif
 				return true;
 			}
 			// 屏蔽已删除微博的转发（是转发但无转发作者）
 			if ($options.filterDeleted && isForward && !fwdAuthor) {
+				//#if DEBUG
 				console.warn('↑↑↑【已删除微博的转发被屏蔽】↑↑↑');
+				//#endif
 				return true;
 			}
 			// 用户黑名单
 			if ((scope === 1 && author && $options.userBlacklist.indexOf(author.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1) ||
 					(isForward && fwdAuthor && $options.userBlacklist.indexOf(fwdAuthor.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1)) {
+				//#if DEBUG
 				console.warn('↑↑↑【被用户黑名单屏蔽】↑↑↑');
+				//#endif
 				return true;
 			}
 			// 屏蔽写心情微博
 			if ($options.filterFeelings && feed.querySelector('div.feelingBoxS')) {
+				//#if DEBUG
 				console.warn('↑↑↑【写心情微博被屏蔽】↑↑↑');
+				//#endif
 				return true;
 			}
 			// 屏蔽指定来源
 			if (searchSource(source, 'sourceKeywords') ||
 					(isForward && searchSource(fwdSource, 'sourceKeywords'))) {
+				//#if DEBUG
 				console.warn('↑↑↑【被来源黑名单屏蔽】↑↑↑');
+				//#endif
 				return true;
 			}
 			// 反版聊（屏蔽重复转发）
 			if ($options.filterDupFwd && fmid && forwardFeeds[fmid]) {
 				if (forwardFeeds[fmid].length >= Number($options.maxDupFwd) && forwardFeeds[fmid].indexOf(mid) === -1) {
+					//#if DEBUG
 					console.warn('↑↑↑【被反版聊功能屏蔽】↑↑↑');
+					//#endif
 					return true;
 				}
 			}
 			// 反刷屏（屏蔽同一用户大量发帖）
 			if ($options.filterFlood && uid && floodFeeds[uid]) {
 				if (floodFeeds[uid] >= Number($options.maxFlood) && floodFeeds[uid].indexOf(mid) === -1) {
+					//#if DEBUG
 					console.warn('↑↑↑【被反刷屏功能屏蔽】↑↑↑');
+					//#endif
 					return true;
 				}
 			}
 			// 在微博内容中搜索屏蔽关键词
 			if (search(text, 'blackKeywords')) {
+				//#if DEBUG
 				console.warn('↑↑↑【被关键词黑名单屏蔽】↑↑↑');
+				//#endif
 				return true;
 			}
 			// 搜索t.cn短链接
 			return Array.prototype.some.call(feed.getElementsByTagName('A'), function (link) {
 				if (link.href.substring(0, 12) === 'http://t.cn/' && search(link.title, 'URLKeywords')) {
+					//#if DEBUG
 					console.warn('↑↑↑【被链接黑名单屏蔽】↑↑↑');
+					//#endif
 					return true;
 				}
 				return false;
