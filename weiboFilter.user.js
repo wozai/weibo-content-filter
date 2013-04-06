@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		【！！旧版微博用户请勿升级！！】；修正屏蔽来源在用户主页失效的问题；修正更换模板功能在使用非自定义模板的页面失效的问题
+// @features		【！！旧版微博用户请勿升级！！】；修正屏蔽来源在用户主页失效的问题；修正更换模板功能在使用非自定义模板的页面失效的问题；首次进入极简阅读模式时显示提示
 // @version			1.1
 // @revision		76
 // @author			@富平侯
@@ -34,7 +34,7 @@ var $ = (function () {
 		return root.querySelector(css);
 	};
 	// 如果必要(Chrome)，通过脚本注入获得unsafeWindow
-	$.window = (unsafeWindow && unsafeWindow.$CONFIG) ? unsafeWindow :
+	$.window = (typeof unsafeWindow !== 'undefined' && unsafeWindow.$CONFIG) ? unsafeWindow :
 			(function () {
 				var e = document.createElement('p');
 				e.setAttribute('onclick', 'return window;');
@@ -104,6 +104,7 @@ Options.prototype = {
 		tipTextColor : ['string', '#FF8080'],
 		readerModeIndex : ['bool'],
 		readerModeProfile : ['bool'],
+		readerModeTip : ['bool'],
 		readerModeWidth : ['string', 750],
 		readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
 		mergeSidebars : ['bool'],
@@ -121,7 +122,7 @@ Options.prototype = {
 		filterOthersOnly : ['bool'],
 		filterPaused : ['bool'],
 		filterSmiley : ['bool'],
-		filterPromotions : ['bool'],
+		filterPromotions : ['bool', true],
 		filterDeleted : ['bool'],
 		filterFeelings : ['bool'],
 		filterDupFwd : ['bool'],
@@ -925,6 +926,11 @@ var $page = (function () {
 						'.B_profile .W_main_c { padding-top: 0; width: ' + width + 'px }\n' +
 						'.B_profile .WB_feed .repeat .input textarea { width: 100% }\n' +
 						'.B_profile .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
+			}
+			if (!$options.readerModeTip) {
+				$.STK.ui.alert('欢迎进入极简阅读模式！您可以按【F8】键快速开关本模式，也可以在“眼不见心不烦”插件设置“改造版面”页进行选择。');
+				$options.readerModeTip = true;
+				$options.save();
 			}
 		} else if (readerModeStyles) {
 			$.remove(readerModeStyles);
