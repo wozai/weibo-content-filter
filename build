@@ -4,6 +4,16 @@ export VER='1.1b2'
 export MAINVER='1.1'
 export REV=77
 
+while getopts ":nd" optname
+do
+	case "$optname" in
+		"n") PARAMS+=' --nocompress' ;;
+		"d") PARAMS+=' --flag=DEBUG';;
+		"?") echo "Unknown option -$OPTARG"; exit 1;;
+		":") echo "Missing argument value for option -$OPTARG"; exit 1;;
+	esac
+done
+
 # Greasemonkey
 printf 'Building Greasemonkey script...'
 export CSS=`./compile.pl settings.css`
@@ -11,7 +21,7 @@ export HTML=`./compile.pl settings.html`
 SCRIPT="latest/weiboFilter-v${VER}.user.js"
 ./compile.pl --nocompress head.js > $SCRIPT
 printf '\n' >> $SCRIPT
-./compile.pl weiboFilter.user.js >> $SCRIPT
+./compile.pl $PARAMS weiboFilter.user.js >> $SCRIPT
 unset CSS HTML
 echo ' done.'
 
