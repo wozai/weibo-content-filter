@@ -32,6 +32,7 @@ export HTML=`./compile.pl --flag=CHROME settings.html`
 rm -f release/latest/chrome/*
 cp chrome/* release/latest/chrome/
 ./compile.pl --nocompress -out="release/latest/chrome/manifest.json" chrome/manifest.json
+./compile.pl $PARAMS --out="release/latest/chrome/main.js" chrome/main.js
 ./compile.pl $PARAMS --flag=CHROME --out="release/latest/chrome/weiboFilter.js" weiboFilter.user.js
 echo ' done.'
 
