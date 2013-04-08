@@ -11,32 +11,32 @@ var $ = (function () {
 		if (!root) { root = document; }
 		return root.querySelector(css);
 	};
-	// 如果必要(Chrome)，通过脚本注入获得unsafeWindow
-	$.window = (typeof unsafeWindow !== 'undefined' && unsafeWindow.$CONFIG) ? unsafeWindow :
-			(function () {
-				var e = document.createElement('p');
-				e.setAttribute('onclick', 'return window;');
-				return e.onclick();
-			})();
-	$.config = $.window.$CONFIG;
-	if (!$.config) { return undefined; }
-	$.uid = $.config && $.config.uid;
-	$.STK = $.window.STK;
-	// Chrome不支持GM_setValue(), GM_getValue()等，需要使用localStorage重新定义
-	// Firefox 2+, Internet Explorer 8+, Safari 4+和Chrome均支持DOM Storage (HTML5)
-	if (!GM_getValue || (GM_getValue.toString && GM_getValue.toString().indexOf("not supported") > -1)) {
-		var CHROME_KEY_ROOT = 'weiboPlus.';
-		$.get = function (name, defval) {
-			var val = localStorage.getItem(CHROME_KEY_ROOT + name);
-			return val === null ? defval : val;
-		};
-		$.set = function (name, value) {
-			localStorage.setItem(CHROME_KEY_ROOT + name, value);
-		};
-	} else {
+	//#if GREASEMONKEY
+	if (typeof unsafeWindow !== 'undefined' && unsafeWindow.$CONFIG) {
+		$.window = unsafeWindow;
 		$.get = GM_getValue;
 		$.set = GM_setValue;
+	} else {
+		alert('当前版本的“眼不见心不烦”(v${VER})不支持您使用的浏览器。\n\n如果您正在使用Chrome，请【卸载】本插件后到【Chrome应用商店】搜索【眼不见心不烦（新浪微博）官方版】安装支持Chrome的新版插件。');
+		return undefined;
 	}
+	//#elseif CHROME
+	// Chrome 27开始不再支持通过脚本注入方式获取unsafeWindow
+	$.window = window;
+	var CHROME_KEY_ROOT = 'weiboPlus.';
+	$.get = function (name, defVal) {
+		var val = localStorage.getItem(CHROME_KEY_ROOT + name);
+		return val === null ? defVal : val;
+	};
+	$.set = function (name, value) {
+		localStorage.setItem(CHROME_KEY_ROOT + name, value);
+	};
+	//#endif
+	$.config = $.window.$CONFIG;
+	if (!$.config) { return undefined; }
+	$.uid = $.config.uid;
+	if (!$.uid) { return undefined; }
+	$.STK = $.window.STK;
 	// 删除节点
 	$.remove = function (el) {
 		if (el) { el.parentNode.removeChild(el); }
@@ -53,7 +53,9 @@ var $ = (function () {
 })();
 
 if (!$) {
+	//#if DEBUG
 	console.warn('不在作用范围内，脚本未运行！');
+	//#endif
 	return false;
 }
 // == LEGACY CODE START ==
@@ -932,7 +934,7 @@ var $page = (function () {
 						'.B_profile .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 			}
 			if (!$options.readerModeTip) {
-				$.STK.ui.alert('欢迎进入极简阅读模式！您可以按【F8】键快速开关本模式，也可以在“眼不见心不烦”插件设置“改造版面”页进行选择。');
+				$.STK.ui.alert('欢迎进入极简阅读模式！<br><br>您可以按【F8】键快速开关本模式，也可以在“眼不见心不烦”插件设置“改造版面”页进行选择。');
 				$options.readerModeTip = true;
 				$options.save();
 			}
@@ -988,6 +990,7 @@ var $page = (function () {
 	};
 	// 禁止默认选中“同时转发到我的微博”
 	var disableDefaultForward = function (node) {
+		if (!$options.noDefaultFwd) { return; }
 		var fwdCheckbox = node.querySelector('.commoned_list .W_checkbox[name="forward"]');
 		if (fwdCheckbox && fwdCheckbox.checked) {
 			fwdCheckbox.checked = false;
@@ -995,6 +998,7 @@ var $page = (function () {
 	};
 	// 禁止默认发布新微博到当前浏览的分组
 	var disableDefaultGroupPub = function (node) {
+		if (!$options.noDefaultGroupPub) { return; }
 		var groupLink = node.querySelector('.limits a[node-type="showPublishTo"]');
 		if (groupLink) {
 			groupLink.firstChild.innerHTML = '公开';
@@ -1115,17 +1119,21 @@ var $page = (function () {
 		overrideSkin();
 		// 应用自定义CSS
 		customStyles();
+		// 禁止默认选中“同时转发到我的微博”
+		disableDefaultForward(document);
+		// 禁止默认发布新微博到当前浏览的分组
+		disableDefaultGroupPub(document);
 	};
 
 	// IFRAME载入不会影响head中的CSS，只添加一次即可
-	GM_addStyle('${CSS}');
+	var myStyles = document.createElement('style');
+	myStyles.type = 'text/css';
+	myStyles.id = 'wbpStyles';
+	myStyles.innerHTML = '${CSS}';
+	document.head.appendChild(myStyles);
 	// 直接应用页面设置（此时页面已载入完成）
 	// 与IFRAME相关的处理在下面注册的DOMNodeInserted事件中完成
 	apply();
-	// 禁止默认选中“同时转发到我的微博”（对于单条微博页面，只运行一次）
-	disableDefaultForward(document);
-	// 禁止默认发布新微博到当前浏览的分组（只运行一次）
-	disableDefaultGroupPub(document);
 	// 处理动态载入内容
 	document.addEventListener('DOMNodeInserted', function (event) {
 		var scope = $.scope(), node = event.target;
@@ -1140,10 +1148,10 @@ var $page = (function () {
 		} else if (node.classList.contains('W_main_r') || node.querySelector('.W_main_r')) {
 			// 合并边栏
 			mergeSidebars();
-		} else if ($options.noDefaultFwd && node.querySelector('.commoned_list')) {
+		} else if (node.querySelector('.commoned_list')) {
 			// 禁止默认选中“同时转发到我的微博”
 			disableDefaultForward(node);
-		} else if ($options.noDefaultGroupPub && node.classList.contains('send_weibo')) {
+		} else if (node.classList.contains('send_weibo')) {
 			// 禁止默认发布新微博到当前浏览的分组
 			disableDefaultGroupPub(node);
 		}
