@@ -1,0 +1,29 @@
+{
+	"name": "眼不见心不烦（新浪微博）官方版",
+	"version": "${MAINVER}",
+	"manifest_version": 2,
+	"description": "在新浪微博屏蔽关键词、用户、推广微博，去除页面广告，恢复双栏版式，反版聊、反刷屏，还您一个清爽干净的微博！",
+	"icons": {
+		"48": "weiboFilter.png",
+		"128": "weiboFilter.large.png"
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"http://weibo.com/*",
+				"http://www.weibo.com/*"
+			],
+			"js": [
+				"main.js"
+			],
+			"run_at": "document_end"
+		}
+	],
+	"web_accessible_resources": [
+		"weiboFilter.js"
+	],	
+	"permissions": [
+		"http://weibo.com/*",
+		"http://www.weibo.com/*"
+	]
+}

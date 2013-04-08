@@ -10,7 +10,6 @@
 // @committers		@牛肉火箭, @JoyerHuang_悦
 // @grant			GM_getValue
 // @grant			GM_setValue
-// @grant			GM_addStyle
 // @grant			GM_xmlhttpRequest
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*

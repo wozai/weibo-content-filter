@@ -16,13 +16,23 @@ done
 
 # Greasemonkey
 printf 'Building Greasemonkey script...'
-export CSS=`./compile.pl settings.css`
-export HTML=`./compile.pl settings.html`
-SCRIPT="latest/weiboFilter-v${VER}.user.js"
+export CSS=`./compile.pl --flag=GREASEMONKEY settings.css`
+export HTML=`./compile.pl --flag=GREASEMONKEY settings.html`
+SCRIPT="release/latest/weiboFilter-v${VER}.user.js"
 ./compile.pl --nocompress head.js > $SCRIPT
 printf '\n' >> $SCRIPT
 ./compile.pl $PARAMS --flag=GREASEMONKEY weiboFilter.user.js >> $SCRIPT
 unset CSS HTML
+echo ' done.'
+
+# Chrome
+printf 'Building Chrome extension...'
+export CSS=`./compile.pl --flag=CHROME settings.css`
+export HTML=`./compile.pl --flag=CHROME settings.html`
+rm -f release/latest/chrome/*
+cp chrome/* release/latest/chrome/
+./compile.pl --nocompress -out="release/latest/chrome/manifest.json" chrome/manifest.json
+./compile.pl $PARAMS --flag=CHROME --out="release/latest/chrome/weiboFilter.js" weiboFilter.user.js
 echo ' done.'
 
 unset VER MAINVER REV
