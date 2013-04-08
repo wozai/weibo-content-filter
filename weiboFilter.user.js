@@ -14,7 +14,14 @@ var $ = (function () {
 	//#if GREASEMONKEY
 	if (typeof unsafeWindow !== 'undefined' && unsafeWindow.$CONFIG) {
 		$.window = unsafeWindow;
-		$.get = GM_getValue;
+		$.get = function (name, defVal, callback) {
+			result = GM_getValue(name, defVal);
+			if (typeof callback === 'function') {
+				callback(result);
+			} else {
+				return result;
+			}
+		}
 		$.set = GM_setValue;
 	} else {
 		alert('当前版本的“眼不见心不烦”(v${VER})不支持您使用的浏览器。\n\n如果您正在使用Chrome，请【卸载】本插件后到【Chrome应用商店】搜索【眼不见心不烦（新浪微博）官方版】安装支持Chrome的新版插件。');
@@ -23,14 +30,36 @@ var $ = (function () {
 	//#elseif CHROME
 	// Chrome 27开始不再支持通过脚本注入方式获取unsafeWindow
 	$.window = window;
-	var CHROME_KEY_ROOT = 'weiboPlus.';
-	$.get = function (name, defVal) {
-		var val = localStorage.getItem(CHROME_KEY_ROOT + name);
-		return val === null ? defVal : val;
-	};
+	var callbacks = {}; messageID = 0;
+	document.addEventListener('wbpPost', function (event) {
+		event.stopPropagation();
+		callbacks[event.detail.id](event.detail.value);
+		delete callbacks[event.detail.id];
+	});
+	$.get = function (name, defVal, callback) {
+		// == LEGACY CODE START ==
+		// 将先前版本插件的设置从localStorage转移到chrome.storage.local
+		var lsName = 'weiboPlus.' + name;
+		var value = localStorage.getItem(lsName);
+		if (value !== null) {
+			localStorage.removeItem(lsName);
+			$.set(name, value);
+			return callback(value);
+		}
+		// == LEGACY CODE END ==
+		callbacks[++messageID] = callback;
+		document.dispatchEvent(new CustomEvent("wbpGet", { detail: { 
+			name : name, 
+			defVal : defVal, 
+			id : messageID
+		}}));
+	}
 	$.set = function (name, value) {
-		localStorage.setItem(CHROME_KEY_ROOT + name, value);
-	};
+		document.dispatchEvent(new CustomEvent("wbpSet", { detail: {
+			name : name, 
+			value : value 
+		}}));
+	}
 	//#endif
 	$.config = $.window.$CONFIG;
 	if (!$.config) { return undefined; }
@@ -172,9 +201,7 @@ Options.prototype = {
 };
 
 var $options = new Options();
-if (!$options.load($.get($.uid.toString()))) {
-	alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
-}
+$options.load(); // 载入默认设置
 
 //#if GREASEMONKEY
 var $update = (function () {
@@ -770,13 +797,10 @@ var $filter = (function () {
 		});
 	};
 
-	// 如果第一次运行时就在作用范围内，则直接屏蔽关键词（此时页面已载入完成）；
-	// 否则交由后面注册的DOMNodeInserted事件处理
+	// 处理动态载入的微博
 	if ($.scope()) {
 		bindTipOnClick($.select('.WB_feed'));
-		applyToAll();
 	}
-	// 处理动态载入的微博
 	document.addEventListener('DOMNodeInserted', function (event) {
 		if ($.scope() === 0) { return; }
 		var node = event.target;
@@ -1131,9 +1155,6 @@ var $page = (function () {
 	myStyles.id = 'wbpStyles';
 	myStyles.innerHTML = '${CSS}';
 	document.head.appendChild(myStyles);
-	// 直接应用页面设置（此时页面已载入完成）
-	// 与IFRAME相关的处理在下面注册的DOMNodeInserted事件中完成
-	apply();
 	// 处理动态载入内容
 	document.addEventListener('DOMNodeInserted', function (event) {
 		var scope = $.scope(), node = event.target;
@@ -1183,5 +1204,17 @@ var $page = (function () {
 	apply.modules = modules;
 	return apply;
 })();
+
+$.get($.uid.toString(), undefined, function (options) {
+	if (!$options.load(options)) {
+		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
+	}
+	// 如果第一次运行时就在作用范围内，则直接屏蔽关键词（此时页面已载入完成）；
+	// 否则交由$filter中注册的DOMNodeInserted事件处理
+	if ($.scope()) { $filter(); }
+	// 直接应用页面设置（此时页面已载入完成）
+	// 与IFRAME相关的处理由$page中注册的DOMNodeInserted事件完成
+	$page();
+});
 
 })();
