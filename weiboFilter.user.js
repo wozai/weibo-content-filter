@@ -36,7 +36,7 @@ var $ = (function () {
 		callbacks[event.detail.id](event.detail.value);
 		delete callbacks[event.detail.id];
 	});
-	$.get = function (name, defVal, callback) {
+	$.get = function (name, defVal, callback, sync) {
 		// == LEGACY CODE START ==
 		// 将先前版本插件的设置从localStorage转移到chrome.storage.local
 		var lsName = 'weiboPlus.' + name;
@@ -49,15 +49,17 @@ var $ = (function () {
 		// == LEGACY CODE END ==
 		callbacks[++messageID] = callback;
 		document.dispatchEvent(new CustomEvent("wbpGet", { detail: { 
-			name : name, 
-			defVal : defVal, 
-			id : messageID
+			name : name,
+			defVal : defVal,
+			id : messageID,
+			sync : sync
 		}}));
 	}
-	$.set = function (name, value) {
+	$.set = function (name, value, sync) {
 		document.dispatchEvent(new CustomEvent("wbpSet", { detail: {
-			name : name, 
-			value : value 
+			name : name,
+			value : value,
+			sync : sync
 		}}));
 	}
 	//#endif
@@ -141,6 +143,9 @@ Options.prototype = {
 		//#if GREASEMONKEY
 		autoUpdate : ['bool', true],
 		//#endif
+		//#if CHROME
+		autoSync : ['bool', true],
+		//#endif
 		floatBtn : ['bool', true],
 		useCustomStyles : ['bool', true],
 		customStyles : ['string'],
@@ -158,9 +163,9 @@ Options.prototype = {
 		return JSON.stringify(stripped);
 	},
 	// 保存设置
-	save : function () {
+	save : function (sync) {
 		// 自动调用toString()
-		$.set($.uid.toString(), JSON.stringify(this));
+		$.set($.uid.toString(), JSON.stringify(this), sync && $options.autoSync);
 	},
 	// 载入/导入设置，输入的str为undefined（首次使用时）或string（非首次使用和导入设置时）
 	load : function (str) {
@@ -527,7 +532,7 @@ var $dialog = (function () {
 		//#endif
 		bind('OK', function () {
 			$options = exportSettings();
-			$options.save();
+			$options.save(true);
 			$filter();
 			$page();
 			dialog.hide();
@@ -960,7 +965,7 @@ var $page = (function () {
 			if (!$options.readerModeTip) {
 				$.STK.ui.alert('欢迎进入极简阅读模式！<br><br>您可以按【F8】键快速开关本模式，也可以在“眼不见心不烦”插件设置“改造版面”页进行选择。');
 				$options.readerModeTip = true;
-				$options.save();
+				$options.save(); // 不同步设置以防频繁写操作导致同步失败
 			}
 		} else if (readerModeStyles) {
 			$.remove(readerModeStyles);
@@ -1117,7 +1122,7 @@ var $page = (function () {
 			} else {
 				$options.userBlacklist.splice(i, 1);
 			}
-			$options.save();
+			$options.save(true);
 			$filter();
 			// 回溯到顶层，关闭信息气球
 			while (node.className !== 'W_layer') {
@@ -1196,7 +1201,7 @@ var $page = (function () {
 			} else {
 				$options.readerModeProfile = !$options.readerModeProfile;
 			}
-			$options.save();
+			$options.save(); // 不同步设置以防频繁写操作导致同步失败
 			toggleReaderMode();
 		}
 	}, false);
@@ -1205,16 +1210,34 @@ var $page = (function () {
 	return apply;
 })();
 
+// 先读取本地设置
 $.get($.uid.toString(), undefined, function (options) {
+	var init = function () {
+		// 如果第一次运行时就在作用范围内，则直接屏蔽关键词（此时页面已载入完成）；
+		// 否则交由$filter中注册的DOMNodeInserted事件处理
+		if ($.scope()) { $filter(); }
+		// 直接应用页面设置（此时页面已载入完成）
+		// 与IFRAME相关的处理由$page中注册的DOMNodeInserted事件完成
+		$page();
+	}
 	if (!$options.load(options)) {
 		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 	}
-	// 如果第一次运行时就在作用范围内，则直接屏蔽关键词（此时页面已载入完成）；
-	// 否则交由$filter中注册的DOMNodeInserted事件处理
-	if ($.scope()) { $filter(); }
-	// 直接应用页面设置（此时页面已载入完成）
-	// 与IFRAME相关的处理由$page中注册的DOMNodeInserted事件完成
-	$page();
+	//#if CHROME
+	if ($options.autoSync) {
+		// 如果本地设置中开启了设置同步，则读取云端设置
+		return $.get($.uid.toString(), undefined, function (options) {
+				if (options) {
+					$options.load(options);
+				} else {
+					// 如果云端尚无设置，则将本地设置保存至云端
+					$options.save(true);
+				}
+				init();
+			}, true);
+	}
+	//#endif
+	init();
 });
 
 })();
