@@ -12,7 +12,7 @@ var $ = (function () {
 		return root.querySelector(css);
 	};
 	//#if GREASEMONKEY
-	if (typeof unsafeWindow !== 'undefined' && unsafeWindow.$CONFIG) {
+	if (typeof unsafeWindow !== 'undefined') {
 		$.window = unsafeWindow;
 		$.get = function (name, defVal, callback) {
 			result = GM_getValue(name, defVal);
@@ -30,7 +30,7 @@ var $ = (function () {
 	//#elseif CHROME
 	// Chrome 27开始不再支持通过脚本注入方式获取unsafeWindow
 	$.window = window;
-	var callbacks = {}; messageID = 0;
+	var callbacks = {}, messageID = 0;
 	document.addEventListener('wbpPost', function (event) {
 		event.stopPropagation();
 		callbacks[event.detail.id](event.detail.value);
@@ -54,14 +54,14 @@ var $ = (function () {
 			id : messageID,
 			sync : sync
 		}}));
-	}
+	};
 	$.set = function (name, value, sync) {
 		document.dispatchEvent(new CustomEvent("wbpSet", { detail: {
 			name : name,
 			value : value,
 			sync : sync
 		}}));
-	}
+	};
 	//#endif
 	$.config = $.window.$CONFIG;
 	if (!$.config) { return undefined; }
@@ -163,9 +163,9 @@ Options.prototype = {
 		return JSON.stringify(stripped);
 	},
 	// 保存设置
-	save : function (sync) {
+	save : function () {
 		// 自动调用toString()
-		$.set($.uid.toString(), JSON.stringify(this), sync && $options.autoSync);
+		$.set($.uid.toString(), JSON.stringify(this), $options.autoSync);
 	},
 	// 载入/导入设置，输入的str为undefined（首次使用时）或string（非首次使用和导入设置时）
 	load : function (str) {
@@ -532,7 +532,7 @@ var $dialog = (function () {
 		//#endif
 		bind('OK', function () {
 			$options = exportSettings();
-			$options.save(true);
+			$options.save();
 			$filter();
 			$page();
 			dialog.hide();
@@ -836,7 +836,6 @@ var $page = (function () {
 			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], div[ad-data]',
 			Stats : '#pl_rightmod_myinfo .user_atten',
 			InterestUser : '#trustPagelet_recom_interestv5',
-			Promotion : '#pl_rightmod_yunying, #trustPagelet_checkin_lotteryv5',
 			Topic : '#trustPagelet_zt_hottopicv5',
 			Member : '#trustPagelet_recom_memberv5',
 			AllInOne : '#trustPagelet_recom_allinonev5',
@@ -846,6 +845,8 @@ var $page = (function () {
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
 			App : '#pl_leftnav_app',
 			Level : 'span.W_level_ico',
+			PhishingTip : 'div[node-type="feed_privateset_tip"]',
+			MemberTip : 'div[node-type="feed_list_shieldKeyword"]',
 			TopComment : '#pl_content_commentTopNav',
 			Medal : '.pf_badge_icon',
 			RecomFeed : 'div[node-type="feed_list_recommend"]',
@@ -853,12 +854,8 @@ var $page = (function () {
 			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .B_profile .W_main_2r',
 			ProfCover : '#plc_profile_header { min-height: 250px } #plc_profile_header .pf_head { top: 10px } #plc_profile_header .pf_info { margin-top: 20px } #plc_profile_header .S_bg5 { background-color: transparent !important } #pl_profile_cover',
 			ProfStats : '#plc_profile_header { min-height: 195px } #pl_profile_photo .user_atten',
-			MyGift : '#pl_profile_giftBox',
-			HisGift : '#pl_profile_hisGiftBox',
 			MyRelation : '#pl_profile_moduleMyRelation',
 			Relation : '#pl_profile_moduleHisRelation',
-			PublicGroup : '#pl_profile_modulePublicGroup',
-			PublicGroupRecom : '#pl_profile_modulePublicGroupRecommend',
 			Album : '#pl_profile_modulealbum',
 			AppWidget : '#pl_profile_appWidget, #trustPagelet_profile_openApplist',
 			FeedRightSidebar : '.B_onefeed .W_main_c, .B_onefeed .WB_detail .WB_media_expand .input textarea { width: 100% } .B_onefeed .W_main_2r',
@@ -965,7 +962,7 @@ var $page = (function () {
 			if (!$options.readerModeTip) {
 				$.STK.ui.alert('欢迎进入极简阅读模式！<br><br>您可以按【F8】键快速开关本模式，也可以在“眼不见心不烦”插件设置“改造版面”页进行选择。');
 				$options.readerModeTip = true;
-				$options.save(); // 不同步设置以防频繁写操作导致同步失败
+				$options.save();
 			}
 		} else if (readerModeStyles) {
 			$.remove(readerModeStyles);
@@ -1122,7 +1119,7 @@ var $page = (function () {
 			} else {
 				$options.userBlacklist.splice(i, 1);
 			}
-			$options.save(true);
+			$options.save();
 			$filter();
 			// 回溯到顶层，关闭信息气球
 			while (node.className !== 'W_layer') {
@@ -1201,7 +1198,7 @@ var $page = (function () {
 			} else {
 				$options.readerModeProfile = !$options.readerModeProfile;
 			}
-			$options.save(); // 不同步设置以防频繁写操作导致同步失败
+			$options.save();
 			toggleReaderMode();
 		}
 	}, false);
@@ -1219,7 +1216,7 @@ $.get($.uid.toString(), undefined, function (options) {
 		// 直接应用页面设置（此时页面已载入完成）
 		// 与IFRAME相关的处理由$page中注册的DOMNodeInserted事件完成
 		$page();
-	}
+	};
 	if (!$options.load(options)) {
 		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 	}
@@ -1231,7 +1228,7 @@ $.get($.uid.toString(), undefined, function (options) {
 					$options.load(options);
 				} else {
 					// 如果云端尚无设置，则将本地设置保存至云端
-					$options.save(true);
+					$options.save();
 				}
 				init();
 			}, true);
