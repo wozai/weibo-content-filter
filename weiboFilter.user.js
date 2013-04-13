@@ -12,24 +12,48 @@ var $ = (function () {
 		return root.querySelector(css);
 	};
 	//#if GREASEMONKEY
-	if (typeof unsafeWindow !== 'undefined') {
-		$.window = unsafeWindow;
-		$.get = function (name, defVal, callback) {
-			result = GM_getValue(name, defVal);
-			if (typeof callback === 'function') {
-				callback(result);
-			} else {
-				return result;
-			}
-		}
-		$.set = GM_setValue;
-	} else {
+	if (window.chrome || typeof unsafeWindow === 'undefined') {
+		// 注意：Chrome 26及以前版本虽然存在unsafeWindow符号，但实际是沙箱中的window
 		alert('当前版本的“眼不见心不烦”(v${VER})不支持您使用的浏览器。\n\n如果您正在使用Chrome，请【卸载】本插件后到【Chrome应用商店】搜索【眼不见心不烦（新浪微博）官方版】安装支持Chrome的新版插件。');
 		return undefined;
+	} else {
+		$.window = unsafeWindow;
 	}
 	//#elseif CHROME
 	// Chrome 27开始不再支持通过脚本注入方式获取unsafeWindow
 	$.window = window;
+	//#endif
+	$.config = $.window.$CONFIG;
+	if (!$.config) {
+		//#if DEBUG
+		console.warn('找不到$CONFIG');
+		//#endif
+		return undefined;
+	}
+	$.uid = $.config.uid;
+	if (!$.uid) {
+		//#if DEBUG
+		console.warn('找不到$CONFIG.uid');
+		//#endif
+		return undefined;
+	}
+	$.STK = $.window.STK;
+	//#if GREASEMONKEY
+	$.get = function (name, defVal, callback) {
+		var result = GM_getValue(name, defVal);
+		if (typeof callback === 'function') {
+			callback(result);
+		} else {
+			return result;
+		}
+	};
+	$.set = function(name, value) {
+		// 必须限制GM_setValue的输入参数数量，否则会抛出错误
+		// 详见Greasemonkey的GM_ScriptStorage.prototype.setValue()
+		// https://github.com/greasemonkey/greasemonkey/blob/master/content/miscapis.js
+		GM_setValue(name, value);
+	};
+	//#elseif CHROME
 	var callbacks = {}, messageID = 0;
 	document.addEventListener('wbpPost', function (event) {
 		event.stopPropagation();
@@ -63,11 +87,6 @@ var $ = (function () {
 		}}));
 	};
 	//#endif
-	$.config = $.window.$CONFIG;
-	if (!$.config) { return undefined; }
-	$.uid = $.config.uid;
-	if (!$.uid) { return undefined; }
-	$.STK = $.window.STK;
 	// 删除节点
 	$.remove = function (el) {
 		if (el) { el.parentNode.removeChild(el); }
@@ -83,12 +102,8 @@ var $ = (function () {
 	return $;
 })();
 
-if (!$) {
-	//#if DEBUG
-	console.warn('不在作用范围内，脚本未运行！');
-	//#endif
-	return false;
-}
+if (!$) { return false; }
+
 // == LEGACY CODE START ==
 // 如果正在运行旧版微博则停止运行并显示提示
 if ($.config.any && $.config.any.indexOf('wvr=5') === -1) {
@@ -115,7 +130,7 @@ Options.prototype = {
 		tipTextColor : ['string', '#FF8080'],
 		readerModeIndex : ['bool'],
 		readerModeProfile : ['bool'],
-		readerModeTip : ['bool'],
+		readerModeTip : ['internal', false], // 内部变量：不在设置界面出现，不随设置导出
 		readerModeWidth : ['string', 750],
 		readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
 		mergeSidebars : ['bool'],
@@ -153,8 +168,8 @@ Options.prototype = {
 	},
 	// 转换为字符串
 	toString : function (strip) {
-		var stripped = {}, option;
-		for (option in this.items) {
+		var stripped = {};
+		for (var option in this.items) {
 			// 如果需要，则去掉所有内部变量
 			if (!strip || this.items[option][0] !== 'internal') {
 				stripped[option] = this[option];
@@ -169,7 +184,7 @@ Options.prototype = {
 	},
 	// 载入/导入设置，输入的str为undefined（首次使用时）或string（非首次使用和导入设置时）
 	load : function (str) {
-		var parsed = {}, option;
+		var parsed = {};
 		// 各类型默认值
 		var typeDefault = {
 			keyword : [],
@@ -189,11 +204,11 @@ Options.prototype = {
 			}
 		}
 		// 填充选项
-		for (option in this.items) {
-			if (parsed[option] !== undefined) {
+		for (var option in this.items) {
+			if (option in parsed) {
 				// 优先使用成功读取的值
 				this[option] = parsed[option];
-			} else if (this.items[option][1] !== undefined) {
+			} else if (this.items[option].length > 1) {
 				// 使用属性默认值
 				this[option] = this.items[option][1];
 			} else {
@@ -371,8 +386,8 @@ var $dialog = (function () {
 	};
 	// 返回当前设置（可能未保存）
 	var exportSettings = function () {
-		var options = new Options(), option;
-		for (option in options.items) {
+		var options = new Options();
+		for (var option in options.items) {
 			switch (options.items[option][0]) {
 			case 'keyword':
 				options[option] = getKeywords(option + 'List');
@@ -407,8 +422,7 @@ var $dialog = (function () {
 	};
 	// 更新设置窗口内容，exportSettings()的反过程
 	var importSettings = function (options) {
-		var option;
-		for (option in options.items) {
+		for (var option in options.items) {
 			switch (options.items[option][0]) {
 			case 'keyword':
 				getDom(option).value = '';
@@ -576,7 +590,7 @@ var $filter = (function () {
 					return (RegExp(keyword.substring(1, keyword.length - 1)).test(str));
 				} catch (e) { }
 			} else {
-				return keyword.split('+').every(function (k) { return text.indexOf(k.toLowerCase()) > -1 });
+				return keyword.split('+').every(function (k) { return text.indexOf(k.toLowerCase()) > -1; });
 			}
 			return false;
 		});
@@ -959,7 +973,9 @@ var $page = (function () {
 						'.B_profile .WB_feed .repeat .input textarea { width: 100% }\n' +
 						'.B_profile .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 			}
-			if (!$options.readerModeTip) {
+			if (!$options.readerModeTip && (
+					($.scope() === 1 && $options.readerModeIndex) ||
+					($.scope() === 2 && $options.readerModeProfile))) {
 				$.STK.ui.alert('欢迎进入极简阅读模式！<br><br>您可以按【F8】键快速开关本模式，也可以在“眼不见心不烦”插件设置“改造版面”页进行选择。');
 				$options.readerModeTip = true;
 				$options.save();
