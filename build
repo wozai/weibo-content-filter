@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export VER='1.1b2'
+export VER='1.1'
 export MAINVER='1.1'
 export REV=77
 
