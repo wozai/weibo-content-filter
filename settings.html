@@ -400,6 +400,23 @@
 <a href="javascript:void(0)" class="W_btn_b" node-type="import" style="float: right; margin-top: 6px"><span>导入</span></a>
 </div>
 <textarea node-type="settingsString" rows="10"></textarea>
+//#if DEBUG
+<div class="clearfix" style="margin-top: 8px">
+<div style="float: left; padding-top: 4px">
+<span style="color: red">调试模式</span>：在 
+<input type="radio" name="scope" checked="checked" style="vertical-align: middle"><label>脚本</label>
+//#if CHROME
+ 或 
+<input type="radio" node-type="extScope" name="scope" style="vertical-align: middle"><label>插件</label>
+//#endif
+ 环境中执行代码，结果输出到控制台
+</div>
+<div style="float: right">
+<a href="javascript:void(0)" class="W_btn_b" node-type="execute"><span>执行</span></a>
+</div>
+</div>
+<textarea node-type="debugSnippet" rows="3"></textarea>
+//#endif
 </div>
 </div>
 </div>
