@@ -2,7 +2,7 @@
 
 export VER='1.1'
 export MAINVER='1.1'
-export REV=77
+export REV=78
 
 while getopts ":nd" optname
 do

@@ -12,9 +12,14 @@ var $ = (function () {
 		return root.querySelector(css);
 	};
 	//#if GREASEMONKEY
-	if (window.chrome || typeof unsafeWindow === 'undefined') {
+	if (window.chrome) {
+		if (confirm('“眼不见心不烦”已在Chrome应用商店上架，加入了更多Chrome浏览器的专属功能（如设置同步）。\n\n请【卸载】本插件并到Chrome应用商店安装新版插件，点击“确定”可转入Chrome应用商店中的插件页面。')) {
+			window.open('https://chrome.google.com/webstore/detail/aognaapdfnnldnjglanfbbklaakbpejm', '_blank');
+		}
+		return undefined;
+	} else if (typeof unsafeWindow === 'undefined') {
 		// 注意：Chrome 26及以前版本虽然存在unsafeWindow符号，但实际是沙箱中的window
-		alert('当前版本的“眼不见心不烦”(v${VER})不支持您使用的浏览器。\n\n如果您正在使用Chrome，请【卸载】本插件后到【Chrome应用商店】搜索【眼不见心不烦（新浪微博）官方版】安装支持Chrome的新版插件。');
+		alert('当前版本的“眼不见心不烦”(v${VER})不支持您使用的浏览器。\n\n插件目前只对Firefox和Chrome浏览器提供官方支持。');
 		return undefined;
 	} else {
 		$.window = unsafeWindow;
@@ -108,7 +113,7 @@ if (!$) { return false; }
 // 如果正在运行旧版微博则停止运行并显示提示
 if ($.config.any && $.config.any.indexOf('wvr=5') === -1) {
 	if (confirm('您使用的“眼不见心不烦”版本(v${VER})不支持旧版微博。\n请升级到新版微博（V5），或使用较低版本（v1.0.6）的“眼不见心不烦”插件。\n如果您希望安装旧版“眼不见心不烦”，请点击“确认”。')) {
-		window.open('http://code.google.com/p/weibo-content-filter/downloads/list');
+		window.open('http://code.google.com/p/weibo-content-filter/downloads/list', '_blank');
 	}
 	return false;
 }
@@ -248,7 +253,7 @@ var $update = (function () {
 				}
 				// 显示更新提示
 				if (confirm('“眼不见心不烦”新版本v' + ver + '可用。\n\n' + features + '如果您希望更新，请点击“确认”打开插件主页。')) {
-					window.open('http://userscripts.org/scripts/show/114087');
+					window.open('http://userscripts.org/scripts/show/114087', '_blank');
 				}
 			}
 		});
