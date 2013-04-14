@@ -66,6 +66,16 @@ document.addEventListener('wbpSet', function (event) {
 		});
 	}
 });
+//#if DEBUG
+document.addEventListener('wbpDebug', function (event) {
+	event.stopPropagation();
+	try {
+		console.log(eval('(function(){' + event.detail.snippet + '})();'));
+	} catch (err) {
+		console.error(err);
+	}
+});
+//#endif
 // 将脚本注入页面环境
 var script = document.createElement('script');
 script.setAttribute('type', 'text/javascript');

@@ -72,7 +72,7 @@ var $ = (function () {
 		}
 		// == LEGACY CODE END ==
 		callbacks[++messageID] = callback;
-		document.dispatchEvent(new CustomEvent("wbpGet", { detail: { 
+		document.dispatchEvent(new CustomEvent('wbpGet', { detail: { 
 			name : name,
 			defVal : defVal,
 			id : messageID,
@@ -80,7 +80,7 @@ var $ = (function () {
 		}}));
 	};
 	$.set = function (name, value, sync) {
-		document.dispatchEvent(new CustomEvent("wbpSet", { detail: {
+		document.dispatchEvent(new CustomEvent('wbpSet', { detail: {
 			name : name,
 			value : value,
 			sync : sync
@@ -541,6 +541,24 @@ var $dialog = (function () {
 				alert('设置导入失败！\n设置信息格式有问题。');
 			}
 		});
+		//#if DEBUG
+		bind('execute', function () {
+			var snippet = getDom('debugSnippet').value;
+			//#if CHROME
+			if (getDom('extScope').checked) {
+				document.dispatchEvent(new CustomEvent('wbpDebug', { detail: { 
+					snippet : snippet
+				}}));
+				return;
+			}
+			//#endif
+			try {
+				console.log(eval('(function(){' + snippet + '})();'));
+			} catch (err) {
+				console.error(err);
+			}
+		});
+		//#endif
 		//#if GREASEMONKEY
 		bind('checkUpdate', $update);
 		//#endif
@@ -986,7 +1004,7 @@ var $page = (function () {
 	};
 	// 覆盖当前模板设置
 	var overrideSkin = function () {
-		var formerStyle = $('custom_style') || document.head.querySelector("link:not([id])[href*='/skin/']"),
+		var formerStyle = $('custom_style') || document.head.querySelector('link:not([id])[href*="/skin/"]'),
 			skinCSS = $('wbpOverrideSkin');
 		if (!formerStyle) { return; }
 		if (($.uid === $.config.oid && $options.overrideMySkin) ||
@@ -1000,7 +1018,7 @@ var $page = (function () {
 				document.head.insertBefore(skinCSS, formerStyle);
 			}
 			skinCSS.href = $.config.cssPath + 'skin/' + $options.skinID + 
-					'/skin' + ($.config.lang !== "zh-cn" ? '_CHT' : '') +
+					'/skin' + ($.config.lang !== 'zh-cn' ? '_CHT' : '') +
 					'.css?version=' + $.config.version;
 			formerStyle.disabled = true;
 		} else if (skinCSS) {
