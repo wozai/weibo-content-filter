@@ -11,6 +11,7 @@
 // @grant			GM_getValue
 // @grant			GM_setValue
 // @grant			GM_xmlhttpRequest
+// @grant			unsafeWindow
 // @include			http://weibo.com/*
 // @include			http://www.weibo.com/*
 // @updateURL		https://userscripts.org/scripts/source/114087.meta.js
