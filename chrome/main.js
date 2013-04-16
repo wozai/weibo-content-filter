@@ -43,7 +43,7 @@ document.addEventListener('wbpSet', function (event) {
 		// 一次性读取所有设置
 		chrome.storage.sync.get(null, function (items) {
 			var data = {}, i = 0, errorHandler = function () {
-				if (chrome.runtime.lastError) {
+				if (chrome.runtime && chrome.runtime.lastError) {
 					alert('将设置保存到云端时发生错误。\n\n' + chrome.runtime.lastError.message);
 				}
 			};
