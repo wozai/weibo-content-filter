@@ -12,20 +12,40 @@ var $ = (function () {
 		return root.querySelector(css);
 	};
 	//#if GREASEMONKEY
+	var CHROME_KEY_ROOT = 'weiboPlus.';
 	if (window.chrome) {
-		if (confirm('“眼不见心不烦”已在Chrome应用商店上架，加入了更多Chrome浏览器的专属功能（如设置同步）。\n\n请【卸载】本插件并到Chrome应用商店安装新版插件，点击“确定”可转入Chrome应用商店中的插件页面。')) {
+		var version = window.navigator.userAgent.match(/Chrome\/(\d+)/) && RegExp.$1;
+		if (!localStorage.getItem(CHROME_KEY_ROOT + 'chromeExtTip') && confirm('以用户脚本方式安装的“眼不见心不烦”插件将在Chrome 27及更高版本下失效。\n\n推荐您【卸载】本插件并到【Chrome应用商店】安装新版插件，点击“确定”即可转入安装页面。\n\n该版本支持更高版本的Chrome，并加入了Chrome浏览器的专属功能（如设置同步）。')) {
 			window.open('https://chrome.google.com/webstore/detail/aognaapdfnnldnjglanfbbklaakbpejm', '_blank');
 		}
-		return undefined;
+		localStorage.setItem(CHROME_KEY_ROOT + 'chromeExtTip', true); // 以后不再询问
+		if (version === null || version >= 27) {
+			// Chrome 27开始不再支持通过脚本注入方式获取unsafeWindow，也不再提供unsafeWindow符号
+			if (typeof unsafeWindow === 'undefined') {
+				console.warn('不支持Chrome ' + version);
+				return undefined;
+			} else { 
+				// Chrome 26以上仍然可以通过Tampermonkey获得unsafeWindow
+				console.warn('使用第三方扩展提供的unsafeWindow');
+				$.window = unsafeWindow;
+			}
+		} else {
+			// Chrome 26及以前版本虽然存在unsafeWindow符号，但实际是沙箱中的window，但可以通过脚本注入方式获取unsafeWindow
+			$.window = (function () {
+				console.warn('Chrome ' + version + ': 通过注入脚本获取unsafeWindow');
+				var div = document.createElement('div');
+				div.setAttribute('onclick', 'return window;');
+				return div.onclick();
+			})();
+		}
 	} else if (typeof unsafeWindow === 'undefined') {
-		// 注意：Chrome 26及以前版本虽然存在unsafeWindow符号，但实际是沙箱中的window
 		alert('当前版本的“眼不见心不烦”(v${VER})不支持您使用的浏览器。\n\n插件目前只对Firefox和Chrome浏览器提供官方支持。');
 		return undefined;
 	} else {
 		$.window = unsafeWindow;
 	}
 	//#elseif CHROME
-	// Chrome 27开始不再支持通过脚本注入方式获取unsafeWindow
+	// Chrome插件版本主程序注入页面环境，可直接获取window对象
 	$.window = window;
 	//#endif
 	$.config = $.window.$CONFIG;
@@ -44,20 +64,35 @@ var $ = (function () {
 	}
 	$.STK = $.window.STK;
 	//#if GREASEMONKEY
-	$.get = function (name, defVal, callback) {
-		var result = GM_getValue(name, defVal);
-		if (typeof callback === 'function') {
-			callback(result);
-		} else {
-			return result;
-		}
-	};
-	$.set = function(name, value) {
-		// 必须限制GM_setValue的输入参数数量，否则会抛出错误
-		// 详见Greasemonkey的GM_ScriptStorage.prototype.setValue()
-		// https://github.com/greasemonkey/greasemonkey/blob/master/content/miscapis.js
-		GM_setValue(name, value);
-	};
+	if (!GM_getValue || (GM_getValue.toString && GM_getValue.toString().indexOf("not supported") > -1)) {
+		$.get = function (name, defVal, callback) {
+			var result = localStorage.getItem(CHROME_KEY_ROOT + name);
+			if (result === null) { result = defVal; }
+			if (typeof callback === 'function') {
+				callback(result);
+			} else {
+				return result;
+			}			
+		};
+		$.set = function (name, value) {
+			localStorage.setItem(CHROME_KEY_ROOT + name, value);
+		};
+	} else {
+		$.get = function (name, defVal, callback) {
+			var result = GM_getValue(name, defVal);
+			if (typeof callback === 'function') {
+				callback(result);
+			} else {
+				return result;
+			}
+		};
+		$.set = function(name, value) {
+			// 必须限制GM_setValue的输入参数数量，否则会抛出错误
+			// 详见Greasemonkey的GM_ScriptStorage.prototype.setValue()
+			// https://github.com/greasemonkey/greasemonkey/blob/master/content/miscapis.js
+			GM_setValue(name, value);
+		};
+	}
 	//#elseif CHROME
 	var callbacks = {}, messageID = 0;
 	document.addEventListener('wbpPost', function (event) {
