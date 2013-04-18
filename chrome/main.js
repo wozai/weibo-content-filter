@@ -44,14 +44,25 @@ document.addEventListener('wbpSet', function (event) {
 		chrome.storage.sync.get(null, function (items) {
 			var data = {}, i = 0, errorHandler = function () {
 				if (chrome.runtime && chrome.runtime.lastError) {
-					alert('将设置保存到云端时发生错误。\n\n' + chrome.runtime.lastError.message);
+					alert('将设置保存到云端时发生错误。\n\n错误信息：' + chrome.runtime.lastError.message);
 				}
-			};
-			// 拆分字符串
-			while (value.length) {
-				data[name + '_' + (i++)] = value.substr(0, chrome.storage.sync.QUOTA_BYTES_PER_ITEM);
-				value = value.substr(chrome.storage.sync.QUOTA_BYTES_PER_ITEM);
+			}, partLength = Math.round(chrome.storage.sync.QUOTA_BYTES_PER_ITEM * 0.8);
+			// chrome.storage.sync的存储条数（MAX_ITEMS=512）与单条长度（QUOTA_BYTES_PER_ITEM=4,096）
+			// 均受限制，当设置过长时需要拆分；chrome.storage.storageArea.set()会对输入项
+			// 做一次JSON.stringify()，且Unicode字符将被转换为\uXXXX的转义形式，都会导致字符串膨胀
+			// 因此拆分时需要事先留出一定裕度（此处保留20%），并将字符串转为Unicode转义格式
+			for (var j = 0, l = 0, s = '', u; j < value.length; ++j) {
+				if (value.charCodeAt(j) < 0x80) { // ASCII字符
+					s += value.charAt(j);
+					++l;
+				} else { // Unicode字符
+					u = value.charCodeAt(j).toString(16);
+					s += '\\u' + (u.length === 2 ? '00' + u : u.length === 3 ? '0' + u : u);
+					l += 6;
+				}
+				if (l >= partLength) { data[name + '_' + (i++)] = s; l = 0; s = ''; }
 			}
+			if (l > 0) { data[name + '_' + (i++)] = s; }
 			//#if DEBUG
 			console.log(data);
 			//#endif
