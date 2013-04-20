@@ -709,8 +709,10 @@ var $filter = (function () {
 
 		if ($options.filterPaused || // 暂停屏蔽
 			($options.filterOthersOnly && feed.querySelector('.WB_detail>.WB_func>.WB_handle a[action-type="feed_list_delete"]')) || // 不要屏蔽自己的微博（判据：工具栏是否有“删除”）
-			search(text, 'whiteKeywords')) { // 白名单
-			// 白名单条件
+			search(text, 'whiteKeywords')) { // 白名单条件
+			//#if DEBUG
+			console.warn('↑↑↑【白名单微博不会被屏蔽】↑↑↑');
+			//#endif
 		} else if ((function () { // 黑名单条件
 			// 屏蔽推广微博
 			if (scope === 1 && $options.filterPromotions && feed.getAttribute('feedtype') === 'ad') {
@@ -905,7 +907,7 @@ var $filter = (function () {
 var $page = (function () {
 	// 模块屏蔽设置
 	var modules = { 
-			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], div[ad-data]',
+			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], div[ad-data], .WB_feed .popular_buss',
 			Stats : '#pl_rightmod_myinfo .user_atten',
 			InterestUser : '#trustPagelet_recom_interestv5',
 			Topic : '#trustPagelet_zt_hottopicv5',
