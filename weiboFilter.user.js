@@ -921,6 +921,7 @@ var $page = (function () {
 			Level : 'span.W_level_ico',
 			PhishingTip : 'div[node-type="feed_privateset_tip"]',
 			MemberTip : 'div[node-type="feed_list_shieldKeyword"]',
+			FollowGuide : '.layer_userguide_brief',
 			TopComment : '#pl_content_commentTopNav',
 			Medal : '.pf_badge_icon',
 			RecomFeed : 'div[node-type="feed_list_recommend"]',
@@ -1089,6 +1090,24 @@ var $page = (function () {
 			document.head.appendChild(styles);
 		}
 		styles.innerHTML = cssText + '\n';
+		// 单独处理“为你推荐”弹窗
+		if ($options.hideMods.indexOf('FollowGuide') > -1) {
+			// 载入页面时，如果DOM中包含#pl_guide_homeguide > div[node-type="follow_dialog"]则会弹出
+			// 如果能抢在pl.guide.homeguide.index()之前去除，可以避免弹窗出现
+			$.remove($.select('#pl_guide_homeguide > div[node-type="follow_dialog"]'));
+			// 如果弹窗已经显示，则关闭之
+			//var closeBtn = $.select('.layer_userguide_brief .W_close');
+			//if (closeBtn) { closeBtn.click(); }
+			// 模拟点击关闭按钮会导致页面刷新，改为去除弹窗DOM及其下的overlay
+			var followGuide = $.select('.layer_userguide_brief');
+			if (followGuide) {
+				while (!followGuide.classList.contains('W_layer')) { followGuide = followGuide.parentNode; }
+				if (followGuide.previousSibling.style.zIndex === followGuide.style.zIndex) {
+					$.remove(followGuide.previousSibling); // 覆盖层
+				}
+				$.remove(followGuide);
+			}
+		}		
 	};
 	// 禁止默认选中“同时转发到我的微博”
 	var disableDefaultForward = function (node) {
@@ -1247,6 +1266,9 @@ var $page = (function () {
 		} else if (node.classList.contains('W_main_r') || node.querySelector('.W_main_r')) {
 			// 合并边栏
 			mergeSidebars();
+		} else if (node.tagName === 'DIV' && node.getAttribute('node-type') === 'follow_dialog' && $options.hideMods.indexOf('FollowGuide') > -1) {
+			// 动态载入的div[node-type="follow_dialog"]会使后续运行的pl.guide.homeguide.index显示“为你推荐”弹窗
+			$.remove(node);
 		} else if (node.querySelector('.commoned_list')) {
 			// 禁止默认选中“同时转发到我的微博”
 			disableDefaultForward(node);
