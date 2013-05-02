@@ -134,6 +134,9 @@
 .wbpTabModules tr.wbpRowSpacing td {
 	padding-top: 10px;
 }
+.wbpTabModules i.W_ico16 {
+	display: inline-block !important;
+}
 .wbpKeywordBlock {
 	margin-top: 10px;
 	border: 1px solid #D2D5D8;
