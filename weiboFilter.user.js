@@ -177,6 +177,7 @@ Options.prototype = {
 		floatSidebar : ['bool'],
 		unwrapText : ['bool'],
 		showAllGroups : ['bool'],
+		showAllMsgNav : ['bool'],
 		noDefaultFwd : ['bool'],
 		noDefaultGroupPub : ['bool'],
 		overrideMyBack : ['bool'],
@@ -1161,6 +1162,9 @@ var $page = (function () {
 		}
 		if ($options.showAllGroups) {
 			cssText += '#pl_leftnav_group div[node-type="moreList"] { display: block !important } #pl_leftnav_group .level_2_Box > .levmore { display: none }\n';
+		}
+		if ($options.showAllMsgNav) {
+			cssText += '#pl_leftnav_common > .level_1_Box > .lev2_new { display: block !important }\n';
 		}
 		if ($options.unwrapText) {
 			cssText += '.WB_info, .WB_text { display: inline } .WB_info+.WB_text:before { content: "：" } .WB_func { margin-top: 5px } .B_index .WB_feed .W_ico16 { vertical-align: -3px !important }\n';
