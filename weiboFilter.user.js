@@ -941,10 +941,11 @@ var $page = (function () {
 			RecomWeiba : '#trustPagelet_mblog_weiba',
 			RecomWeikan : '#trustPagelet_mblog_weikan',
 			HotWeibo : '#trustPagelet_mblog_hotmblog',
-			MemberIcon : '.ico_member:not(.wbpShow), .ico_member_dis:not(.wbpShow)',
-			VerifyIcon : '.approve:not(.wbpShow), .approve_co:not(.wbpShow)',
-			DarenIcon : '.ico_club:not(.wbpShow)',
-			VgirlIcon : '.ico_vlady:not(.wbpShow)'
+			MemberIcon : '.ico_member, .ico_member_dis',
+			VerifyIcon : '.approve, .approve_co',
+			DarenIcon : '.ico_club',
+			VgirlIcon : '.ico_vlady',
+			PaiIcon : '.ico_pai'
 		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
