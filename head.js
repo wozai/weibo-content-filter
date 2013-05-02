@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		增加对商品推广的屏蔽（屏蔽模块→“版面及嵌入广告”）；重新加入对“为你推荐”弹窗的屏蔽
+// @features		可选择始终显示“消息”下的导航条
 // @version			${MAINVER}
 // @revision		${REV}
 // @author			@富平侯
