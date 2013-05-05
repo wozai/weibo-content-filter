@@ -44,7 +44,7 @@ document.addEventListener('wbpSet', function (event) {
 		chrome.storage.sync.get(null, function (items) {
 			var data = {}, i = 0, errorHandler = function () {
 				if (chrome.runtime && chrome.runtime.lastError) {
-					alert('将设置保存到云端时发生错误。\n\n错误信息：' + chrome.runtime.lastError.message);
+					alert('将设置保存到云端时发生错误。\n\n错误信息：' + chrome.runtime.lastError.message + '\n\n如果您经常遇到本错误，请关闭插件的“自动同步设置”功能。');
 				}
 			}, partLength = Math.round(chrome.storage.sync.QUOTA_BYTES_PER_ITEM * 0.8);
 			// chrome.storage.sync的存储条数（MAX_ITEMS=512）与单条长度（QUOTA_BYTES_PER_ITEM=4,096）
