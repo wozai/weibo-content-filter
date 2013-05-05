@@ -11,9 +11,13 @@ var $ = (function () {
 		if (!root) { root = document; }
 		return root.querySelector(css);
 	};
-	//#if GREASEMONKEY
 	var CHROME_KEY_ROOT = 'weiboPlus.';
+	//#if GREASEMONKEY
 	if (window.chrome) {
+		if (localStorage.getItem(CHROME_KEY_ROOT + 'chromeExtInstalled')) {
+			console.warn('已安装插件版本，脚本停止运行！');
+			return undefined; // 如果已经（曾经）安装过插件则不再继续运行脚本
+		}
 		var version = window.navigator.userAgent.match(/Chrome\/(\d+)/) && RegExp.$1;
 		if (!localStorage.getItem(CHROME_KEY_ROOT + 'chromeExtTip') && confirm('以用户脚本方式安装的“眼不见心不烦”插件将在Chrome 27及更高版本下失效。\n\n推荐您【卸载】本插件并到【Chrome应用商店】安装新版插件，点击“确定”即可转入安装页面。\n\n该版本支持更高版本的Chrome，并加入了Chrome浏览器的专属功能（如设置同步）。')) {
 			window.open('https://chrome.google.com/webstore/detail/aognaapdfnnldnjglanfbbklaakbpejm', '_blank');
@@ -22,7 +26,7 @@ var $ = (function () {
 		if (version === null || version >= 27) {
 			// Chrome 27开始不再支持通过脚本注入方式获取unsafeWindow，也不再提供unsafeWindow符号
 			if (typeof unsafeWindow === 'undefined') {
-				console.warn('不支持Chrome ' + version);
+				console.warn('不支持Chrome ' + version + '，脚本停止运行！');
 				return undefined;
 			} else { 
 				// Chrome 26以上仍然可以通过Tampermonkey获得unsafeWindow
@@ -47,18 +51,19 @@ var $ = (function () {
 	//#elseif CHROME
 	// Chrome插件版本主程序注入页面环境，可直接获取window对象
 	$.window = window;
+	localStorage.setItem(CHROME_KEY_ROOT + 'chromeExtInstalled', true);
 	//#endif
 	$.config = $.window.$CONFIG;
 	if (!$.config) {
 		//#if DEBUG
-		console.warn('找不到$CONFIG');
+		console.warn('找不到$CONFIG，脚本停止运行！');
 		//#endif
 		return undefined;
 	}
 	$.uid = $.config.uid;
 	if (!$.uid) {
 		//#if DEBUG
-		console.warn('找不到$CONFIG.uid');
+		console.warn('找不到$CONFIG.uid，脚本停止运行！');
 		//#endif
 		return undefined;
 	}
@@ -72,7 +77,7 @@ var $ = (function () {
 				callback(result);
 			} else {
 				return result;
-			}			
+			}
 		};
 		$.set = function (name, value) {
 			localStorage.setItem(CHROME_KEY_ROOT + name, value);

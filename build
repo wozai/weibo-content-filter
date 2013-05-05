@@ -1,8 +1,8 @@
 #!/bin/sh
 
-export VER='1.1.2b1'
+export VER='1.1.2'
 export MAINVER='1.1.2'
-export REV=80
+export REV=81
 
 while getopts ":nd" optname
 do
