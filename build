@@ -3,12 +3,13 @@
 export VER='1.1.3'
 export MAINVER='1.1.3'
 export REV=82
+export FEATURES='可选择点击“查看大图”直接打开大图；更新后首次使用时显示新功能'
 
 while getopts ":nd" optname
 do
 	case "$optname" in
-		"n") COMPRESS=' --nocompress' ;;
-		"d") PARAMS=' --flag=DEBUG';;
+		"n") COMPRESS=' --nocompress';;
+		"d") COMPRESS=' --nocompress'; PARAMS=' --flag=DEBUG';;
 		"?") echo "Unknown option -$OPTARG"; exit 1;;
 		":") echo "Missing argument value for option -$OPTARG"; exit 1;;
 	esac
