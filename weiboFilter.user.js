@@ -91,12 +91,7 @@ var $ = (function () {
 				return result;
 			}
 		};
-		$.set = function(name, value) {
-			// 必须限制GM_setValue的输入参数数量，否则会抛出错误
-			// 详见Greasemonkey的GM_ScriptStorage.prototype.setValue()
-			// https://github.com/greasemonkey/greasemonkey/blob/master/content/miscapis.js
-			GM_setValue(name, value);
-		};
+		$.set = GM_setValue;
 	}
 	//#elseif CHROME
 	var callbacks = {}, messageID = 0;
@@ -213,12 +208,11 @@ Options.prototype = {
 		customStyles : ['string'],
 		hideMods : ['array']
 	},
-	// 转换为字符串
-	toString : function (strip) {
+	// 去除内部变量并转换为字符串
+	strip : function () {
 		var stripped = {};
 		for (var option in this.items) {
-			// 如果需要，则去掉所有内部变量
-			if (!strip || this.items[option][0] !== 'internal') {
+			if (this.items[option][0] !== 'internal') {
 				stripped[option] = this[option];
 			}
 		}
@@ -226,8 +220,13 @@ Options.prototype = {
 	},
 	// 保存设置
 	save : function () {
-		// 自动调用toString()
-		$.set($.uid.toString(), JSON.stringify(this), $options.autoSync);
+		$.set($.uid.toString(), JSON.stringify(this));
+		//#if CHROME
+		if ($options.autoSync) {
+			// 不必同步内部变量
+			$.set($.uid.toString(), this.strip(), true);
+		}
+		//#endif
 	},
 	// 载入/导入设置，输入的str为undefined（首次使用时）或string（非首次使用和导入设置时）
 	load : function (str) {
@@ -464,7 +463,7 @@ var $dialog = (function () {
 				options.hideMods.push(module);
 			}
 		}
-		getDom('settingsString').value = options.toString(true);
+		getDom('settingsString').value = options.strip();
 		return options;
 	};
 	// 更新设置窗口内容，exportSettings()的反过程
@@ -497,7 +496,7 @@ var $dialog = (function () {
 		for (var module in $page.modules) {
 			getDom('hide' + module).checked = (options.hideMods.indexOf(module) > -1);
 		}
-		getDom('settingsString').value = options.toString(true);
+		getDom('settingsString').value = options.strip();
 	};
 	// 创建设置窗口
 	var createDialog = function () {
