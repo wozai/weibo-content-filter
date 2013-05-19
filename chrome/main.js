@@ -5,7 +5,7 @@ document.addEventListener('wbpGet', function (event) {
 	var name = event.detail.name;
 	var post = function (value) {
 		//#if DEBUG
-		console.log(value);
+		console.log('Data read from storage:', value);
 		//#endif
 		// 注意：不能在此处直接调用callback，否则回调函数将在本程序所在的沙箱环境中运行，在Chrome 27及更高版本下会出错
 		document.dispatchEvent(new CustomEvent("wbpPost", { detail: {
@@ -17,7 +17,7 @@ document.addEventListener('wbpGet', function (event) {
 		// 一次性读取所有设置
 		chrome.storage.sync.get(null, function (items) {
 			//#if DEBUG
-			console.log(items);
+			console.log('Items in sync storage:', items);
 			//#endif
 			var i = 0, value = '';
 			while ((name + '_' + i) in items) {
@@ -37,9 +37,7 @@ document.addEventListener('wbpSet', function (event) {
 	event.stopPropagation();
 	var data = {}, name = event.detail.name, value = event.detail.value;
 	data[name] = value;
-	// 总是将设置保存在本地
-	chrome.storage.local.set(data);
-	if (event.detail.sync) {
+	if (event.detail.sync) { // 将设置保存到同步存储
 		// 一次性读取所有设置
 		chrome.storage.sync.get(null, function (items) {
 			var data = {}, i = 0, errorHandler = function () {
@@ -64,7 +62,7 @@ document.addEventListener('wbpSet', function (event) {
 			}
 			if (l > 0) { data[name + '_' + (i++)] = s; }
 			//#if DEBUG
-			console.log(data);
+			console.log('Writing to sync storage:', data);
 			//#endif
 			// 保存新的设置
 			chrome.storage.sync.set(data, errorHandler);
@@ -75,6 +73,11 @@ document.addEventListener('wbpSet', function (event) {
 			}
 			chrome.storage.sync.remove(keys, errorHandler);
 		});
+	} else { // 将设置保存到本地存储
+		//#if DEBUG
+		console.log('Writing to local storage:', data);
+		//#endif
+		chrome.storage.local.set(data);
 	}
 });
 //#if DEBUG
