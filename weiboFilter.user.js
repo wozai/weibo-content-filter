@@ -6,6 +6,7 @@ var $ = (function () {
 	var $ = function (id) {
 		return document.getElementById(id);
 	};
+	$.version = Number('${REV}');
 	// 按CSS选择元素
 	$.select = function (css, root) {
 		if (!root) { root = document; }
@@ -154,11 +155,31 @@ if ($.config.any && $.config.any.indexOf('wvr=5') === -1) {
 }
 // == LEGACY CODE END ==
 
-function Options() {}
+function Options () {
+	// 各类型默认值
+	var typeDefault = {
+		keyword : [],
+		string : '',
+		bool : false,
+		array : [],
+		object : {},
+		internal : null
+	};
+	for (var option in this.items) {
+		if (this.items[option].length > 1) {
+			// 使用属性默认值
+			this[option] = this.items[option][1];
+		} else {
+			// 使用类型默认值
+			this[option] = typeDefault[this.items[option][0]];
+		}
+	}
+}
 
 Options.prototype = {
 	// 选项类型与默认值
 	items : {
+		version : ['internal', 0], // 内部变量：不在设置界面出现，不随设置导出
 		whiteKeywords : ['keyword'],
 		blackKeywords : ['keyword'],
 		grayKeywords : ['keyword'],
@@ -200,6 +221,7 @@ Options.prototype = {
 		//#if GREASEMONKEY
 		autoUpdate : ['bool', true],
 		//#endif
+		updateNotify : ['bool', true],
 		//#if CHROME
 		autoSync : ['bool', true],
 		//#endif
@@ -219,27 +241,18 @@ Options.prototype = {
 		return JSON.stringify(stripped);
 	},
 	// 保存设置
-	save : function () {
+	save : function (noSync) {
 		$.set($.uid.toString(), JSON.stringify(this));
 		//#if CHROME
-		if ($options.autoSync) {
+		if (!noSync && $options.autoSync) {
 			// 不必同步内部变量
 			$.set($.uid.toString(), this.strip(), true);
 		}
 		//#endif
 	},
 	// 载入/导入设置，输入的str为undefined（首次使用时）或string（非首次使用和导入设置时）
-	load : function (str) {
+	load : function (str, strip) {
 		var parsed = {};
-		// 各类型默认值
-		var typeDefault = {
-			keyword : [],
-			string : '',
-			bool : false,
-			array : [],
-			object : {},
-			internal : null
-		};
 		if (str) {
 			try {
 				parsed = JSON.parse(str.replace(/\n/g, ''));
@@ -252,14 +265,7 @@ Options.prototype = {
 		// 填充选项
 		for (var option in this.items) {
 			if (option in parsed) {
-				// 优先使用成功读取的值
 				this[option] = parsed[option];
-			} else if (this.items[option].length > 1) {
-				// 使用属性默认值
-				this[option] = this.items[option][1];
-			} else {
-				// 使用类型默认值
-				this[option] = typeDefault[this.items[option][0]];
 			}
 		}
 		return (str !== null);
@@ -267,7 +273,6 @@ Options.prototype = {
 };
 
 var $options = new Options();
-$options.load(); // 载入默认设置
 
 //#if GREASEMONKEY
 var $update = (function () {
@@ -282,7 +287,7 @@ var $update = (function () {
 				if (!result.responseText.match(/@version\s+(.*)/)) { return; }
 				$.set('lastCheckUpdateSuccess', new Date().getTime().toString());
 				var ver = RegExp.$1;
-				if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= Number('${REV}')) {
+				if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= $.version) {
 					// 自动检查更新且并无新版本时不必提示
 					// 用户手动检查时event是click事件对象
 					if (event) { alert('您使用的“眼不见心不烦”(v${VER})已经是最新版。'); }
@@ -1063,7 +1068,7 @@ var $page = (function () {
 					($.scope() === 2 && $options.readerModeProfile))) {
 				$.STK.ui.alert('欢迎进入极简阅读模式！<br><br>您可以按【F8】键快速开关本模式，也可以在“眼不见心不烦”插件设置“改造版面”页进行选择。');
 				$options.readerModeTip = true;
-				$options.save();
+				$options.save(true);
 			}
 		} else if (readerModeStyles) {
 			$.remove(readerModeStyles);
@@ -1344,6 +1349,12 @@ $.get($.uid.toString(), undefined, function (options) {
 	};
 	if (!$options.load(options)) {
 		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
+	} else if (options && $options.version < $.version) {
+		$options.version = $.version;
+		$options.save(true);
+		if ($options.updateNotify) {
+			alert('您已更新到“眼不见心不烦”v${VER}：\n\n- ' + '${FEATURES}'.split('；').join('\n- '));
+		}
 	}
 	//#if CHROME
 	if ($options.autoSync) {

@@ -3,7 +3,7 @@
 // @namespace		http://weibo.com/salviati
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
-// @features		可选择点击“查看大图”直接打开大图
+// @features		${FEATURES}
 // @version			${MAINVER}
 // @revision		${REV}
 // @author			@富平侯
