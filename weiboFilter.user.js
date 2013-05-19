@@ -193,7 +193,7 @@ Options.prototype = {
 		readerModeProfile : ['bool'],
 		readerModeTip : ['internal', false], // 内部变量：不在设置界面出现，不随设置导出
 		readerModeWidth : ['string', 750],
-		readerModeBackColor : ['string', 'rgba(100%, 100%, 100%, 0.8)'],
+		readerModeBackColor : ['string', 'rgba(100%,100%,100%,0.8)'],
 		mergeSidebars : ['bool'],
 		floatSidebar : ['bool'],
 		unwrapText : ['bool'],
@@ -204,7 +204,7 @@ Options.prototype = {
 		noDefaultGroupPub : ['bool'],
 		overrideMyBack : ['bool'],
 		overrideOtherBack : ['bool'],
-		backColor : ['string', 'rgba(100%, 100%, 100%, 0.2)'],
+		backColor : ['string', 'rgba(100%,100%,100%,0.2)'],
 		overrideMySkin : ['bool'],
 		overrideOtherSkin : ['bool'],
 		skinID : ['string', 'skinvip001'],
@@ -934,7 +934,7 @@ var $filter = (function () {
 // 修改页面
 var $page = (function () {
 	// 模块屏蔽设置
-	var modules = { 
+	var modules = {
 			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], div[ad-data], .WB_feed .popular_buss',
 			Stats : '#pl_rightmod_myinfo .user_atten',
 			InterestUser : '#trustPagelet_recom_interestv5',
@@ -947,8 +947,9 @@ var $page = (function () {
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
 			App : '#pl_leftnav_app',
 			Level : 'span.W_level_ico',
-			PhishingTip : 'div[node-type="feed_privateset_tip"]',
+			CommentTip : 'div[node-type="feed_privateset_tip"]',
 			MemberTip : 'div[node-type="feed_list_shieldKeyword"]',
+			FriendFollow : '.B_index .WB_feed .WB_feed_type:not([mid])',
 			FollowGuide : '.layer_userguide_brief',
 			TopComment : '#pl_content_commentTopNav',
 			Medal : '.pf_badge_icon',
