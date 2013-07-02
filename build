@@ -1,9 +1,9 @@
 #!/bin/sh
 
-export VER='1.1.3'
-export MAINVER='1.1.3'
-export REV=82
-export FEATURES='可选择点击“查看大图”直接打开大图；增加对首页时间线“好友关注”的屏蔽；更新后首次使用时显示新功能'
+export VER='1.1.4'
+export MAINVER='1.1.4'
+export REV=83
+export FEATURES='更新“热门话题”、“可能感兴趣的人”等屏蔽模块；增加对首页右边栏“微吧推荐”、“应用推荐”模块的屏蔽'
 
 while getopts ":nd" optname
 do

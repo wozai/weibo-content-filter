@@ -935,12 +935,14 @@ var $filter = (function () {
 var $page = (function () {
 	// 模块屏蔽设置
 	var modules = {
-			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], div[ad-data], .WB_feed .popular_buss',
+			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], #trustPagelet_indexright_recom .hot_topicad, div[ad-data], .WB_feed .popular_buss',
 			Stats : '#pl_rightmod_myinfo .user_atten',
-			InterestUser : '#trustPagelet_recom_interestv5',
-			Topic : '#trustPagelet_zt_hottopicv5',
+			InterestUser : '#trustPagelet_recom_interestv5, #trustPagelet_indexright_recom>div[ucardconf]>.WB_right_module:nth-child(3)',
+			Topic : '#trustPagelet_zt_hottopicv5, #trustPagelet_indexright_recom>div[ucardconf]>.WB_right_module:nth-child(1)',
 			Member : '#trustPagelet_recom_memberv5',
 			AllInOne : '#trustPagelet_recom_allinonev5',
+			WeibaRecom : '#trustPagelet_indexright_recom>div[ucardconf]>.WB_right_module:nth-child(4)',
+			AppRecom : '#trustPagelet_indexright_recom>div[ucardconf]>.WB_right_module:nth-child(5)',
 			Notice : '#pl_rightmod_noticeboard',
 			Footer : 'div.global_footer',
 			Activity : '#pl_content_biztips',
@@ -949,7 +951,7 @@ var $page = (function () {
 			Level : 'span.W_level_ico',
 			CommentTip : 'div[node-type="feed_privateset_tip"]',
 			MemberTip : 'div[node-type="feed_list_shieldKeyword"]',
-			FriendFollow : '.B_index .WB_feed .WB_feed_type:not([mid])',
+			TimelineMods : '.B_index .WB_feed .WB_feed_type:not([mid])',
 			FollowGuide : '.layer_userguide_brief',
 			TopComment : '#pl_content_commentTopNav',
 			Medal : '.pf_badge_icon',
@@ -962,18 +964,11 @@ var $page = (function () {
 			Relation : '#pl_profile_moduleHisRelation',
 			Album : '#pl_profile_modulealbum',
 			AppWidget : '#pl_profile_appWidget, #trustPagelet_profile_openApplist',
-			FeedRightSidebar : '.B_onefeed .W_main_c, .B_onefeed .WB_detail .WB_media_expand .input textarea { width: 100% } .B_onefeed .W_main_2r',
-			RecomPerson : '#pl_rightmod_recomperson',
-			RecomTopic : '#trustPagelet_mblog_topic',
-			RecomWeibo : '#pl_rightmod_recommblog',
-			RecomWeiba : '#trustPagelet_mblog_weiba',
-			RecomWeikan : '#trustPagelet_mblog_weikan',
-			HotWeibo : '#trustPagelet_mblog_hotmblog',
+			FeedRecom : '.B_onefeed #trustPagelet_biz_recommend',
 			MemberIcon : '.ico_member, .ico_member_dis',
 			VerifyIcon : '.approve, .approve_co',
 			DarenIcon : '.ico_club',
-			VgirlIcon : '.ico_vlady',
-			PaiIcon : '.ico_pai'
+			VgirlIcon : '.ico_vlady'
 		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
