@@ -201,6 +201,7 @@ Options.prototype = {
 		showAllMsgNav : ['bool'],
 		noDefaultFwd : ['bool'],
 		noDefaultGroupPub : ['bool'],
+		clearDefTopic : ['bool'],
 		overrideMyBack : ['bool'],
 		overrideOtherBack : ['bool'],
 		backColor : ['string', 'rgba(100%,100%,100%,0.2)'],
@@ -1168,6 +1169,22 @@ var $page = (function () {
 			groupLink.setAttribute('action-data', 'rank=0');
 		}
 	};
+	// 清除发布框中的默认话题
+	var clearDefTopic = function () {
+		if ($options.clearDefTopic && $.scope() === 1) {
+			var inputBox = document.querySelector('#pl_content_publisherTop .send_weibo .input textarea');
+			if (inputBox && inputBox.hasAttribute('hottopic')) {
+				// IFRAME载入方式，hotTopic可能尚未启动，直接清除相关属性即可
+				inputBox.removeAttribute('hottopic');
+				inputBox.removeAttribute('hottopicid');
+				// 在发布框中模拟输入，欺骗STK.common.editor.plugin.hotTopic
+				inputBox.value = 'DUMMY';
+				inputBox.focus();
+				inputBox.value = '';
+				inputBox.blur();
+			}
+		}
+	};
 	// 将左边栏合并到右边栏
 	var leftBar = $.select('.W_main_l'), navBar;
 	if (leftBar) { navBar = leftBar.querySelector('.WB_left_nav'); }
@@ -1281,6 +1298,8 @@ var $page = (function () {
 		mergeSidebars();
 		// 屏蔽版面模块
 		hideModules();
+		// 清除发布框中的默认话题
+		clearDefTopic();
 		// 覆盖当前模板设置
 		overrideSkin();
 		// 应用自定义CSS
@@ -1317,9 +1336,11 @@ var $page = (function () {
 		} else if (node.querySelector('.commoned_list')) {
 			// 禁止默认选中“同时转发到我的微博”
 			disableDefaultForward(node);
-		} else if (node.classList.contains('send_weibo')) {
+		} else if (node.tagName === 'DIV' && node.classList.contains('send_weibo')) {
 			// 禁止默认发布新微博到当前浏览的分组
 			disableDefaultGroupPub(node);
+			// 清除发布框中的默认话题
+			clearDefTopic();
 		} else if (node.tagName === 'DIV' && node.hasAttribute('ucardconf') && node.parentNode.id === 'trustPagelet_indexright_recom') {
 			// 微博新首页右边栏模块处理
 			tagRightbarMods(node.parentNode);
