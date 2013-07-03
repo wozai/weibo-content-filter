@@ -68,7 +68,6 @@ var $ = (function () {
 		//#endif
 		return undefined;
 	}
-	$.STK = $.window.STK;
 	//#if GREASEMONKEY
 	if (!GM_getValue || (GM_getValue.toString && GM_getValue.toString().indexOf("not supported") > -1)) {
 		$.get = function (name, defVal, callback) {
@@ -324,12 +323,12 @@ var $update = (function () {
 //#endif
 
 var $dialog = (function () {
-	var shown = false, dialog, content;
+	var shown = false, dialog, content, STK;
 	var getDom = function (node) {
 		return content.getDom(node);
 	};
 	var bind = function (node, func, event) {
-		$.STK.core.evt.addEvent(content.getDom(node), event || 'click', func);
+		STK.core.evt.addEvent(content.getDom(node), event || 'click', func);
 	};
 	// 从显示列表建立关键词数组
 	var getKeywords = function (id, attr) {
@@ -376,7 +375,7 @@ var $dialog = (function () {
 			// 在文本框中显示无效的正则表达式并闪烁提示
 			getDom(list).value = illegalRegex.join(' ');
 			if (illegalRegex.length) {
-				$.STK.common.extra.shine(getDom(list));
+				STK.common.extra.shine(getDom(list));
 			}
 		}
 	};
@@ -388,7 +387,7 @@ var $dialog = (function () {
 		if (updateOnly && usercardLoaded) { return; }
 		var users = updateOnly ? getKeywords(id, 'uid') : getDom(list).value.split(' '),
 			unprocessed = users.length, unfound = [];
-		var searcher = $.STK.common.trans.relation.getTrans('userCard', { onComplete : 
+		var searcher = STK.common.trans.relation.getTrans('userCard', { onComplete : 
 			function (result, data) {
 				var link;
 				if (updateOnly) {
@@ -420,7 +419,7 @@ var $dialog = (function () {
 					// 全部处理完成，在文本框中显示未被添加的用户并闪烁提示
 					getDom(list).value = unfound.join(' ');
 					if (unfound.length) {
-						$.STK.common.extra.shine(getDom(list));
+						STK.common.extra.shine(getDom(list));
 					}
 				}
 			} });
@@ -505,9 +504,16 @@ var $dialog = (function () {
 	};
 	// 创建设置窗口
 	var createDialog = function () {
-		dialog = $.STK.ui.dialog({isHold: true});
+		// 由于操作是异步进行的，脚本载入时STK可能尚未载入，尤其是在Firefox中
+		// 鉴于只有$dialog使用STK，将其设置为内部变量，仅在打开设置窗口时载入
+		STK = $.window.STK;
+		if (!STK) {
+			console.warn('页面尚未载入完成，无法打开设置页面！')
+			return false;
+		}
+		dialog = STK.ui.dialog({isHold: true});
 		dialog.setTitle('“眼不见心不烦”(v${VER})设置');
-		content = ($.STK.module.layer || $.STK.ui.mod.layer)('${HTML}');
+		content = (STK.module.layer || STK.ui.mod.layer)('${HTML}');
 		dialog.setContent(content.getOuter());
 		// 修改屏蔽提示颜色事件
 		bind('tipBackColor', function () {
@@ -517,7 +523,7 @@ var $dialog = (function () {
 			getDom('tipSample').style.borderColor = this.value;
 			getDom('tipSample').style.color = this.value;
 		}, 'blur');
-		var events = $.STK.core.evt.delegatedEvent(content.getInner());
+		var events = STK.core.evt.delegatedEvent(content.getInner());
 		// 添加关键词按钮点击事件
 		events.add('add', 'click', function (action) {
 			addKeywords(action.data.list, action.data.text);
@@ -621,14 +627,15 @@ var $dialog = (function () {
 			dialog.hide();
 		});
 		bind('cancel', dialog.hide);
-		$.STK.custEvent.add(dialog, 'hide', function () {
+		STK.custEvent.add(dialog, 'hide', function () {
 			shown = false;
 		});
+		return true;
 	};
 	// 显示设置窗口
 	var show = function () {
-		if (!dialog) {
-			createDialog();
+		if (!dialog && !createDialog()) {
+			return;
 		}
 		shown = true;
 		importSettings($options);
@@ -1057,7 +1064,7 @@ var $page = (function () {
 			if (!$options.readerModeTip && (
 					($.scope() === 1 && $options.readerModeIndex) ||
 					($.scope() === 2 && $options.readerModeProfile))) {
-				$.STK.ui.alert('欢迎进入极简阅读模式！<br><br>您可以按【F8】键快速开关本模式，也可以在“眼不见心不烦”插件设置“改造版面”页进行选择。');
+				alert('欢迎进入极简阅读模式！\n\n您可以按【F8】键快速开关本模式，也可以在“眼不见心不烦”插件设置“改造版面”页进行选择。');
 				$options.readerModeTip = true;
 				$options.save(true);
 			}
