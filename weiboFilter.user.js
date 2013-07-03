@@ -886,27 +886,23 @@ var $filter = (function () {
 			}
 		});
 	};
-	// 点击“查看大图”事件拦截处理
-	var bindBigImgBtnClick = function (node) { 
-		if (!node) { return; }
-		node.addEventListener('click', function (event) {
-			if (!$options.directBigImg) { return true; }
-			var node = event.target;
-			if (node && node.getAttribute('action-type') === 'images_view_tobig' &&
-					node.getAttribute('action-data').match(/pid=(\w+)&mid=(\d+)&uid=(\d+)/)) {
-				window.open('http://photo.weibo.com/' + RegExp.$3 + 
-					'/wbphotos/large/mid/' + RegExp.$2 +
-					'/pid/' + RegExp.$1, '_blank');
-				event.stopPropagation();
-			}
-		}, true); // 使用事件捕捉以尽早触发事件，避免与新浪自带事件撞车
-	};
 
 	// 处理动态载入的微博
 	if ($.scope()) {
 		bindTipOnClick($.select('.WB_feed'));
-		bindBigImgBtnClick($.select('.WB_feed'));
 	}
+	// 点击“查看大图”事件拦截处理
+	document.addEventListener('click', function (event) {
+		if (!$options.directBigImg) { return true; }
+		var node = event.target;
+		if (node && node.getAttribute('action-type') === 'images_view_tobig' &&
+				node.getAttribute('action-data').match(/pid=(\w+)&mid=(\d+)&uid=(\d+)/)) {
+			window.open('http://photo.weibo.com/' + RegExp.$3 + 
+				'/wbphotos/large/mid/' + RegExp.$2 +
+				'/pid/' + RegExp.$1, '_blank');
+			event.stopPropagation();
+		}
+	}, true); // 使用事件捕捉以尽早触发事件，避免与新浪自带事件撞车
 	document.addEventListener('DOMNodeInserted', function (event) {
 		if ($.scope() === 0) { return; }
 		var node = event.target;
@@ -923,7 +919,6 @@ var $filter = (function () {
 		} else if (node.tagName === 'DIV' && node.classList.contains('WB_feed')) {
 			// 微博列表作为pagelet被一次性载入
 			bindTipOnClick(node);
-			bindBigImgBtnClick(node);
 			applyToAll();
 		}
 	}, false);
