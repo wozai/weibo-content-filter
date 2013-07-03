@@ -939,12 +939,12 @@ var $page = (function () {
 	var modules = {
 			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], #trustPagelet_indexright_recom .hot_topicad, div[ad-data], .WB_feed .popular_buss',
 			Stats : '#pl_rightmod_myinfo .user_atten',
-			InterestUser : '#trustPagelet_recom_interestv5, #trustPagelet_indexright_recom>div[ucardconf]>.WB_right_module:nth-child(3)',
-			Topic : '#trustPagelet_zt_hottopicv5, #trustPagelet_indexright_recom>div[ucardconf]>.WB_right_module:nth-child(1)',
+			InterestUser : '#trustPagelet_recom_interestv5', // 动态右边栏
+			Topic : '#trustPagelet_zt_hottopicv5', // 动态右边栏
 			Member : '#trustPagelet_recom_memberv5',
 			AllInOne : '#trustPagelet_recom_allinonev5',
-			WeibaRecom : '#trustPagelet_indexright_recom>div[ucardconf]>.WB_right_module:nth-child(4)',
-			AppRecom : '#trustPagelet_indexright_recom>div[ucardconf]>.WB_right_module:nth-child(5)',
+			WeibaRecom : '#trustPagelet_recom_weiba', // 动态右边栏
+			AppRecom : '#trustPagelet_recom_app', // 动态右边栏
 			Notice : '#pl_rightmod_noticeboard',
 			Footer : 'div.global_footer',
 			Activity : '#pl_content_biztips',
@@ -1096,6 +1096,21 @@ var $page = (function () {
 			formerStyle.disabled = false;
 		}
 	};
+	// 2013年6月起右边栏模块不再有固定ID，为其打上ID
+	var tagRightbarMods = function (rightBar) {
+		var hrefs = {
+			'http://huati.weibo.com/?refer=index_hot' : 'Topic',
+			'http://weibo.com/find/i' : 'InterestUser',
+			'http://weiba.weibo.com/' : 'WeibaRecom',
+			'http://app.weibo.com/' : 'AppRecom'
+		}, mods = rightBar.querySelectorAll('.WB_right_module'), title;
+		for (var i = 0; i < mods.length; ++i) {
+			title = mods[i].querySelector('.right_title a');
+			if (title && title.href in hrefs) {
+				mods[i].id = modules[hrefs[title.href]].substring(1);
+			}
+		}		
+	}
 	// 屏蔽模块
 	var hideModules = function () {
 		var cssText = '';
@@ -1134,7 +1149,7 @@ var $page = (function () {
 				}
 				$.remove(followGuide);
 			}
-		}		
+		}
 	};
 	// 禁止默认选中“同时转发到我的微博”
 	var disableDefaultForward = function (node) {
@@ -1305,6 +1320,9 @@ var $page = (function () {
 		} else if (node.classList.contains('send_weibo')) {
 			// 禁止默认发布新微博到当前浏览的分组
 			disableDefaultGroupPub(node);
+		} else if (node.tagName === 'DIV' && node.hasAttribute('ucardconf') && node.parentNode.id === 'trustPagelet_indexright_recom') {
+			// 微博新首页右边栏模块处理
+			tagRightbarMods(node.parentNode);
 		}
 	}, false);
 	document.addEventListener('DOMNodeRemoved', function (event) {
