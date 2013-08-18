@@ -1,9 +1,9 @@
 #!/bin/sh
 
-export VER='1.1.4'
-export MAINVER='1.1.4'
-export REV=83
-export FEATURES='更新“热门话题”、“可能感兴趣的人”等屏蔽模块；增加对首页右边栏“微吧推荐”、“应用推荐”模块的屏蔽；修正在部分页面无法直接查看大图的问题；修正部分运行环境下无法打开插件设置窗口的问题；恢复“清除发布框中的默认话题”功能'
+export VER='1.1.5'
+export MAINVER='1.1.5'
+export REV=84
+export FEATURES='增加对“带着微博去旅行”标识的屏蔽'
 
 while getopts ":nd" optname
 do

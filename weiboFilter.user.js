@@ -943,12 +943,10 @@ var $page = (function () {
 			InterestUser : '#trustPagelet_recom_interestv5', // 动态右边栏
 			Topic : '#trustPagelet_zt_hottopicv5', // 动态右边栏
 			Member : '#trustPagelet_recom_memberv5',
-			AllInOne : '#trustPagelet_recom_allinonev5',
 			WeibaRecom : '#trustPagelet_recom_weiba', // 动态右边栏
 			AppRecom : '#trustPagelet_recom_app', // 动态右边栏
 			Notice : '#pl_rightmod_noticeboard',
 			Footer : 'div.global_footer',
-			Activity : '#pl_content_biztips',
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
 			App : '#pl_leftnav_app',
 			Level : 'span.W_level_ico',
@@ -971,7 +969,8 @@ var $page = (function () {
 			MemberIcon : '.ico_member, .ico_member_dis',
 			VerifyIcon : '.approve, .approve_co',
 			DarenIcon : '.ico_club',
-			VgirlIcon : '.ico_vlady'
+			VgirlIcon : '.ico_vlady',
+			TravelIcon : '.ico_airball'
 		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
