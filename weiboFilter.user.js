@@ -1250,24 +1250,22 @@ var $page = (function () {
 	// 在用户信息气泡上添加屏蔽链接
 	var modifyNamecard = function (node) {
 		// 获得关注链接
-		var userData = node.querySelector('ul.userdata a'),
-			toolbar = node.querySelector('.links > p');
+		var userData = node.querySelector('.related_info>.name a[uid]'),
+			toolbar = node.querySelector('.btn_item[node-type="followBtnBox"] span');
 		if (!userData || !toolbar) { return false; }
-		// “关注”、“粉丝”和“微博”链接中一定使用数字id
-		var uid = userData.pathname.split('/')[1];
+		var uid = userData.getAttribute('uid');
 		if (uid === $.uid) { return false; }
-		// 创建分隔符（如果需要）
-		if (toolbar.childElementCount) {
-			var vline = document.createElement('span');
-			vline.className = 'W_vline';
-			vline.innerHTML = '|';
-			toolbar.appendChild(vline);
-		}
+		// 创建分隔符
+		var vline = document.createElement('em');
+		vline.className = 'W_vline';
+		vline.innerHTML = '|';
+		toolbar.appendChild(vline);
 		// 创建操作链接
 		var link = document.createElement('a');
 		link.href = 'javascript:void(0)';
 		link.innerHTML = $options.userBlacklist.indexOf(uid) === -1 ? '屏蔽' : '解除屏蔽';
-		$.click(link, function () {
+		$.click(link, function (event) {
+			event.stopPropagation(); // 防止事件冒泡触发上级按钮onclick事件
 			// 切换屏蔽状态
 			var i = $options.userBlacklist.indexOf(uid);
 			if (i === -1) {
@@ -1278,7 +1276,7 @@ var $page = (function () {
 			$options.save();
 			$filter();
 			// 回溯到顶层，关闭信息气球
-			while (node.className !== 'W_layer') {
+			while (node.className !== 'WB_global_personcard') {
 				node = node.parentNode;
 			}
 			node.style.display = 'none';
@@ -1323,7 +1321,7 @@ var $page = (function () {
 		if (scope && node.classList.contains('group_read')) {
 			// 重新载入设置按钮
 			showSettingsBtn();
-		} else if (node.classList.contains('name_card')) {
+		} else if (node.classList.contains('name_card_new')) {
 			// 用户信息气球
 			modifyNamecard(node);
 		} else if (node.classList.contains('W_main_r') || node.querySelector('.W_main_r')) {
