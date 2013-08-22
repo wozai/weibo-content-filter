@@ -3,7 +3,7 @@
 export VER='1.1.5'
 export MAINVER='1.1.5'
 export REV=84
-export FEATURES='修正无法在用户信息气球中设置屏蔽的问题；增加对“带着微博去旅行”标识的屏蔽'
+export FEATURES='修正无法在用户主页打开设置窗口的问题；修正无法在用户信息气球中设置屏蔽的问题；增加对“带着微博去旅行”标识的屏蔽'
 
 while getopts ":nd" optname
 do
