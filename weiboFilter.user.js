@@ -326,10 +326,11 @@ var $update = (function () {
 var $dialog = (function () {
 	var shown = false, dialog, content, STK;
 	var getDom = function (node) {
-		return content.getDom(node);
+		// 首页与主页API不一致
+		return content ? content.getDom(node) : dialog.getDomList()[node];
 	};
 	var bind = function (node, func, event) {
-		STK.core.evt.addEvent(content.getDom(node), event || 'click', func);
+		STK.core.evt.addEvent(getDom(node), event || 'click', func);
 	};
 	// 从显示列表建立关键词数组
 	var getKeywords = function (id, attr) {
@@ -376,7 +377,8 @@ var $dialog = (function () {
 			// 在文本框中显示无效的正则表达式并闪烁提示
 			getDom(list).value = illegalRegex.join(' ');
 			if (illegalRegex.length) {
-				STK.common.extra.shine(getDom(list));
+				// 首页与主页API不一致
+				(STK.common.extra ? STK.common.extra.shine : STK.kit.extra.shine)(getDom(list));
 			}
 		}
 	};
@@ -387,43 +389,50 @@ var $dialog = (function () {
 		// 整个列表只载入一次
 		if (updateOnly && usercardLoaded) { return; }
 		var users = updateOnly ? getKeywords(id, 'uid') : getDom(list).value.split(' '),
-			unprocessed = users.length, unfound = [];
-		var searcher = STK.common.trans.relation.getTrans('userCard', { onComplete : 
-			function (result, data) {
-				var link;
-				if (updateOnly) {
-					link = div.querySelector('a[uid="' + data.id + '"]');
-				} else {
-					link = document.createElement('a');
-				}
-				if (result.code === '100000') { // 成功
-					var img = result.data.match(/<img[^>]+>/)[0];
-					if (!updateOnly) { data.id = img.match(/uid="([^"]+)"/)[1]; }
-					// 防止重复添加
-					if (updateOnly || getKeywords(id, 'uid').indexOf(data.id) === -1) {
-						link.innerHTML = '<img ' + img.match(/src="[^"]+"/)[0] + ' /><br />' + img.match(/title="([^"]+)"/)[1];
-						if (!updateOnly) {
-							// 添加新的用户
-							link.title = '点击删除';
-							link.href = 'javascript:void(0)';
-							link.setAttribute('uid', data.id);
-							link.setAttribute('action-type', 'remove');
-							div.appendChild(link);
+			unprocessed = users.length, unfound = [], searcher, params = 
+				{ onComplete : function (result, data) {
+						var link;
+						if (updateOnly) {
+							link = div.querySelector('a[uid="' + data.id + '"]');
+						} else {
+							link = document.createElement('a');
+						}
+						if (result.code === '100000') { // 成功
+							var img = result.data.match(/<img[^>]+>/)[0];
+							if (!updateOnly) { data.id = img.match(/uid="([^"]+)"/)[1]; }
+							// 防止重复添加
+							if (updateOnly || getKeywords(id, 'uid').indexOf(data.id) === -1) {
+								link.innerHTML = '<img width="50" height="50" ' + img.match(/src="[^"]+"/)[0] + ' /><br />' + img.match(/title="([^"]+)"/)[1];
+								if (!updateOnly) {
+									// 添加新的用户
+									link.title = '点击删除';
+									link.href = 'javascript:void(0)';
+									link.setAttribute('uid', data.id);
+									link.setAttribute('action-type', 'remove');
+									div.appendChild(link);
+								}
+							}
+						} else if (updateOnly) {
+							link.innerHTML += '<br />（未找到）';
+						} else {
+							unfound.push(data.name);
+						}
+						if (--unprocessed === 0) {
+							// 全部处理完成，在文本框中显示未被添加的用户并闪烁提示
+							getDom(list).value = unfound.join(' ');
+							if (unfound.length) {
+								// 首页与主页API不一致
+								(STK.common.extra ? STK.common.extra.shine : STK.kit.extra.shine)(getDom(list));
+							}
 						}
 					}
-				} else if (updateOnly) {
-					link.innerHTML += '<br />（未找到）';
-				} else {
-					unfound.push(data.name);
-				}
-				if (--unprocessed === 0) {
-					// 全部处理完成，在文本框中显示未被添加的用户并闪烁提示
-					getDom(list).value = unfound.join(' ');
-					if (unfound.length) {
-						STK.common.extra.shine(getDom(list));
-					}
-				}
-			} });
+				};
+		// 首页与主页API不一致
+		if (STK.common.trans) {
+			searcher = STK.common.trans.relation.getTrans(document.domain === 'www.weibo.com' ? 'userCard2_abroad' : 'userCard2', params);
+		} else {
+			searcher = STK.conf.trans.card.getTrans(document.domain === 'www.weibo.com' ? 'userCard_abroad' : 'userCard', params);
+		}
 		users.forEach(function (user) {
 			var request = { type : 1 };
 			if (updateOnly) {
@@ -512,10 +521,19 @@ var $dialog = (function () {
 			console.warn('页面尚未载入完成，无法打开设置页面！')
 			return false;
 		}
+		var HTML = '${HTML}', events;
 		dialog = STK.ui.dialog({isHold: true});
 		dialog.setTitle('“眼不见心不烦”(v${VER})设置');
-		content = (STK.module.layer || STK.ui.mod.layer)('${HTML}');
-		dialog.setContent(content.getOuter());
+		// 首页与主页API不一致
+		if (dialog.getDom) {
+			content = STK.ui.mod.layer(HTML);
+			dialog.setContent(content.getOuter());
+			events = STK.core.evt.delegatedEvent(content.getInner());
+		} else {
+			//content = STK.ui.mod.layer({template: HTML, appendTo: null});
+			dialog.setContent(HTML);
+			events = STK.core.evt.delegatedEvent(dialog.getDomList(true).inner[1]); // true用于更新DOM缓存（只需做一次）
+		}
 		// 修改屏蔽提示颜色事件
 		bind('tipBackColor', function () {
 			getDom('tipSample').style.backgroundColor = this.value;
@@ -524,7 +542,6 @@ var $dialog = (function () {
 			getDom('tipSample').style.borderColor = this.value;
 			getDom('tipSample').style.color = this.value;
 		}, 'blur');
-		var events = STK.core.evt.delegatedEvent(content.getInner());
 		// 添加关键词按钮点击事件
 		events.add('add', 'click', function (action) {
 			addKeywords(action.data.list, action.data.text);
@@ -542,7 +559,7 @@ var $dialog = (function () {
 			addUsers(action.data.list, action.data.text);
 		});
 		// 复选框标签点击事件
-		bind('inner', function (event) {
+		bind('outer', function (event) {
 			var node = event.target;
 			// 标签下可能有span等元素
 			if (node.parentNode && node.parentNode.tagName === 'LABEL') {
