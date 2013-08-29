@@ -197,6 +197,7 @@ Options.prototype = {
 		floatSidebar : ['bool'],
 		unwrapText : ['bool'],
 		directBigImg : ['bool'],
+		directFeeds : ['bool'],
 		showAllGroups : ['bool'],
 		showAllMsgNav : ['bool'],
 		noDefaultFwd : ['bool'],
@@ -242,6 +243,7 @@ Options.prototype = {
 	},
 	// 保存设置
 	save : function (noSync) {
+		this.version = $.version;
 		$.set($.uid.toString(), JSON.stringify(this));
 		//#if CHROME
 		if (!noSync && $options.autoSync) {
@@ -1306,7 +1308,7 @@ var $page = (function () {
 		toolbar.appendChild(link);
 	};
 	// 根据当前设置修改页面
-	var apply = function () {
+	var apply = function (init) {
 		// 极简阅读模式
 		toggleReaderMode();
 		// 设置链接
@@ -1327,6 +1329,12 @@ var $page = (function () {
 		disableDefaultForward(document);
 		// 禁止默认发布新微博到当前浏览的分组
 		disableDefaultGroupPub(document);
+		if (init) {
+			// 跳过用户主页（自动跳转到微博列表）
+			if ($.scope() === 2 && $.config.location.substr(-5) === '_home' && $options.directFeeds) {
+				document.querySelector('.PRF_tab_noicon li.pftb_itm>a[href*="/weibo?"]').click();
+			}
+		}
 	};
 
 	// IFRAME载入不会影响head中的CSS，只添加一次即可
@@ -1335,6 +1343,7 @@ var $page = (function () {
 	myStyles.id = 'wbpStyles';
 	myStyles.innerHTML = '${CSS}';
 	document.head.appendChild(myStyles);
+	// 为右边栏动态模块打屏蔽标记
 	tagRightbarMods($('trustPagelet_indexright_recom'));
 	// 处理动态载入内容
 	document.addEventListener('DOMNodeInserted', function (event) {
@@ -1402,13 +1411,12 @@ $.get($.uid.toString(), undefined, function (options) {
 		if ($.scope()) { $filter(); }
 		// 直接应用页面设置（此时页面已载入完成）
 		// 与IFRAME相关的处理由$page中注册的DOMNodeInserted事件完成
-		$page();
+		$page(true);
 	};
 	if (!$options.load(options)) {
 		alert('“眼不见心不烦”设置读取失败！\n设置信息格式有问题。');
 	} else if (options && $options.version < $.version) {
-		$options.version = $.version;
-		$options.save(true);
+		$options.save(true); // 更新版本信息
 		if ($options.updateNotify) {
 			alert('您已更新到“眼不见心不烦”v${VER}：\n\n- ' + '${FEATURES}'.split('；').join('\n- '));
 		}
