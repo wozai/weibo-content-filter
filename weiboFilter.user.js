@@ -962,6 +962,7 @@ var $page = (function () {
 			Member : '#trustPagelet_recom_memberv5',
 			WeibaRecom : '#trustPagelet_recom_weiba', // 动态右边栏
 			AppRecom : '#trustPagelet_recom_app', // 动态右边栏
+			LocationRecom : '#trustPagelet_recom_location', // 动态右边栏
 			Notice : '#pl_rightmod_noticeboard',
 			Footer : 'div.global_footer',
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
@@ -1115,18 +1116,22 @@ var $page = (function () {
 	};
 	// 2013年6月起右边栏模块不再有固定ID，为其打上ID
 	var tagRightbarMods = function (rightBar) {
-		var hrefs = {
-			'http://huati.weibo.com/?refer=index_hot' : 'Topic',
-			'http://weibo.com/find/i' : 'InterestUser',
-			'http://weiba.weibo.com/' : 'WeibaRecom',
-			'http://app.weibo.com/' : 'AppRecom'
-		}, mods = rightBar.querySelectorAll('.WB_right_module'), title;
+		if (!rightBar) { return; }
+		var classNames = {
+			'hot_topic' : 'Topic',
+			'person_list' : 'InterestUser',
+			//'http://weiba.weibo.com/' : 'WeibaRecom',
+			//'http://app.weibo.com/' : 'AppRecom',
+			'lbs_map' : 'LocationRecom'
+		}, mods = rightBar.querySelectorAll('.WB_right_module');
 		for (var i = 0; i < mods.length; ++i) {
-			title = mods[i].querySelector('.right_title a');
-			if (title && title.href in hrefs) {
-				mods[i].id = modules[hrefs[title.href]].substring(1);
+			for (var className in classNames) {
+				if (mods[i].querySelector('.right_content.'+className)) {
+					mods[i].id = modules[classNames[className]].substring(1);
+					break;
+				}
 			}
-		}		
+		}
 	}
 	// 屏蔽模块
 	var hideModules = function () {
@@ -1330,6 +1335,7 @@ var $page = (function () {
 	myStyles.id = 'wbpStyles';
 	myStyles.innerHTML = '${CSS}';
 	document.head.appendChild(myStyles);
+	tagRightbarMods($('trustPagelet_indexright_recom'));
 	// 处理动态载入内容
 	document.addEventListener('DOMNodeInserted', function (event) {
 		var scope = $.scope(), node = event.target;
