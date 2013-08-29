@@ -918,10 +918,10 @@ var $filter = (function () {
 	}
 	// 点击“查看大图”事件拦截处理
 	document.addEventListener('click', function (event) {
-		if (!$options.directBigImg) { return true; }
-		var node = event.target;
-		if (node && node.getAttribute('action-type') === 'images_view_tobig' &&
-				node.getAttribute('action-data').match(/pid=(\w+)&mid=(\d+)&uid=(\d+)/)) {
+		if (!$options.directBigImg || !event.target) { return true; }
+		var actionType = event.target.getAttribute('action-type'), actionData = event.target.getAttribute('action-data');
+		if (actionType && (actionType === 'images_view_tobig' || actionType === 'widget_photoview')
+				&& actionData && actionData.match(/pid=(\w+)&mid=(\d+)&uid=(\d+)/)) {
 			window.open('http://photo.weibo.com/' + RegExp.$3 + 
 				'/wbphotos/large/mid/' + RegExp.$2 +
 				'/pid/' + RegExp.$1, '_blank');
