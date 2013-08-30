@@ -29,7 +29,7 @@ var $ = (function () {
 			if (typeof unsafeWindow === 'undefined') {
 				console.warn('不支持Chrome ' + version + '，脚本停止运行！');
 				return undefined;
-			} else { 
+			} else {
 				// Chrome 26以上仍然可以通过Tampermonkey获得unsafeWindow
 				console.warn('使用第三方扩展提供的unsafeWindow');
 				$.window = unsafeWindow;
@@ -103,8 +103,7 @@ var $ = (function () {
 	$.get = function (name, defVal, callback, sync) {
 		// == LEGACY CODE START ==
 		// 将先前版本插件的设置从localStorage转移到chrome.storage.local
-		var lsName = 'weiboPlus.' + name;
-		var value = localStorage.getItem(lsName);
+		var lsName = 'weiboPlus.' + name, value = localStorage.getItem(lsName);
 		if (value !== null) {
 			localStorage.removeItem(lsName);
 			$.set(name, value);
@@ -112,7 +111,7 @@ var $ = (function () {
 		}
 		// == LEGACY CODE END ==
 		callbacks[++messageID] = callback;
-		document.dispatchEvent(new CustomEvent('wbpGet', { detail: { 
+		document.dispatchEvent(new CustomEvent('wbpGet', { detail: {
 			name : name,
 			defVal : defVal,
 			id : messageID,
@@ -253,7 +252,7 @@ Options.prototype = {
 		//#endif
 	},
 	// 载入/导入设置，输入的str为undefined（首次使用时）或string（非首次使用和导入设置时）
-	load : function (str, strip) {
+	load : function (str) {
 		var parsed = {};
 		if (str) {
 			try {
@@ -520,7 +519,7 @@ var $dialog = (function () {
 		// 鉴于只有$dialog使用STK，将其设置为内部变量，仅在打开设置窗口时载入
 		STK = $.window.STK;
 		if (!STK) {
-			console.warn('页面尚未载入完成，无法打开设置页面！')
+			console.warn('页面尚未载入完成，无法打开设置页面！');
 			return false;
 		}
 		var HTML = '${HTML}', events;
@@ -922,8 +921,8 @@ var $filter = (function () {
 	document.addEventListener('click', function (event) {
 		if (!$options.directBigImg || !event.target) { return true; }
 		var actionType = event.target.getAttribute('action-type'), actionData = event.target.getAttribute('action-data');
-		if (actionType && (actionType === 'images_view_tobig' || actionType === 'widget_photoview')
-				&& actionData && actionData.match(/pid=(\w+)&mid=(\d+)&uid=(\d+)/)) {
+		if ((actionType === 'images_view_tobig' || actionType === 'widget_photoview') &&
+				actionData && actionData.match(/pid=(\w+)&mid=(\d+)&uid=(\d+)/)) {
 			window.open('http://photo.weibo.com/' + RegExp.$3 + 
 				'/wbphotos/large/mid/' + RegExp.$2 +
 				'/pid/' + RegExp.$1, '_blank');
@@ -1072,7 +1071,7 @@ var $page = (function () {
 						'.B_index .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 			}
 			if ($options.readerModeProfile) { // 个人主页
-				readerModeStyles.innerHTML += '.B_profile #plc_profile_header, .B_profile #pl_profile_nav, .B_profile #pl_profile_cover, .B_profile .group_read, .B_profile .W_main_2r, .B_profile .group_read, .B_profile .global_footer { display: none }\n' +
+				readerModeStyles.innerHTML += '.B_profile #Pl_Official_Header__1, .B_profile #Pl_Core_Nav__2, .B_profile .group_read, .B_profile .W_main_2r, .B_profile .group_read, .B_profile .global_footer { display: none }\n' +
 						'.B_profile #pl_content_top, .B_profile .WB_global_nav { top: -40px }\n' +
 						'.B_profile { background-position-y: -40px }\n' +
 						'.B_profile .W_miniblog { padding-top: 20px; background-position-y: -40px }\n' +
@@ -1134,7 +1133,7 @@ var $page = (function () {
 				}
 			}
 		}
-	}
+	};
 	// 屏蔽模块
 	var hideModules = function () {
 		var cssText = '';
@@ -1264,7 +1263,7 @@ var $page = (function () {
 			cssText += 'body:not(.S_profile) .W_main { background: none ' + $options.backColor + ' !important } body:not(.S_profile) .S_bg4, body:not(.S_profile) .W_main_a, body:not(.S_profile) .W_main_bg { background: none transparent !important }\n';
 		}
 		if ($options.overrideOtherBack) {
-			cssText += '.S_profile .W_profile_bg { background-color: ' + $options.backColor + ' } .S_profile .S_bg4:not(.W_profile_bg), .S_profile .S_bg5, .S_profile .profile_tabbig { background: none transparent !important }\n';
+			cssText += '.S_profile .W_profile_bg, .S_profile .S_bg5 { background-color: ' + $options.backColor + ' } .S_profile .S_bg4:not(.W_profile_bg) { background: none transparent !important }\n';
 		}
 		if ($options.useCustomStyles) {
 			cssText += $options.customStyles;
