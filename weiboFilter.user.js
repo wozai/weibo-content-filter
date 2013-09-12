@@ -930,19 +930,19 @@ var $filter = (function () {
 		}
 	}, true); // 使用事件捕捉以尽早触发事件，避免与新浪自带事件撞车
 	document.addEventListener('DOMNodeInserted', function (event) {
-		if ($.scope() === 0) { return; }
 		var node = event.target;
-		if (node.tagName === 'DIV' && node.classList.contains('WB_feed_type')) {
+		if ($.scope() === 0 || node.tagName !== 'DIV') { return; }
+		if (node.classList.contains('WB_feed_type')) {
 			// 处理动态载入的微博
 			apply(node);
-		} else if (node.tagName === 'DIV' && node.classList.contains('W_loading')) {
+		} else if (node.classList.contains('W_loading')) {
 			var requestType = node.getAttribute('requesttype');
 			// 仅在搜索和翻页时需要初始化反刷屏/反版聊记录
 			// 其它情况（新微博：newFeed，同页接续：lazyload）下不需要
 			if (requestType === 'search' || requestType === 'page') {
 				forwardFeeds = {}; floodFeeds = {};
 			}
-		} else if (node.tagName === 'DIV' && node.classList.contains('WB_feed')) {
+		} else if (node.classList.contains('WB_feed') || node.querySelector('.WB_feed')) {
 			// 微博列表作为pagelet被一次性载入
 			bindTipOnClick(node);
 			applyToAll();
@@ -995,7 +995,7 @@ var $page = (function () {
 	// 显示设置链接
 	var showSettingsBtn = function () {
 		if (!$('wbpShowSettings')) {
-			var groups = $.select('ul.sort');
+			var groups = $.select('ul.sort') || $.select('ul.sort_profile');
 			if (!groups) { return false; }
 			var tab = document.createElement('li');
 			tab.id = 'wbpShowSettings';
@@ -1232,6 +1232,16 @@ var $page = (function () {
 			leftBar.style.display = '';
 		}
 	};
+	// 首次进入用户主页时直接跳转到微博列表
+	var redirectToFeeds = (function () {
+		var required, link;
+		return function (node, req) {
+			if (arguments.length === 2 && required === undefined) { required = req; }
+			if (required === false) { return; }
+			if (!link) { link = node.querySelector('.PRF_tab_noicon li.pftb_itm>a[href*="/weibo?"]'); }
+			if (required && link) { link.click(); required = false; }
+		};
+	})();
 	// 用户自定义样式及程序附加样式
 	var customStyles = function () {
 		var cssText = '.W_person_info { margin: 0 20px 20px !important }\n', styles = $('wbpCustomStyles');
@@ -1329,11 +1339,9 @@ var $page = (function () {
 		disableDefaultForward(document);
 		// 禁止默认发布新微博到当前浏览的分组
 		disableDefaultGroupPub(document);
+		// 首次进入用户主页时直接跳转到微博列表
 		if (init) {
-			// 跳过用户主页（自动跳转到微博列表）
-			if ($.scope() === 2 && $.config.location.substr(-5) === '_home' && $options.directFeeds) {
-				document.querySelector('.PRF_tab_noicon li.pftb_itm>a[href*="/weibo?"]').click();
-			}
+			redirectToFeeds(document, $.scope() === 2 && $.config.location.substr(-5) === '_home' && $options.directFeeds);
 		}
 	};
 
@@ -1359,18 +1367,21 @@ var $page = (function () {
 		} else if (node.classList.contains('W_main_r') || node.querySelector('.W_main_r')) {
 			// 合并边栏
 			mergeSidebars();
-		} else if (node.tagName === 'DIV' && node.getAttribute('node-type') === 'follow_dialog' && $options.hideMods.indexOf('FollowGuide') > -1) {
+		} else if (node.getAttribute('node-type') === 'follow_dialog' && $options.hideMods.indexOf('FollowGuide') > -1) {
 			// 动态载入的div[node-type="follow_dialog"]会使后续运行的pl.guide.homeguide.index显示“为你推荐”弹窗
 			$.remove(node);
 		} else if (node.querySelector('.commoned_list')) {
 			// 禁止默认选中“同时转发到我的微博”
 			disableDefaultForward(node);
-		} else if (node.tagName === 'DIV' && node.classList.contains('send_weibo')) {
+		} else if (node.classList.contains('send_weibo')) {
 			// 禁止默认发布新微博到当前浏览的分组
 			disableDefaultGroupPub(node);
 			// 清除发布框中的默认话题
 			clearDefTopic();
-		} else if (node.tagName === 'DIV' && node.hasAttribute('ucardconf') && node.parentNode.id === 'trustPagelet_indexright_recom') {
+		} else if (node.classList.contains('PRF_tab_noicon')) {
+			// 首次进入用户主页时直接跳转到微博列表
+			redirectToFeeds(node);
+		} else if (node.hasAttribute('ucardconf') && node.parentNode.id === 'trustPagelet_indexright_recom') {
 			// 微博新首页右边栏模块处理
 			tagRightbarMods(node.parentNode);
 		}

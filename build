@@ -3,7 +3,7 @@
 export VER='1.1.6'
 export MAINVER='1.1.6'
 export REV=85
-export FEATURES='增加对首页右边栏“图书推荐”、“电影推荐”模块的屏蔽；增加对淘宝商户标识的屏蔽'
+export FEATURES='增加对首页右边栏“图书推荐”、“电影推荐”模块的屏蔽；增加对淘宝商户标识的屏蔽；修正跳过主页功能偶然失效的问题；修正微博屏蔽在用户主页失效的问题'
 
 while getopts ":nd" optname
 do
