@@ -961,8 +961,8 @@ var $page = (function () {
 			InterestUser : '#trustPagelet_recom_interestv5', // 动态右边栏
 			Topic : '#trustPagelet_zt_hottopicv5', // 动态右边栏
 			Member : '#trustPagelet_recom_memberv5',
-			WeibaRecom : '#trustPagelet_recom_weiba', // 动态右边栏
-			AppRecom : '#trustPagelet_recom_app', // 动态右边栏
+			BookRecom : '#trustPagelet_recom_book', // 动态右边栏
+			MovieRecom : '#trustPagelet_recom_movie', // 动态右边栏
 			LocationRecom : '#trustPagelet_recom_location', // 动态右边栏
 			Notice : '#pl_rightmod_noticeboard',
 			Footer : 'div.global_footer',
@@ -979,7 +979,7 @@ var $page = (function () {
 			Nofollow : '#pl_profile_unfollow',
 			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .B_profile .W_main_2r',
 			ProfCover : '.profile_top { min-height: 250px } .profile_top .pf_head { top: 10px } .profile_top .pf_info { margin-top: 20px } .profile_top .S_bg5 { background-color: transparent !important } .profile_pic_top',
-			ProfStats : '.profile_top .pf_head { top: -62px !important } .profile_top .user_atten',
+			ProfStats : '.profile_top { min-height: 200px !important } .profile_top .user_atten',
 			Relation : '.W_main_2r div[id^="Pl_Core_RightUserGrid__"]',
 			Album : '.W_main_2r div[id^="Pl_Core_RightPicMulti__"]',
 			ProfHotTopic : '.W_main_2r div[id^="Pl_Core_RightTextSingle__"]',
@@ -989,6 +989,7 @@ var $page = (function () {
 			VerifyIcon : '.approve, .approve_co',
 			DarenIcon : '.ico_club',
 			VgirlIcon : '.ico_vlady',
+			TaobaoIcon : '.ico_taobao',
 			TravelIcon : '.ico_airball'
 		};
 	// 显示设置链接
@@ -1118,17 +1119,17 @@ var $page = (function () {
 	// 2013年6月起右边栏模块不再有固定ID，为其打上ID
 	var tagRightbarMods = function (rightBar) {
 		if (!rightBar) { return; }
-		var classNames = {
-			'hot_topic' : 'Topic',
-			'person_list' : 'InterestUser',
-			//'http://weiba.weibo.com/' : 'WeibaRecom',
-			//'http://app.weibo.com/' : 'AppRecom',
-			'lbs_map' : 'LocationRecom'
+		var identifiers = {
+			'.right_content.hot_topic' : 'Topic',
+			'.right_content.person_list' : 'InterestUser',
+			'[change-data*="key=index_mov"]' : 'BookRecom',
+			'[change-data*="key=index_book"]' : 'MovieRecom',
+			'.right_content.lbs_map' : 'LocationRecom'
 		}, mods = rightBar.querySelectorAll('.WB_right_module');
 		for (var i = 0; i < mods.length; ++i) {
-			for (var className in classNames) {
-				if (mods[i].querySelector('.right_content.'+className)) {
-					mods[i].id = modules[classNames[className]].substring(1);
+			for (var id in identifiers) {
+				if (mods[i].querySelector(id)) {
+					mods[i].id = modules[identifiers[id]].substring(1);
 					break;
 				}
 			}
