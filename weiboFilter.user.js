@@ -968,7 +968,7 @@ var $page = (function () {
 			Footer : 'div.global_footer',
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
 			App : '#pl_leftnav_app',
-			Level : 'span.W_level_ico',
+			Avatar : 'dl.W_person_info',
 			CommentTip : 'div[node-type="feed_privateset_tip"]',
 			MemberTip : 'div[node-type="feed_list_shieldKeyword"]',
 			TimelineMods : '.B_index .WB_feed .WB_feed_type:not([mid])',
@@ -976,7 +976,6 @@ var $page = (function () {
 			TopComment : '#pl_content_commentTopNav',
 			Medal : '.pf_badge_icon',
 			RecomFeed : 'div[node-type="feed_list_recommend"]',
-			Nofollow : '#pl_profile_unfollow',
 			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .B_profile .W_main_2r',
 			ProfCover : '.profile_top { min-height: 250px } .profile_top .pf_head { top: 10px } .profile_top .pf_info { margin-top: 20px } .profile_top .S_bg5 { background-color: transparent !important } .profile_pic_top',
 			ProfStats : '.profile_top { min-height: 200px !important } .profile_top .user_atten',
@@ -1069,6 +1068,7 @@ var $page = (function () {
 						'.B_index #Box_center, .B_index .W_main_a { width: ' + width + 'px }\n' +
 						'.B_index .WB_feed .repeat .input textarea { width: 100% }\n' +
 						'.B_index .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n' +
+						'.B_index .WB_feed .type_text { margin-left: ' + (width-165) + 'px }\n' +
 						'.B_index .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 			}
 			if ($options.readerModeProfile) { // 个人主页
@@ -1079,6 +1079,8 @@ var $page = (function () {
 						'.B_profile .W_main { width: ' + width + 'px !important; background: ' + $options.readerModeBackColor + ' }\n' +
 						'.B_profile .W_main_c { padding-top: 0; width: ' + width + 'px }\n' +
 						'.B_profile .WB_feed .repeat .input textarea { width: 100% }\n' +
+						'.B_profile .WB_feed .WB_screen { margin-left: ' + (width-48) + 'px }\n' +
+						'.B_profile .WB_feed .type_text { margin-left: ' + (width-165) + 'px }\n' +
 						'.B_profile .W_gotop { margin-left: ' + (width/2) + 'px !important }\n';
 			}
 			if (!$options.readerModeTip && (
