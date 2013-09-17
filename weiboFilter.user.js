@@ -1124,9 +1124,9 @@ var $page = (function () {
 		var identifiers = {
 			'.right_content.hot_topic' : 'Topic',
 			'.right_content.person_list' : 'InterestUser',
-			'[change-data*="key=index_mov"]' : 'BookRecom',
-			'[change-data*="key=index_book"]' : 'MovieRecom',
-			'.right_content.lbs_map' : 'LocationRecom'
+			'[change-data*="key=index_book"]' : 'BookRecom',
+			'[change-data*="key=index_mov"]' : 'MovieRecom',
+			'[change-data*="key=index_LBS"]' : 'LocationRecom'
 		}, mods = rightBar.querySelectorAll('.WB_right_module');
 		for (var i = 0; i < mods.length; ++i) {
 			for (var id in identifiers) {
