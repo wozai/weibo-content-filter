@@ -3,7 +3,7 @@
 export VER='1.1.7'
 export MAINVER='1.1.7'
 export REV=86
-export FEATURES='增加对首页右边栏“音乐推荐”模块的屏蔽；增加对“微博益起来”标识的屏蔽'
+export FEATURES='增加对首页右边栏“音乐推荐”模块的屏蔽；增加对“微博益起来”标识的屏蔽；可以屏蔽带有淘宝链接的微博'
 
 while getopts ":nd" optname
 do
@@ -28,6 +28,7 @@ echo ' done.'
 
 # Chrome
 printf 'Building Chrome extension...'
+PACKAGE="release/latest/weiboFilter-chrome-v${VER}.zip"
 export CSS=`./compile.pl $PARAMS --flag=CHROME settings.css`
 export HTML=`./compile.pl $PARAMS --flag=CHROME settings.html`
 rm -f release/latest/chrome/*
@@ -35,6 +36,7 @@ cp chrome/* release/latest/chrome/
 ./compile.pl --nocompress -out="release/latest/chrome/manifest.json" chrome/manifest.json
 ./compile.pl $COMPRESS $PARAMS --out="release/latest/chrome/main.js" chrome/main.js
 ./compile.pl $COMPRESS $PARAMS --flag=CHROME --out="release/latest/chrome/weiboFilter.js" weiboFilter.user.js
+zip -q -j $PACKAGE release/latest/chrome/*
 echo ' done.'
 
 unset VER MAINVER REV

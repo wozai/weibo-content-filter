@@ -214,6 +214,7 @@ Options.prototype = {
 		filterPromotions : ['bool', true],
 		filterDeleted : ['bool'],
 		filterFeelings : ['bool'],
+		filterTaobao : ['bool'],
 		filterDupFwd : ['bool'],
 		maxDupFwd : ['string', 1],
 		filterFlood : ['bool'],
@@ -780,6 +781,13 @@ var $filter = (function () {
 				//#endif
 				return true;
 			}
+			// 屏蔽淘宝链接微博
+			if ($options.filterTaobao && feed.querySelector('a>i.icon_fl_tb')) {
+				//#if DEBUG
+				console.warn('↑↑↑【淘宝链接微博被屏蔽】↑↑↑');
+				//#endif
+				return true;
+			}			
 			// 屏蔽指定来源
 			if (searchSource(source, 'sourceKeywords') ||
 					(isForward && searchSource(fwdSource, 'sourceKeywords'))) {
