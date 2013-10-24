@@ -964,6 +964,7 @@ var $page = (function () {
 			BookRecom : '#trustPagelet_recom_book', // 动态右边栏
 			MovieRecom : '#trustPagelet_recom_movie', // 动态右边栏
 			LocationRecom : '#trustPagelet_recom_location', // 动态右边栏
+			MusicRecom : '#trustPagelet_recom_music', // 动态右边栏
 			Notice : '#pl_rightmod_noticeboard',
 			Footer : 'div.global_footer',
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
@@ -989,7 +990,7 @@ var $page = (function () {
 			DarenIcon : '.ico_club',
 			VgirlIcon : '.ico_vlady',
 			TaobaoIcon : '.ico_taobao',
-			TravelIcon : '.ico_airball'
+			GongyiIcon : '.ico_gongyi'
 		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
@@ -1126,7 +1127,8 @@ var $page = (function () {
 			'.right_content.person_list' : 'InterestUser',
 			'[change-data*="key=index_book"]' : 'BookRecom',
 			'[change-data*="key=index_mov"]' : 'MovieRecom',
-			'[change-data*="key=index_LBS"]' : 'LocationRecom'
+			'[change-data*="key=index_LBS"]' : 'LocationRecom',
+			'[change-data*="key=index_song"]' : 'MusicRecom'
 		}, mods = rightBar.querySelectorAll('.WB_right_module');
 		for (var i = 0; i < mods.length; ++i) {
 			for (var id in identifiers) {
