@@ -1,5 +1,6 @@
 {
-	"name": "眼不见心不烦（新浪微博）官方版",
+	"name": "眼不见心不烦（新浪微博）",
+	"short_name": "眼不见心不烦",
 	"version": "${MAINVER}",
 	"manifest_version": 2,
 	"minimum_chrome_version": "20",
