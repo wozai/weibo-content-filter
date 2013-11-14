@@ -746,7 +746,7 @@ var $filter = (function () {
 		//#endif
 
 		if ($options.filterPaused || // 暂停屏蔽
-			($options.filterOthersOnly && feed.querySelector('.WB_detail>.WB_func>.WB_handle a[action-type="feed_list_delete"]')) || // 不要屏蔽自己的微博（判据：工具栏是否有“删除”）
+			($options.filterOthersOnly && feed.querySelector('.WB_screen>a[action-type="feed_list_delete"]')) || // 不要屏蔽自己的微博（判据：工具栏是否有“删除”）
 			search(text, 'whiteKeywords')) { // 白名单条件
 			//#if DEBUG
 			console.warn('↑↑↑【白名单微博不会被屏蔽】↑↑↑');
@@ -966,13 +966,16 @@ var $page = (function () {
 	var modules = {
 			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], #trustPagelet_indexright_recom .hot_topicad, div[ad-data], .WB_feed .popular_buss',
 			Stats : '#pl_rightmod_myinfo .user_atten',
+			ToMe : '#pl_leftnav_common a[href^="/direct/tome"]',
+			Friends : '#pl_leftnav_common .level_1_Box+.level_1_Box',
 			InterestUser : '#trustPagelet_recom_interestv5', // 动态右边栏
 			Topic : '#trustPagelet_zt_hottopicv5', // 动态右边栏
-			Member : '#trustPagelet_recom_memberv5',
-			BookRecom : '#trustPagelet_recom_book', // 动态右边栏
-			MovieRecom : '#trustPagelet_recom_movie', // 动态右边栏
+			Member : '#trustPagelet_recom_memberv5',			
+			WeiboRecom : '#trustPagelet_recom_weibo', // 动态右边栏
 			LocationRecom : '#trustPagelet_recom_location', // 动态右边栏
 			MusicRecom : '#trustPagelet_recom_music', // 动态右边栏
+			MovieRecom : '#trustPagelet_recom_movie', // 动态右边栏
+			BookRecom : '#trustPagelet_recom_book', // 动态右边栏
 			Notice : '#pl_rightmod_noticeboard',
 			Footer : 'div.global_footer',
 			RecommendedTopic : '#pl_content_publisherTop div[node-type="recommendTopic"]',
@@ -985,7 +988,7 @@ var $page = (function () {
 			TopComment : '#pl_content_commentTopNav',
 			Medal : '.pf_badge_icon',
 			RecomFeed : 'div[node-type="feed_list_recommend"]',
-			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .B_profile .W_main_2r',
+			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .B_profile .WB_feed .WB_screen { margin-left: 928px } .B_profile .W_main_2r',
 			ProfCover : '.profile_top { min-height: 250px } .profile_top .pf_head { top: 10px } .profile_top .pf_info { margin-top: 20px } .profile_top .S_bg5 { background-color: transparent !important } .profile_pic_top',
 			ProfStats : '.profile_top { min-height: 200px !important } .profile_top .user_atten',
 			Relation : '.W_main_2r div[id^="Pl_Core_RightUserGrid__"]',
@@ -1133,10 +1136,11 @@ var $page = (function () {
 		var identifiers = {
 			'.right_content.hot_topic' : 'Topic',
 			'.right_content.person_list' : 'InterestUser',
-			'[change-data*="key=index_book"]' : 'BookRecom',
-			'[change-data*="key=index_mov"]' : 'MovieRecom',
+			'[change-data*="key=index_weibo"]' : 'WeiboRecom',
 			'[change-data*="key=index_LBS"]' : 'LocationRecom',
-			'[change-data*="key=index_song"]' : 'MusicRecom'
+			'[change-data*="key=index_song"]' : 'MusicRecom',
+			'[change-data*="key=index_mov"]' : 'MovieRecom',
+			'[change-data*="key=index_book"]' : 'BookRecom'			
 		}, mods = rightBar.querySelectorAll('.WB_right_module');
 		for (var i = 0; i < mods.length; ++i) {
 			for (var id in identifiers) {
