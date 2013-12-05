@@ -964,7 +964,7 @@ var $filter = (function () {
 var $page = (function () {
 	// 模块屏蔽设置
 	var modules = {
-			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], #trustPagelet_indexright_recom .hot_topicad, div[ad-data], .WB_feed .popular_buss',
+			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], #trustPagelet_zt_hottopicv5 [class*="hot_topicad"], div[ad-data], .WB_feed .popular_buss',
 			Stats : '#pl_rightmod_myinfo .user_atten',
 			ToMe : '#pl_leftnav_common a[href^="/direct/tome"]',
 			Friends : '#pl_leftnav_common .level_1_Box+.level_1_Box',
@@ -1001,7 +1001,7 @@ var $page = (function () {
 			DarenIcon : '.ico_club',
 			VgirlIcon : '.ico_vlady',
 			TaobaoIcon : '.ico_taobao',
-			GongyiIcon : '.ico_gongyi'
+			GongyiIcon : '.W_ico16[class*="ico_gongyi"]'
 		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
