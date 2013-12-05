@@ -1,9 +1,9 @@
 #!/bin/sh
 
-export VER='1.1.8'
-export MAINVER='1.1.8'
-export REV=87
-export FEATURES='增加对首页右边栏“热门微博”模块的屏蔽；增加对导航栏“发给我的”、“好友圈”的屏蔽；修正“不要屏蔽我自己的微博”功能失效的问题；修正去除主页右边栏后删除微博按钮错位的问题'
+export VER='1.1.9'
+export MAINVER='1.1.9'
+export REV=88
+export FEATURES='增加对热门话题推广广告的屏蔽'
 
 while getopts ":nd" optname
 do
