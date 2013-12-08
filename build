@@ -3,7 +3,7 @@
 export VER='1.1.9'
 export MAINVER='1.1.9'
 export REV=88
-export FEATURES='增加对“微博桌面”推广的屏蔽；增加对微博话题卡片、位置卡片的屏蔽；修正“微博益起来”标识屏蔽失效的问题'
+export FEATURES='增加导航栏浮动选项；增加对“微博桌面”推广的屏蔽；增加对微博话题卡片、位置卡片的屏蔽；修正“微博益起来”标识屏蔽失效的问题'
 
 while getopts ":nd" optname
 do

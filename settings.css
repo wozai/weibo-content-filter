@@ -127,7 +127,7 @@
 	margin-top: 10px;
 	border: 1px solid #D2D5D8;
 }
-.wbpSettings input[type="checkbox"] {
+.wbpSettings input[type="checkbox"], .wbpSettings input[type="radio"] {
 	vertical-align: middle; 
 	margin-right: 5px;
 }
