@@ -28,7 +28,7 @@
 <a tab="tabModify" href="javascript:void(0);">改造版面</a>
 <a node-type="tabHeaderSettings" tab="tabSettings" href="javascript:void(0);">设置</a>
 </div>
-<div node-type="inner" style="float: right; width: 440px">
+<div node-type="tabs" style="float: right; width: 440px">
 <div node-type="tabKeywords">
 <div class="clearfix">
 <div style="float: left">
@@ -347,9 +347,12 @@
 </div>
 <div node-type="tabModify" style="display: none">
 <p><input type="checkbox" node-type="mergeSidebars"><label><span style="color: red">双栏版式</span>（将左边栏并入右边栏）</label></p>
-<p><input type="checkbox" node-type="floatSidebar"><label><span style="color: red">浮动常用边栏</span>（常用边栏随页面滚动）</label></p>
-<p><input type="checkbox" node-type="showAllGroups"><label>始终显示所有分组</label></p>
-<p><input type="checkbox" node-type="showAllMsgNav"><label>始终显示所有消息导航条（左边栏“消息”下的“提到我的”、“评论”等）</label></p>
+<p><span style="color: blue">左边栏浮动选项</span>：</p>
+<p style="margin-top: 3px"><input type="radio" name="floatSetting" value="Nav"><label>导航栏随分组栏浮动</label></p>
+<p style="margin-top: 3px"><input type="radio" name="floatSetting" value="Groups"><label>仅分组栏浮动（新浪微博默认值）</label></p>
+<p style="margin-top: 3px"><input type="radio" name="floatSetting" value="None"><label>禁止浮动</label></p>
+<p><input type="checkbox" node-type="showAllGroups"><label>展开分组栏中的所有分组</label></p>
+<p><input type="checkbox" node-type="showAllMsgNav"><label>展开导航栏中的所有消息链接（左边栏“消息”下的“提到我的”、“评论”等）</label></p>
 <p><input type="checkbox" node-type="unwrapText"><label>微博作者与正文间不折行</label></p>
 <p><input type="checkbox" node-type="directBigImg"><label>点击“查看大图”直接打开大图</label></p>
 <p><input type="checkbox" node-type="directFeeds"><label>点击用户名直接进入微博列表（跳过“他/她的主页”）</label></p>

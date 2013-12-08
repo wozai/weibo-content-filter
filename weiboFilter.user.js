@@ -159,6 +159,7 @@ function Options () {
 		keyword : [],
 		string : '',
 		bool : false,
+		radio : '',
 		array : [],
 		object : {},
 		internal : null
@@ -193,7 +194,7 @@ Options.prototype = {
 		readerModeWidth : ['string', 750],
 		readerModeBackColor : ['string', 'rgba(100%,100%,100%,0.8)'],
 		mergeSidebars : ['bool'],
-		floatSidebar : ['bool'],
+		floatSetting : ['radio', 'Groups'],
 		unwrapText : ['bool'],
 		directBigImg : ['bool'],
 		directFeeds : ['bool'],
@@ -448,7 +449,7 @@ var $dialog = (function () {
 	};
 	// 返回当前设置（可能未保存）
 	var exportSettings = function () {
-		var options = new Options();
+		var options = new Options(), radio;
 		for (var option in options.items) {
 			switch (options.items[option][0]) {
 			case 'keyword':
@@ -459,6 +460,10 @@ var $dialog = (function () {
 				break;
 			case 'bool':
 				options[option] = getDom(option).checked;
+				break;
+			case 'radio':
+				radio = getDom('tabs').querySelector('input[type="radio"][name="' + option + '"]:checked');
+				options[option] = radio ? radio.value : '';
 				break;
 			case 'array':
 				options[option] = [];
@@ -484,6 +489,7 @@ var $dialog = (function () {
 	};
 	// 更新设置窗口内容，exportSettings()的反过程
 	var importSettings = function (options) {
+		var radio;
 		for (var option in options.items) {
 			switch (options.items[option][0]) {
 			case 'keyword':
@@ -496,6 +502,10 @@ var $dialog = (function () {
 				break;
 			case 'bool':
 				getDom(option).checked = options[option];
+				break;
+			case 'radio':
+				radio = getDom('tabs').querySelector('input[type="radio"][name="' + option + '"][value="' + options[option] + '"]');
+				if (radio) { radio.checked = true; }
 				break;
 			}
 		}
@@ -530,11 +540,11 @@ var $dialog = (function () {
 		if (dialog.getDom) {
 			content = STK.ui.mod.layer(HTML);
 			dialog.setContent(content.getOuter());
-			events = STK.core.evt.delegatedEvent(content.getInner());
+			events = STK.core.evt.delegatedEvent(content.getDom('tabs'));
 		} else {
 			//content = STK.ui.mod.layer({template: HTML, appendTo: null});
 			dialog.setContent(HTML);
-			events = STK.core.evt.delegatedEvent(dialog.getDomList(true).inner[1]); // true用于更新DOM缓存（只需做一次）
+			events = STK.core.evt.delegatedEvent(dialog.getDomList(true).tabs); // true用于更新DOM缓存（只需做一次）
 		}
 		// 修改屏蔽提示颜色事件
 		bind('tipBackColor', function () {
@@ -1234,16 +1244,41 @@ var $page = (function () {
 	var mergeSidebars = function () {
 		// 不要作用于“我关注的人”页面
 		if (!navBar || navBar.id === 'pl_leftNav_relation') { return; }
-		if ($options.mergeSidebars && !navBar.id) {
-			var rightBar = $.select('.W_main_r'), myInfo = $('pl_rightmod_myinfo');
-			if (!rightBar) { return; }
-			leftBar.style.display = 'none';
-			navBar.id = 'wbpNavBar';
-			// 注意：Firefox不支持background-position-x
-			$.select('.W_main').style.cssText = 'width: 830px; background-position: -150px 0';
-			// 左边栏移动到右边栏
-			rightBar.insertBefore(navBar, myInfo ? myInfo.nextSibling : rightBar.firstChild);
-		} else if (!$options.mergeSidebars && navBar.id) {
+		// 浮动边栏设置
+		var navBox = navBar.querySelector('#pl_leftnav_common'), node, next;
+		if ($options.floatSetting === 'Nav' && navBox.parentNode.getAttribute('node-type') === 'left_all') {
+			navBar.querySelector('[node-type="left_fixed_item"]').insertBefore(navBox, navBar.querySelector('#pl_leftnav_group'));
+		} else if ($options.floatSetting !== 'Nav' && navBox.parentNode.getAttribute('node-type') === 'left_fixed_item') {
+			navBar.querySelector('[node-type="left_all"]').insertBefore(navBox, navBar.querySelector('[node-type="left_fixed"]'));
+		}
+		if ((!$options.mergeSidebars || $options.floatSetting === 'None') && navBar.hasAttribute('modsMoved')) {
+			next = navBar.querySelector('#pl_leftnav_app').nextSibling;
+			while (node = next) {
+				next = node.nextSibling;
+				navBar.parentNode.appendChild(node); // 移动回原位置
+			}
+			navBar.removeAttribute('modsMoved');
+		}
+		// 合并边栏
+		if ($options.mergeSidebars) {
+			if (!navBar.id) {
+				var rightBar = $.select('.W_main_r'), myInfo = $('pl_rightmod_myinfo');
+				leftBar.style.display = 'none';
+				navBar.id = 'wbpNavBar';
+				// 注意：Firefox不支持background-position-x
+				$.select('.W_main').style.cssText = 'width: 830px; background-position: -150px 0';
+				// 左边栏移动到右边栏
+				rightBar.insertBefore(navBar, myInfo ? myInfo.nextSibling : rightBar.firstChild);
+			}
+			// 移动右边栏模块的操作需在完成合并边栏后进行
+			if ($options.floatSetting !== 'None' && !navBar.hasAttribute('modsMoved')) {
+				node = navBar.querySelector('[node-type="left_all"]');
+				while (next = navBar.nextSibling) {
+					node.appendChild(next);
+				}
+				navBar.setAttribute('modsMoved', '');
+			}
+		} else if (navBar.id) {
 			navBar.id = '';
 			leftBar.style.display = 'none';
 			$.select('.W_main').style.cssText = '';
@@ -1283,12 +1318,8 @@ var $page = (function () {
 		if ($options.mergeSidebars) {
 			cssText += 'body:not(.S_profile) .W_gotop { margin-left: 415px }\n';
 		}
-		if ($options.floatSidebar) {
-			if ($options.mergeSidebars) {
-				cssText += 'body:not(.S_profile) .W_main_r { position: fixed; margin-left: 600px; } body:not(.S_profile) .W_main_r > div { display: none } body:not(.S_profile) #wbpNavBar, #pl_rightmod_myinfo { display: block !important }\n';
-			} else {
-				cssText += 'body:not(.S_profile) .WB_left_nav { position: fixed; width: 150px }\n';
-			}
+		if ($options.floatSetting === 'None') {
+			cssText += 'body:not(.S_profile) .WB_left_nav [node-type="left_fixed"] { position: static !important; height: auto !important }\n';
 		}
 		if ($options.overrideMyBack) {
 			cssText += 'body:not(.S_profile) .W_main { background: none ' + $options.backColor + ' !important } body:not(.S_profile) .S_bg4, body:not(.S_profile) .W_main_a, body:not(.S_profile) .W_main_bg { background: none transparent !important }\n';
@@ -1410,6 +1441,15 @@ var $page = (function () {
 		if (!navBar || !navBar.id) { return; }
 		var node = event.target;
 		if (node.tagName === 'DIV' && node.querySelector('#wbpNavBar')) {
+			if (navBar.hasAttribute('modsMoved')) {
+				// 将原属于右边栏的模块移出，注意node变量此处被重用
+				var next = navBar.querySelector('#pl_leftnav_app').nextSibling;
+				while (node = next) {
+					next = node.nextSibling;
+					navBar.parentNode.appendChild(node); // 移动回原位置
+				}
+				navBar.removeAttribute('modsMoved');
+			}
 			// 原左边栏所属模块即将随着右边栏被移除，需要将其暂时移动回左边栏（必须在DOM中时刻保持一个副本）
 			navBar.id = '';
 			leftBar.appendChild(navBar);
