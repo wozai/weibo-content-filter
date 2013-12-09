@@ -201,6 +201,7 @@ Options.prototype = {
 		showAllGroups : ['bool'],
 		showAllMsgNav : ['bool'],
 		noDefaultFwd : ['bool'],
+		noDefaultCmt : ['bool'],
 		noDefaultGroupPub : ['bool'],
 		clearDefTopic : ['bool'],
 		overrideMyBack : ['bool'],
@@ -1205,14 +1206,6 @@ var $page = (function () {
 			}
 		}
 	};
-	// 禁止默认选中“同时转发到我的微博”
-	var disableDefaultForward = function (node) {
-		if (!$options.noDefaultFwd) { return; }
-		var fwdCheckbox = node.querySelector('.commoned_list .W_checkbox[name="forward"]');
-		if (fwdCheckbox && fwdCheckbox.checked) {
-			fwdCheckbox.checked = false;
-		}
-	};
 	// 禁止默认发布新微博到当前浏览的分组
 	var disableDefaultGroupPub = function (node) {
 		if (!$options.noDefaultGroupPub) { return; }
@@ -1387,8 +1380,6 @@ var $page = (function () {
 		overrideSkin();
 		// 应用自定义CSS
 		customStyles();
-		// 禁止默认选中“同时转发到我的微博”
-		disableDefaultForward(document);
 		// 禁止默认发布新微博到当前浏览的分组
 		disableDefaultGroupPub(document);
 		// 首次进入用户主页时直接跳转到微博列表
@@ -1422,9 +1413,28 @@ var $page = (function () {
 		} else if (node.getAttribute('node-type') === 'follow_dialog' && $options.hideMods.indexOf('FollowGuide') > -1) {
 			// 动态载入的div[node-type="follow_dialog"]会使后续运行的pl.guide.homeguide.index显示“为你推荐”弹窗
 			$.remove(node);
-		} else if (node.querySelector('.commoned_list')) {
-			// 禁止默认选中“同时转发到我的微博”
-			disableDefaultForward(node);
+		} else if (node.querySelector('.commoned_list') && $options.noDefaultFwd) {
+			// 禁止评论时默认选中“同时转发”
+			var fwdCheckbox = node.querySelector('.commoned_list .W_checkbox[name="forward"]');
+			if (fwdCheckbox && fwdCheckbox.checked) {
+				fwdCheckbox.checked = false;
+			}
+		} else if (node.classList.contains('feed_repeat') && $options.noDefaultCmt) {
+			// 禁止转发时默认选中“同时评论”
+			var runs = 0,
+				cmtFwdCheckbox = node.parentNode.parentNode.querySelector('.W_checkbox[node-type="forwardInput"]'),
+				cmtOrgCheckbox = node.parentNode.parentNode.querySelector('.W_checkbox[node-type="originInput"]');
+			// 如果满足指定条件（uid倒数第二位是8或9），在转发窗口“当前已转发”微博列表
+			// 成功载入后会自动选中“同时评论”，此处采用短时间延时器将其取消选中
+			(function waitForUncheck() {
+				if (cmtFwdCheckbox && cmtFwdCheckbox.checked) {
+					cmtFwdCheckbox.checked = false;
+				} else if (cmtOrgCheckbox && cmtOrgCheckbox.checked) {
+					cmtOrgCheckbox.checked = false;
+				} else if (++runs < 10) { // 最多等待10ms*10=0.1s
+					setTimeout(waitForUncheck, 10);
+				}
+			})();
 		} else if (node.classList.contains('send_weibo')) {
 			// 禁止默认发布新微博到当前浏览的分组
 			disableDefaultGroupPub(node);
