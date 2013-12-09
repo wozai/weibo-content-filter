@@ -1000,11 +1000,11 @@ var $page = (function () {
 			HomeTip : '#pl_content_hometip',
 			IMNews : '.WBIM_news',
 			TopComment : '#pl_content_commentTopNav',
-			Medal : '.pf_badge_icon',
 			RecomFeed : 'div[node-type="feed_list_recommend"]',
 			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .B_profile .WB_feed .WB_screen { margin-left: 928px } .B_profile .W_main_2r',
 			ProfCover : '.profile_top { min-height: 250px } .profile_top .pf_head { top: 10px } .profile_top .pf_info { margin-top: 20px } .profile_top .S_bg5 { background-color: transparent !important } .profile_pic_top',
 			ProfStats : '.profile_top { min-height: 200px !important } .profile_top .user_atten',
+			MyMicroworld : '.W_main_c div[id^="Pl_Official_MyMicroworld__"]',
 			Relation : '.W_main_2r div[id^="Pl_Core_RightUserGrid__"]',
 			Album : '.W_main_2r div[id^="Pl_Core_RightPicMulti__"]',
 			ProfHotTopic : '.W_main_2r div[id^="Pl_Core_RightTextSingle__"]',
@@ -1263,6 +1263,7 @@ var $page = (function () {
 		if ($options.mergeSidebars) {
 			if (!navBar.id) {
 				var rightBar = $.select('.W_main_r'), myInfo = $('pl_rightmod_myinfo');
+				if (!rightBar) { return; }
 				leftBar.style.display = 'none';
 				navBar.id = 'wbpNavBar';
 				// 注意：Firefox不支持background-position-x
