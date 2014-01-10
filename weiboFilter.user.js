@@ -757,7 +757,7 @@ var $filter = (function () {
 		//#endif
 
 		if ($options.filterPaused || // 暂停屏蔽
-			($options.filterOthersOnly && feed.querySelector('.WB_screen>a[action-type="feed_list_delete"]')) || // 不要屏蔽自己的微博（判据：工具栏是否有“删除”）
+			($options.filterOthersOnly && feed.querySelector('.WB_screen a[action-type="feed_list_delete"]')) || // 不要屏蔽自己的微博（判据：工具栏是否有“删除”）
 			search(text, 'whiteKeywords')) { // 白名单条件
 			//#if DEBUG
 			console.warn('↑↑↑【白名单微博不会被屏蔽】↑↑↑');
@@ -1016,7 +1016,7 @@ var $page = (function () {
 			DarenIcon : '.ico_club',
 			VgirlIcon : '.ico_vlady',
 			TaobaoIcon : '.ico_taobao',
-			GongyiIcon : '.W_ico16[class*="ico_gongyi"]'
+			HongbaoIcon : '.hongbaofei2014'
 		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
