@@ -3,7 +3,7 @@
 export VER='1.1.10'
 export MAINVER='1.1.10'
 export REV=89
-export FEATURES='可以禁止转发时自动选中“同时评论”；增加对主页“我的微博人气”模块的屏蔽'
+export FEATURES='可以禁止转发时自动选中“同时评论”；增加对“让红包飞”标识的屏蔽；增加对主页“我的微博人气”模块的屏蔽；修正合并边栏后浮动模块的问题'
 
 while getopts ":nd" optname
 do
