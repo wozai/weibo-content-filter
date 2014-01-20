@@ -8,9 +8,8 @@ var $ = (function () {
 	};
 	$.version = Number('${REV}');
 	// 按CSS选择元素
-	$.select = function (css, root) {
-		if (!root) { root = document; }
-		return root.querySelector(css);
+	$.select = function (css) {
+		return document.querySelector(css);
 	};
 	var CHROME_KEY_ROOT = 'weiboPlus.';
 	//#if GREASEMONKEY
@@ -1218,7 +1217,7 @@ var $page = (function () {
 	// 清除发布框中的默认话题
 	var clearDefTopic = function () {
 		if ($options.clearDefTopic && $.scope() === 1) {
-			var inputBox = document.querySelector('#pl_content_publisherTop .send_weibo .input textarea');
+			var inputBox = $.select('#pl_content_publisherTop .send_weibo .input textarea');
 			if (inputBox && inputBox.hasAttribute('hottopic')) {
 				// IFRAME载入方式，hotTopic可能尚未启动，直接清除相关属性即可
 				inputBox.removeAttribute('hottopic');
@@ -1245,6 +1244,13 @@ var $page = (function () {
 			navBar.querySelector('[node-type="left_all"]').insertBefore(navBox, navBar.querySelector('[node-type="left_fixed"]'));
 		}
 		if ((!$options.mergeSidebars || $options.floatSetting === 'None') && navBar.hasAttribute('modsMoved')) {
+			// 将右边栏原来的浮动模块移回原位
+			node = navBar.parentNode.querySelector('#trustPagelet_indexright_recom [node-type="right_module_fixed"]');
+			console.log(node.parentNode);
+			while ((next = node.parentNode.firstChild) !== node) {
+				node.appendChild(next);
+			}
+			// 将原属于右边栏的模块移出
 			next = navBar.querySelector('#pl_leftnav_app').nextSibling;
 			while (node = next) {
 				next = node.nextSibling;
@@ -1271,6 +1277,13 @@ var $page = (function () {
 					node.appendChild(next);
 				}
 				navBar.setAttribute('modsMoved', '');
+				// 如果左边栏有浮动模块，则禁止右边栏浮动
+				node = navBar.querySelector('#trustPagelet_indexright_recom [node-type="right_module_fixed"]');
+				if (node) { // 此时浮动模块可能尚未载入，交由DOMNodeInserted事件处理
+					while (next = node.firstChild) {
+						node.parentNode.insertBefore(next, node);
+					}
+				}
 			}
 		} else if (navBar.id) {
 			navBar.id = '';
@@ -1446,6 +1459,13 @@ var $page = (function () {
 		} else if (node.hasAttribute('ucardconf') && node.parentNode.id === 'trustPagelet_indexright_recom') {
 			// 微博新首页右边栏模块处理
 			tagRightbarMods(node.parentNode);
+			if ($options.mergeSidebars && $options.floatSetting !== 'None') {
+				// 如果左边栏有浮动模块，则禁止右边栏浮动
+				var fixed = node.querySelector('[node-type="right_module_fixed"]'), next;
+				while (next = fixed.firstChild) {
+					node.insertBefore(next, fixed.parentNode.firstChild);
+				}
+			}
 		}
 	}, false);
 	document.addEventListener('DOMNodeRemoved', function (event) {
@@ -1460,6 +1480,7 @@ var $page = (function () {
 					navBar.parentNode.appendChild(node); // 移动回原位置
 				}
 				navBar.removeAttribute('modsMoved');
+				// 右边栏即将被移除，无需将浮动模块移动回原位置
 			}
 			// 原左边栏所属模块即将随着右边栏被移除，需要将其暂时移动回左边栏（必须在DOM中时刻保持一个副本）
 			navBar.id = '';
