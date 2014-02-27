@@ -977,7 +977,7 @@ var $page = (function () {
 			Ads : '#plc_main [id^="pl_rightmod_ads"], #Box_right [id^="ads_"], #trustPagelet_zt_hottopicv5 [class*="hot_topicad"], div[ad-data], .WB_feed .popular_buss',
 			Stats : '#pl_rightmod_myinfo .user_atten',
 			ToMe : '#pl_leftnav_common a[href^="/direct/tome"]',
-			Friends : '#pl_leftnav_common .level_1_Box+.level_1_Box',
+			Friends : '#pl_leftnav_group > div[node-type="groupList"] > .level_1_Box, #pl_leftnav_common .level_1_Box > form.left_nav_line',
 			InterestUser : '#trustPagelet_recom_interestv5', // 动态右边栏
 			Topic : '#trustPagelet_zt_hottopicv5', // 动态右边栏
 			Member : '#trustPagelet_recom_memberv5',			
@@ -1010,12 +1010,11 @@ var $page = (function () {
 			ProfHotTopic : '.W_main_2r div[id^="Pl_Core_RightTextSingle__"]',
 			ProfHotWeibo : '.W_main_2r div[id^="Pl_Core_RightPicText__"]',
 			FeedRecom : '.W_main_2r div[id^="Pl_Third_Inline__"]',
-			MemberIcon : '.ico_member, .ico_member_dis',
+			MemberIcon : '.W_ico16[class*="ico_member"], .ico_member_dis',
 			VerifyIcon : '.approve, .approve_co',
 			DarenIcon : '.ico_club',
 			VgirlIcon : '.ico_vlady',
-			TaobaoIcon : '.ico_taobao',
-			HongbaoIcon : '.hongbaofei2014'
+			TaobaoIcon : '.ico_taobao'
 		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
@@ -1314,7 +1313,7 @@ var $page = (function () {
 			document.head.appendChild(styles);
 		}
 		if ($options.showAllGroups) {
-			cssText += '#pl_leftnav_group div[node-type="moreList"] { display: block !important } #pl_leftnav_group .level_2_Box > .levmore { display: none }\n';
+			cssText += '#pl_leftnav_group div[node-type="moreList"] { display: block !important } #pl_leftnav_group > div[node-type="groupList"] > .level_2_Box > .levmore { display: none }\n';
 		}
 		if ($options.showAllMsgNav) {
 			cssText += '#pl_leftnav_common > .level_1_Box > .lev2_new { display: block !important }\n';
