@@ -1305,7 +1305,10 @@ var $page = (function () {
 	})();
 	// 用户自定义样式及程序附加样式
 	var customStyles = function () {
-		var cssText = '.W_person_info { margin: 0 20px 20px !important }\n', styles = $('wbpCustomStyles');
+		var cssText = '.W_person_info { margin: 0 20px 20px !important }\n' + 
+			'.layer_personcard .name_card_new .cover .btn_item { margin-right: 8px !important }\n' +
+			'.layer_personcard .name_card_new .cover .btn_item span { padding: 0 6px !important }',
+			styles = $('wbpCustomStyles');
 		if (!styles) {
 			styles = document.createElement('style');
 			styles.type = 'text/css';
@@ -1342,21 +1345,19 @@ var $page = (function () {
 	var modifyNamecard = function (node) {
 		// 获得关注链接
 		var userData = node.querySelector('.related_info>.name a[uid]'),
-			toolbar = node.querySelector('.btn_item[node-type="followBtnBox"] span');
+			toolbar = node.querySelector('.action');
 		if (!userData || !toolbar) { return false; }
 		var uid = userData.getAttribute('uid');
 		if (uid === $.uid) { return false; }
 		// 创建分隔符
-		var vline = document.createElement('em');
-		vline.className = 'W_vline';
-		vline.innerHTML = '|';
-		toolbar.appendChild(vline);
+		var button = document.createElement('div');
+		button.className = 'btn_item';
 		// 创建操作链接
 		var link = document.createElement('a');
+		link.className = 'W_btn_c';
 		link.href = 'javascript:void(0)';
-		link.innerHTML = $options.userBlacklist.indexOf(uid) === -1 ? '屏蔽' : '解除屏蔽';
+		link.innerHTML = '<span><i class="W_chat_stat ' + ($options.userBlacklist.indexOf(uid) === -1 ? 'W_chat_stat_offline' : 'W_chat_stat_busy') + '"></i>屏蔽</span>';
 		$.click(link, function (event) {
-			event.stopPropagation(); // 防止事件冒泡触发上级按钮onclick事件
 			// 切换屏蔽状态
 			var i = $options.userBlacklist.indexOf(uid);
 			if (i === -1) {
@@ -1367,12 +1368,13 @@ var $page = (function () {
 			$options.save();
 			$filter();
 			// 回溯到顶层，关闭信息气球
-			while (node.className !== 'WB_global_personcard') {
+			while (node.className !== 'W_layer') {
 				node = node.parentNode;
 			}
 			node.style.display = 'none';
 		});
-		toolbar.appendChild(link);
+		button.appendChild(link);
+		toolbar.insertBefore(button, toolbar.querySelector('.btn_item[node-type="followBtnBox"]'));
 	};
 	// 根据当前设置修改页面
 	var apply = function (init) {

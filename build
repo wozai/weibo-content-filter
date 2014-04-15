@@ -3,7 +3,7 @@
 export VER='1.1.11'
 export MAINVER='1.1.11'
 export REV=90
-export FEATURES='修正微博会员图标屏蔽失效的问题；修正朋友圈导航栏屏蔽失效的问题'
+export FEATURES='用户信息气球屏蔽链接从关注按钮分离；修正微博会员图标屏蔽失效的问题；修正朋友圈导航栏屏蔽失效的问题'
 
 while getopts ":nd" optname
 do
