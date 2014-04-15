@@ -67,6 +67,7 @@ var $ = (function () {
 		//#endif
 		return undefined;
 	}
+	$.oid = $.config.oid; // 页面uid（个人主页或单条微博的uid）
 	//#if GREASEMONKEY
 	if (!GM_getValue || (GM_getValue.toString && GM_getValue.toString().indexOf("not supported") > -1)) {
 		$.get = function (name, defVal, callback) {
@@ -742,7 +743,8 @@ var $filter = (function () {
 			fwdSource = feed.querySelector('.WB_media_expand .WB_func .WB_from>em+a'),
 			fwdLink = feed.querySelector('.WB_media_expand .WB_func .WB_time'),
 			fmid = isForward ? (fwdLink ? fwdLink.href : null) : null,
-			uid = author ? author.getAttribute('usercard') : null;
+			uid = author ? author.getAttribute('usercard').match(/id=(\d+)/)[1] : null,
+			fuid = fwdAuthor ? fwdAuthor.getAttribute('usercard').match(/id=(\d+)/)[1] : null;
 
 		if (!content) { return false; }
 		var text = (scope === 1) ? '@' + author.getAttribute('nick-name') + ': ' : ''; 
@@ -777,8 +779,8 @@ var $filter = (function () {
 				return true;
 			}
 			// 用户黑名单
-			if ((scope === 1 && author && $options.userBlacklist.indexOf(author.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1) ||
-					(isForward && fwdAuthor && $options.userBlacklist.indexOf(fwdAuthor.getAttribute('usercard').match(/id=(\d+)/)[1]) > -1)) {
+			if ((scope === 1 && author && $options.userBlacklist.indexOf(uid) > -1) ||
+					(isForward && fwdAuthor && (scope === 1 || fuid !== $.oid) && $options.userBlacklist.indexOf(fuid) > -1)) {
 				//#if DEBUG
 				console.warn('↑↑↑【被用户黑名单屏蔽】↑↑↑');
 				//#endif
@@ -1002,8 +1004,8 @@ var $page = (function () {
 			TopComment : '#pl_content_commentTopNav',
 			RecomFeed : 'div[node-type="feed_list_recommend"]',
 			MyRightSidebar : '.B_profile .W_main_c, .B_profile .WB_feed .repeat .input textarea { width: 100% } .B_profile .WB_feed .WB_screen { margin-left: 928px } .B_profile .W_main_2r',
-			ProfCover : '.profile_top { min-height: 250px } .profile_top .pf_head { top: 10px } .profile_top .pf_info { margin-top: 20px } .profile_top .S_bg5 { background-color: transparent !important } .profile_pic_top',
-			ProfStats : '.profile_top { min-height: 200px !important } .profile_top .user_atten',
+			ProfCover : '.profile_top .pf_head { top: 10px } .profile_top .pf_info { margin-top: 20px } .profile_top .S_bg5 { background-color: transparent !important } .profile_pic_top',
+			ProfStats : '.profile_top .user_atten',
 			MyMicroworld : '.W_main_c div[id^="Pl_Official_MyMicroworld__"]',
 			Relation : '.W_main_2r div[id^="Pl_Core_RightUserGrid__"]',
 			Album : '.W_main_2r div[id^="Pl_Core_RightPicMulti__"]',
@@ -1172,6 +1174,9 @@ var $page = (function () {
 				cssText += modules[module] + ' { display: none !important }\n';
 			}
 		});
+		if ($options.hideMods.indexOf('ProfCover') !== -1) { // 屏蔽封面时的特别处理
+			cssText += '.profile_top { min-height: ' + ($options.hideMods.indexOf('ProfStats') === -1 ? 250 : 200) + 'px }\n';
+		}
 		// 屏蔽提示相关CSS
 		var tipBackColor = $options.tipBackColor;
 		var tipTextColor = $options.tipTextColor;
@@ -1306,8 +1311,8 @@ var $page = (function () {
 	// 用户自定义样式及程序附加样式
 	var customStyles = function () {
 		var cssText = '.W_person_info { margin: 0 20px 20px !important }\n' + 
-			'.layer_personcard .name_card_new .cover .btn_item { margin-right: 8px !important }\n' +
-			'.layer_personcard .name_card_new .cover .btn_item span { padding: 0 6px !important }',
+			'.layer_personcard .name_card_new .cover .btn_item { margin-right: 7px !important } ' +
+			'.layer_personcard .name_card_new .cover .btn_item span { padding: 0 5px !important }\n',
 			styles = $('wbpCustomStyles');
 		if (!styles) {
 			styles = document.createElement('style');
@@ -1325,7 +1330,7 @@ var $page = (function () {
 			cssText += '.WB_info, .WB_text { display: inline } .WB_info+.WB_text:before { content: "：" } .WB_func { margin-top: 5px } .B_index .WB_feed .W_ico16 { vertical-align: -3px !important }\n';
 		}
 		if ($options.mergeSidebars) {
-			cssText += 'body:not(.S_profile) .W_gotop { margin-left: 415px }\n';
+			cssText += 'body:not(.S_profile) .W_gotop { margin-left: 415px } body:not(.S_profile) .WB_left_nav .FIXED { width: 230px !important } \n';
 		}
 		if ($options.floatSetting === 'None') {
 			cssText += 'body:not(.S_profile) .WB_left_nav [node-type="left_fixed"] { position: static !important; height: auto !important }\n';
@@ -1341,23 +1346,50 @@ var $page = (function () {
 		}
 		styles.innerHTML = cssText + '\n';
 	};
-	// 在用户信息气泡上添加屏蔽链接
-	var modifyNamecard = function (node) {
-		// 获得关注链接
-		var userData = node.querySelector('.related_info>.name a[uid]'),
+	// 在用户信息气球或用户主页上添加屏蔽链接
+	var showUserFilterBtn = function (node) {
+		if (!node) { node = document.body; }
+		var balloon = node.classList.contains('name_card_new'), userData, toolbar, uid;
+		if (balloon) {
+			// 获得关注链接
+			userData = node.querySelector('.related_info>.name a[uid]');
 			toolbar = node.querySelector('.action');
-		if (!userData || !toolbar) { return false; }
-		var uid = userData.getAttribute('uid');
+			if (!userData || !toolbar) { return false; }
+			uid = userData.getAttribute('uid');
+		} else if ($.scope() === 2) {
+			if (userData = $('wbpUserFilter')) {
+				// 按钮已存在时只更新状态
+				userData.update();
+				return false;
+			}
+			toolbar = node.querySelector('.pf_info .pf_do');
+			uid = $.oid;
+		} else {
+			return false;
+		}
 		if (uid === $.uid) { return false; }
 		// 创建分隔符
 		var button = document.createElement('div');
-		button.className = 'btn_item';
+		if (balloon) {
+			button.className = 'btn_item';
+		} else {
+			button.id = 'wbpUserFilter';
+			button.className = 'btn_bed W_fl';
+		}
 		// 创建操作链接
 		var link = document.createElement('a');
-		link.className = 'W_btn_c';
+		button.appendChild(link);
 		link.href = 'javascript:void(0)';
-		link.innerHTML = '<span><i class="W_chat_stat ' + ($options.userBlacklist.indexOf(uid) === -1 ? 'W_chat_stat_offline' : 'W_chat_stat_busy') + '"></i>屏蔽</span>';
-		$.click(link, function (event) {
+		(button.update = function () {
+			if ($options.userBlacklist.indexOf(uid) === -1) {
+				link.className = 'W_btn_b';
+				link.innerHTML = '<span>屏蔽</span>';
+			} else {
+				link.className = 'W_btn_c';
+				link.innerHTML = '<span><em class="W_ico12 icon_addone"></em>已屏蔽</span>';	
+			}
+		})();
+		$.click(link, function () {
 			// 切换屏蔽状态
 			var i = $options.userBlacklist.indexOf(uid);
 			if (i === -1) {
@@ -1367,14 +1399,16 @@ var $page = (function () {
 			}
 			$options.save();
 			$filter();
-			// 回溯到顶层，关闭信息气球
-			while (node.className !== 'W_layer') {
-				node = node.parentNode;
+			if (balloon) {
+				// 回溯到顶层，关闭信息气球
+				while (node.className !== 'W_layer') {
+					node = node.parentNode;
+				}
+				node.style.display = 'none';
 			}
-			node.style.display = 'none';
+			if (i = $('wbpUserFilter')) { i.update(); }
 		});
-		button.appendChild(link);
-		toolbar.insertBefore(button, toolbar.querySelector('.btn_item[node-type="followBtnBox"]'));
+		toolbar.insertBefore(button, toolbar.querySelector('div+div'));
 	};
 	// 根据当前设置修改页面
 	var apply = function (init) {
@@ -1384,6 +1418,8 @@ var $page = (function () {
 		showSettingsBtn();
 		// 浮动设置按钮
 		toggleFloatSettingsBtn();
+		// 屏蔽用户按钮
+		showUserFilterBtn();
 		// 合并边栏
 		mergeSidebars();
 		// 屏蔽版面模块
@@ -1405,7 +1441,7 @@ var $page = (function () {
 	// IFRAME载入不会影响head中的CSS，只添加一次即可
 	var myStyles = document.createElement('style');
 	myStyles.type = 'text/css';
-	myStyles.id = 'wbpStyles';
+	myStyles.id = 'wbpDialogStyles';
 	myStyles.innerHTML = '${CSS}';
 	document.head.appendChild(myStyles);
 	// 为右边栏动态模块打屏蔽标记
@@ -1420,7 +1456,7 @@ var $page = (function () {
 			showSettingsBtn();
 		} else if (node.classList.contains('name_card_new')) {
 			// 用户信息气球
-			modifyNamecard(node);
+			showUserFilterBtn(node);
 		} else if (node.classList.contains('W_main_r') || node.querySelector('.W_main_r')) {
 			// 合并边栏
 			mergeSidebars();
