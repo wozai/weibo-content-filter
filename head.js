@@ -4,7 +4,7 @@
 // @license			MIT License
 // @description		新浪微博（weibo.com）非官方功能增强脚本，具有屏蔽关键词、用户、来源、链接，改造版面等功能
 // @features		${FEATURES}
-// @version			${MAINVER}
+// @version			${FULLVER}
 // @revision		${REV}
 // @author			@富平侯
 // @committers		@牛肉火箭, @JoyerHuang_悦
