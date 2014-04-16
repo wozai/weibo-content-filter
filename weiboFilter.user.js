@@ -1353,21 +1353,19 @@ var $page = (function () {
 		if (balloon) {
 			// 获得关注链接
 			userData = node.querySelector('.related_info>.name a[uid]');
-			toolbar = node.querySelector('.action');
-			if (!userData || !toolbar) { return false; }
+			if (!userData) { return false; }
 			uid = userData.getAttribute('uid');
+			toolbar = node.querySelector('.action');
 		} else if ($.scope() === 2) {
 			if (userData = $('wbpUserFilter')) {
 				// 按钮已存在时只更新状态
 				userData.update();
 				return false;
 			}
-			toolbar = node.querySelector('.pf_info .pf_do');
 			uid = $.oid;
-		} else {
-			return false;
+			toolbar = node.querySelector('.pf_info .pf_do');
 		}
-		if (uid === $.uid) { return false; }
+		if (!toolbar || uid === $.uid) { return false; }
 		// 创建分隔符
 		var button = document.createElement('div');
 		if (balloon) {
@@ -1454,8 +1452,8 @@ var $page = (function () {
 		if (scope && node.classList.contains('group_read')) {
 			// 重新载入设置按钮
 			showSettingsBtn();
-		} else if (node.classList.contains('name_card_new')) {
-			// 用户信息气球
+		} else if (node.classList.contains('name_card_new') || node.classList.contains('PRF_profile_header')) {
+			// 在用户信息气球或个人主页信息栏中显示屏蔽按钮
 			showUserFilterBtn(node);
 		} else if (node.classList.contains('W_main_r') || node.querySelector('.W_main_r')) {
 			// 合并边栏
