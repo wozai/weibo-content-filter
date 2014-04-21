@@ -1,9 +1,9 @@
 #!/bin/sh
 
-export VER='1.1.11'
-export FULLVER='1.1.11.1'
+export VER='1.2'
+export FULLVER='1.2'
 export REV=90
-export FEATURES='用户信息气球屏蔽链接从关注按钮分离；在个人主页和单条微博页面添加屏蔽用户按钮；在被屏蔽的用户个人主页中正常显示其本人发布的微博；修正微博会员图标屏蔽失效的问题；修正好友圈导航栏屏蔽失效的问题'
+export FEATURES='增加对天猫链接的屏蔽'
 
 while getopts ":nd" optname
 do

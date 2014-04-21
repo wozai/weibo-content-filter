@@ -793,10 +793,10 @@ var $filter = (function () {
 				//#endif
 				return true;
 			}
-			// 屏蔽淘宝链接微博
-			if ($options.filterTaobao && feed.querySelector('a>i.icon_fl_tb')) {
+			// 屏蔽淘宝和天猫链接微博
+			if ($options.filterTaobao && feed.querySelector('a>i.icon_fl_tb, a>i.icon_fl_tmall')) {
 				//#if DEBUG
-				console.warn('↑↑↑【淘宝链接微博被屏蔽】↑↑↑');
+				console.warn('↑↑↑【含有淘宝或天猫商品链接的微博被屏蔽】↑↑↑');
 				//#endif
 				return true;
 			}			
