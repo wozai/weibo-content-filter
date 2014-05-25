@@ -1016,7 +1016,8 @@ var $page = (function () {
 			VerifyIcon : '.approve, .approve_co',
 			DarenIcon : '.ico_club',
 			VgirlIcon : '.ico_vlady',
-			TaobaoIcon : '.ico_taobao'
+			TaobaoIcon : '.ico_taobao',
+			FifaIcon : '.icon_fifa'
 		};
 	// 显示设置链接
 	var showSettingsBtn = function () {
