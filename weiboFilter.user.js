@@ -19,10 +19,6 @@ var $ = (function () {
 			return undefined; // 如果已经（曾经）安装过插件则不再继续运行脚本
 		}
 		var version = window.navigator.userAgent.match(/Chrome\/(\d+)/) && RegExp.$1;
-		if (!localStorage.getItem(CHROME_KEY_ROOT + 'chromeExtTip') && confirm('以用户脚本方式安装的“眼不见心不烦”插件将在Chrome 27及更高版本下失效。\n\n推荐您【卸载】本插件并到【Chrome应用商店】安装新版插件，点击“确定”即可转入安装页面。\n\n该版本支持更高版本的Chrome，并加入了Chrome浏览器的专属功能（如设置同步）。')) {
-			window.open('https://chrome.google.com/webstore/detail/aognaapdfnnldnjglanfbbklaakbpejm', '_blank');
-		}
-		localStorage.setItem(CHROME_KEY_ROOT + 'chromeExtTip', true); // 以后不再询问
 		if (version === null || version >= 27) {
 			// Chrome 27开始不再支持通过脚本注入方式获取unsafeWindow，也不再提供unsafeWindow符号
 			if (typeof unsafeWindow === 'undefined') {
@@ -221,9 +217,6 @@ Options.prototype = {
 		maxDupFwd : ['string', 1],
 		filterFlood : ['bool'],
 		maxFlood : ['string', 5],
-		//#if GREASEMONKEY
-		autoUpdate : ['bool', true],
-		//#endif
 		updateNotify : ['bool', true],
 		//#if CHROME
 		autoSync : ['bool', true],
@@ -277,55 +270,6 @@ Options.prototype = {
 };
 
 var $options = new Options();
-
-//#if GREASEMONKEY
-var $update = (function () {
-	// 检查更新
-	var checkUpdate = function (event) {
-		GM_xmlhttpRequest({
-			method: 'GET',
-			// 只载入metadata
-			url: 'http://userscripts.org/scripts/source/114087.meta.js?' + new Date().getTime(),
-			headers: {'Cache-Control': 'no-cache'},
-			onload: function (result) {
-				if (!result.responseText.match(/@version\s+(.*)/)) { return; }
-				$.set('lastCheckUpdateSuccess', new Date().getTime().toString());
-				var ver = RegExp.$1;
-				if (!result.responseText.match(/@revision\s+(\d+)/) || RegExp.$1 <= $.version) {
-					// 自动检查更新且并无新版本时不必提示
-					// 用户手动检查时event是click事件对象
-					if (event) { alert('您使用的“眼不见心不烦”(v${VER})已经是最新版。'); }
-					return;
-				}
-				var features = '';
-				if (result.responseText.match(/@features\s+(.*)/)) {
-					features = '- ' + RegExp.$1.split('；').join('\n- ') + '\n\n';
-				}
-				// 显示更新提示
-				if (confirm('“眼不见心不烦”新版本v' + ver + '可用。\n\n' + features + '如果您希望更新，请点击“确认”打开插件主页。')) {
-					window.open('http://userscripts.org/scripts/show/114087', '_blank');
-				}
-			}
-		});
-	};
-	// 自动检查更新
-	if ($options.autoUpdate) {
-		// 部分自动更新代码改写自http://loonyone.livejournal.com/
-		// 防止重复检查（同时打开多个窗口时），间隔至少两分钟
-		var DoS_PREVENTION_TIME = 2 * 60 * 1000;
-		var lastAttempt = $.get('lastCheckUpdateAttempt', 0);
-		var now = new Date().getTime();
-		if (now - lastAttempt > DoS_PREVENTION_TIME) {
-			$.set('lastCheckUpdateAttempt', now.toString());
-			// 每周检查一次，避免频繁升级
-			var ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
-			var lastSuccess = $.get('lastCheckUpdateSuccess', 0);
-			if (now - lastSuccess > ONE_WEEK) { checkUpdate(); }
-		}
-	}
-	return checkUpdate;
-})();
-//#endif
 
 var $dialog = (function () {
 	var shown = false, dialog, content, STK;
@@ -646,9 +590,6 @@ var $dialog = (function () {
 				console.error(err);
 			}
 		});
-		//#endif
-		//#if GREASEMONKEY
-		bind('checkUpdate', $update);
 		//#endif
 		bind('OK', function () {
 			$options = exportSettings();

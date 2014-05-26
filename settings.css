@@ -66,6 +66,9 @@
 .wbpSettings span.link a > span li+li {
 	margin-top: 5px;
 }
+.wbpSettings span.link a > span p+p {
+	margin-top: 10px;
+}
 .wbpSettings span.link a:hover > span {
 	display: block;
 	position: absolute; 
